@@ -1,7 +1,10 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  /* config options here */
+  // the API reads measured stock profiles from disk; ship them with the server functions
+  outputFileTracingIncludes: {
+    "/api/**": ["./public/data/**"],
+  },
 };
 
 export default nextConfig;
