@@ -30,7 +30,7 @@ key the user provides. The model only parses and explains; every number comes fr
 | SEC 8-K Item 2.02 history per company | Known: used in spikes; heavy filers need older pages (handled in spike code) |
 | Daily price history source that works from Vercel | Needs a spike: Yahoo worked locally; check from a serverless function, else cache per stock |
 | Agent Hub signal skills callable from a web server | Needs a spike: the package is `@bitget-ai/bitget-signal`, public and keyless, but the endpoint is undocumented |
-| Agent Hub Demo orders | Needs your Bitget Demo API key (read and trade on Demo only) |
+| Agent Hub Demo orders | Reuse an existing Demo key locally only, orders tagged `shunt`; no key on the public site |
 | Which rTokens trade at weekends | Known approach: read last weekend's Bitget candles per symbol |
 | Language model access | Needs your decision: Qwen credits not arrived; which key to use meanwhile |
 | Calibration may show the bands are too narrow | Known risk: if so, widen by the measured miss rate and publish that, do not hide it |
@@ -38,4 +38,4 @@ key the user provides. The model only parses and explains; every number comes fr
 ## Questions for you at this checkpoint
 1. Approve the PRD and plan, or tell me what to change.
 2. Which language model key can I use until the Qwen credits arrive (Anthropic, OpenAI, other)?
-3. A Bitget **Demo** API key for the order button (Demo only, never a live key). Can be given later, before phase 6.
+3. None needed: we reuse an existing Demo key locally, tag orders `shunt`, and keep keys off the public site.

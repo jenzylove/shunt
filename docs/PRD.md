@@ -32,7 +32,9 @@ their pain threshold. They do not have a Bloomberg terminal.
 
 ## Front door (first ten seconds)
 
-One line: "What's your trade?" with three example chips. The visitor types their own:
+One line: "What's your trade?" with ready made example trades a visitor can press before writing their own
+(for example: holding rNVDA through its earnings, a 5x TSLA perp over a weekend, a small cap rToken with a thin
+book, a trade that fits cleanly). Each example is a real, live check, not a recording. The visitor types their own:
 
 > buy $20k rNVDA, holding 5 days, max loss $600
 
@@ -88,8 +90,12 @@ track switches colour. Above it, one sentence: the switchpoint.
   with Bitget's live fee rates (rNVDA currently shows 0.1% maker and taker).
 - Perp funding over the horizon from Bitget's funding history.
 - Weekend tradability of this rToken.
-- Optional, only after the user presses it: a prefilled order at the switchpoint size, sent to **Bitget Demo**
-  through Agent Hub, with the order id as a receipt. Shunt never places an order by itself.
+- An order ticket prefilled at the switchpoint size, ready for the trader's own Bitget account (the exact
+  Agent Hub command and the order details to copy). The public site holds no exchange key, so no visitor can
+  place orders through it. Shunt never places an order by itself.
+- Proof of the Agent Hub order path: a small number of Demo orders placed from our side through Agent Hub, tagged
+  with a `shunt` client order id so they are separable from any other project on the same Demo account, and
+  listed on the proof page with their order ids.
 
 ### 6. Review and calibration (research quality, measurable)
 - **Backtest calibration:** for every past event, build the band using only earlier events, then check whether the
