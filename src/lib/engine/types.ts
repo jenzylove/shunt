@@ -8,7 +8,7 @@ export type Summary = {
 
 export type PastEvent = { d: string; move: number | null; z: number | null; timing?: string };
 
-export type Bellwether = { hub: string; n: number; meanZ: number; events: PastEvent[] };
+export type Bellwether = { hub: string; n: number; ratio: number; p?: number; events: PastEvent[] };
 
 export type Profile = {
   ticker: string;

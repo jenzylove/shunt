@@ -1,0 +1,156 @@
+{
+ "asOf": "2026-09-28",
+ "target": 0.8,
+ "types": {
+  "earnings": {
+   "raw": {
+    "inside": 36863,
+    "checked": 50306,
+    "rate": 0.7328
+   },
+   "smallSample": {
+    "inside": 39492,
+    "checked": 50306,
+    "rate": 0.785
+   },
+   "volScaled": {
+    "inside": 40407,
+    "checked": 50070,
+    "rate": 0.807
+   },
+   "corrected": {
+    "factor": 0.828,
+    "fittedBefore": "2023-05-04",
+    "checkedAfter": 25110,
+    "rateAfter": 0.6772,
+    "uncorrectedRateAfter": 0.757,
+    "apply": false
+   }
+  },
+  "fed": {
+   "raw": {
+    "inside": 28353,
+    "checked": 37694,
+    "rate": 0.7522
+   },
+   "smallSample": {
+    "inside": 30621,
+    "checked": 37694,
+    "rate": 0.8124
+   },
+   "volScaled": {
+    "inside": 31188,
+    "checked": 37399,
+    "rate": 0.8339
+   },
+   "corrected": {
+    "factor": 0.968,
+    "fittedBefore": "2025-09-17",
+    "checkedAfter": 19808,
+    "rateAfter": 0.846,
+    "uncorrectedRateAfter": 0.8561,
+    "apply": true
+   }
+  },
+  "bellwether": {
+   "raw": {
+    "inside": 1041,
+    "checked": 1375,
+    "rate": 0.7571
+   },
+   "smallSample": {
+    "inside": 1114,
+    "checked": 1375,
+    "rate": 0.8102
+   },
+   "volScaled": {
+    "inside": 1143,
+    "checked": 1373,
+    "rate": 0.8325
+   },
+   "corrected": {
+    "factor": 0.915,
+    "fittedBefore": "2023-03-29",
+    "checkedAfter": 687,
+    "rateAfter": 0.7846,
+    "uncorrectedRateAfter": 0.8326,
+    "apply": true
+   }
+  },
+  "overnight": {
+   "raw": {
+    "inside": 243382,
+    "checked": 308297,
+    "rate": 0.7894
+   },
+   "smallSample": {
+    "inside": 244527,
+    "checked": 308297,
+    "rate": 0.7932
+   },
+   "volScaled": {
+    "inside": 246739,
+    "checked": 308281,
+    "rate": 0.8004
+   },
+   "corrected": {
+    "factor": 1.007,
+    "fittedBefore": "2025-05-13",
+    "checkedAfter": 155243,
+    "rateAfter": 0.8056,
+    "uncorrectedRateAfter": 0.8031,
+    "apply": false
+   }
+  },
+  "weekend": {
+   "raw": {
+    "inside": 28849,
+    "checked": 44360,
+    "rate": 0.6503
+   },
+   "smallSample": {
+    "inside": 29283,
+    "checked": 44360,
+    "rate": 0.6601
+   },
+   "volScaled": {
+    "inside": 31321,
+    "checked": 44358,
+    "rate": 0.7061
+   },
+   "corrected": {
+    "factor": 1.449,
+    "fittedBefore": "2025-10-06",
+    "checkedAfter": 24396,
+    "rateAfter": 0.9038,
+    "uncorrectedRateAfter": 0.7754,
+    "apply": false
+   }
+  },
+  "day": {
+   "raw": {
+    "inside": 239241,
+    "checked": 302656,
+    "rate": 0.7905
+   },
+   "smallSample": {
+    "inside": 240437,
+    "checked": 302656,
+    "rate": 0.7944
+   },
+   "volScaled": {
+    "inside": 243673,
+    "checked": 302642,
+    "rate": 0.8052
+   },
+   "corrected": {
+    "factor": 0.957,
+    "fittedBefore": "2025-05-13",
+    "checkedAfter": 151495,
+    "rateAfter": 0.7771,
+    "uncorrectedRateAfter": 0.7943,
+    "apply": false
+   }
+  }
+ }
+}

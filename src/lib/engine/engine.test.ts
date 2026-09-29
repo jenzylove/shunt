@@ -15,7 +15,7 @@ const profile: Profile = {
   weekend: { n: 150, z80: 0.8, z95: 1.5 },
   earnings: { n: 20, z80: 4, z95: 6, p80: 0.08, events: [] },
   fed: { n: 5, events: [] },
-  bellwethers: [{ hub: "NVDA", n: 10, meanZ: 2, events: Array.from({ length: 10 }, (_, i) => ev(0.01 * (i + 1), 0.5 * (i + 1))) }],
+  bellwethers: [{ hub: "NVDA", n: 10, ratio: 2, events: Array.from({ length: 10 }, (_, i) => ev(0.01 * (i + 1), 0.5 * (i + 1))) }],
 };
 const cal: Calibration = { asOf: "x", target: 0.8, types: { weekend: { corrected: { factor: 1.4, apply: true, rateAfter: 0.85, uncorrectedRateAfter: 0.7, checkedAfter: 100 } } } };
 const trade: Trade = { ticker: "TEST", venue: "rtoken", side: "long", sizeUsd: 20_000, horizonDays: 5, lossLimitUsd: 600, confidence: 0.8 };

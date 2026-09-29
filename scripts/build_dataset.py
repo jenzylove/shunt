@@ -15,6 +15,7 @@ import json, sys, time, datetime as dt, urllib.request
 from pathlib import Path
 from concurrent.futures import ThreadPoolExecutor
 import numpy as np, pandas as pd
+from scipy import stats
 
 ROOT = Path(__file__).resolve().parent.parent
 CACHE = ROOT / "data" / "cache"
@@ -206,47 +207,37 @@ def main(limit=None):
                 seen[d] = timing(a)
         earn[t] = seen
 
-    # ---------- bellwether reactions (method confirmed in docs/spikes/results.md, spike C) ----------
-    print("bellwether reactions...", flush=True)
+    # ---------- bellwether earnings days ----------
+    # For risk, what matters is the stock's actual move on a bellwether's earnings day (sector moves included),
+    # scaled by the stock's volatility at the time. (The residual method in docs/spikes answers a different
+    # question: which stocks move unusually. It is reported on the research page, not used to pick links.)
+    print("bellwether earnings days...", flush=True)
     sic = {t: str(subs[t].get("sic") or "") for t in liquid}
-    names = [t for t in liquid if sic[t]]
-    col = {t: i for i, t in enumerate(names)}
-    A = R[names].values
-    spy = R["SPY"].values
-    S2 = pd.Series({t: sic[t][:2] for t in names})
-    PEER = np.tile(spy[:, None], (1, len(names)))
-    for g, m in S2.groupby(S2).groups.items():
-        idx = [col[x] for x in m]
-        if len(idx) < 4:
-            continue
-        sub = A[:, idx]
-        s, c = np.nansum(sub, 1, keepdims=True), np.sum(~np.isnan(sub), 1, keepdims=True)
-        PEER[:, idx] = (s - np.nan_to_num(sub)) / np.maximum(c - (~np.isnan(sub)), 1)
-    bell = {}   # stock -> hub -> list of (date, raw move, |z|)
+    SD = R[liquid].rolling(60).std().shift(1)
+    bell = {}   # stock -> hub -> (list of (date, move, z) on report days, list of z on same season control days)
+    Z = (R[liquid] / SD).values
+    col = {t: i for i, t in enumerate(liquid)}
     for h in HUBS:
-        if h not in col:
+        if h not in earn:
             continue
-        for d in sorted(earn[h]):
-            pos = days.get_loc(d)
-            if pos < 260:
+        hd = [d for d in sorted(earn[h]) if d > days[260]]
+        pos = [days.get_loc(d) for d in hd]
+        # control: the same stock 3 to 7 trading days either side of each report, i.e. the same earnings season
+        ctrl_pos = sorted({p + k for p in pos for k in (-7, -6, -5, -4, -3, 3, 4, 5, 6, 7) if 0 <= p + k < len(days)})
+        for t in liquid:
+            if t == h:
                 continue
-            w = slice(pos - 250, pos)
-            Y, P_, M = A[w], PEER[w], spy[w]
-            for t in names:
-                if t == h or d in earn[t]:
+            i = col[t]
+            rows = []
+            for d, p in zip(hd, pos):
+                if d in earn[t]:
                     continue
-                i = col[t]
-                y, pe = Y[:, i], P_[:, i]
-                ok = ~np.isnan(y) & ~np.isnan(pe) & ~np.isnan(M)
-                if ok.sum() < 200 or np.isnan(A[pos, i]) or np.isnan(PEER[pos, i]):
-                    continue
-                X = np.column_stack([np.ones(ok.sum()), M[ok], pe[ok]])
-                b, *_ = np.linalg.lstsq(X, y[ok], rcond=None)
-                sd = (y[ok] - X @ b).std()
-                if sd > 0:
-                    z = abs((A[pos, i] - b @ [1, spy[pos], PEER[pos, i]]) / sd)
-                    bell.setdefault(t, {}).setdefault(h, []).append((d, A[pos, i], z))
-        print("  ", h, flush=True)
+                m, z = R.iat[p, R.columns.get_loc(t)], Z[p, i]
+                if not np.isnan(m) and not np.isnan(z):
+                    rows.append((d, m, z))
+            ctrl = [Z[p, i] for p in ctrl_pos if days[p] not in earn[t] and not np.isnan(Z[p, i])]
+            if rows:
+                bell.setdefault(t, {})[h] = (rows, ctrl)
 
     # ---------- per stock profiles ----------
     METHODS = ("raw", "smallSample", "volScaled")
@@ -276,11 +267,18 @@ def main(limit=None):
                    if d in r.index and not np.isnan(r.get(d))]
         fed_ev = [ev(d) for d in fomc if d in r.index and d > since and not np.isnan(r.get(d))]
         bw = []
-        for h, evs in bell.get(t, {}).items():
-            if len(evs) >= MIN_EVENTS and np.mean([z for _, _, z in evs]) >= 1.5:
-                bw.append({"hub": h, "n": len(evs), "meanZ": round(float(np.mean([z for _, _, z in evs])), 2),
+        for h, (evs, ctrl) in bell.get(t, {}).items():
+            if len(evs) < MIN_EVENTS or len(ctrl) < 30:
+                continue
+            hz = np.abs([z for _, _, z in evs])
+            med, base = float(np.median(hz)), float(np.median(np.abs(ctrl)))
+            # shown only if report days are clearly and significantly bigger than the same stock's days in the same
+            # earnings season: rank test, Bonferroni corrected for testing every bellwether
+            p_ = stats.mannwhitneyu(hz, np.abs(ctrl), alternative="greater").pvalue
+            if base > 0 and med >= 1.3 * base and p_ < 0.01 / len(HUBS):
+                bw.append({"hub": h, "n": len(evs), "ratio": round(med / base, 2), "p": float(f"{p_:.2g}"),
                            "events": [ev(d) for d, _, _ in evs]})
-        bw.sort(key=lambda x: -x["meanZ"])
+        bw.sort(key=lambda x: -x["ratio"])
 
         # point in time calibration of the 80% band, three methods, using only earlier observations
         def score(kind, a, z, s_at, idx, lo, dates):
