@@ -1,0 +1,19 @@
+# secrets
+.env
+.env.*
+!.env.example
+*.pem
+*keypair*.json
+# build
+node_modules/
+.next/
+out/
+dist/
+build/
+coverage/
+*.tsbuildinfo
+.vercel/
+# local data and caches
+data/cache/
+*.log
+.DS_Store
