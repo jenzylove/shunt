@@ -21,3 +21,17 @@
   errors on 29 Sep. Shunt does not depend on it for any number; rechecked later.
 - CPI dates: bls.gov blocks scripts and a summarised date list contained wrong dates, so CPI is not used until
   dates come from a verified source.
+- Full dataset: 2,218 Bitget stocks. Calibration of the volatility scaled 80% band over real history: ordinary days
+  80.5% (302,656 checks), overnight gaps 80.0% (308,297), own earnings 80.7% (50,306), Fed days 83.4% (37,694),
+  weekends 70.6% overall and 77.5% in the recent half (44,360). The weekend correction factor overshot on unseen
+  data (90%), so by the rule it is not applied; the weekend number is published as it is.
+- Bellwether links, three passes. (1) Residual method picked noisy small caps and missed AMD when NVIDIA reports:
+  it answers "who moves unusually", not "who loses money". (2) Actual moves vs ordinary days linked 2,018 stocks,
+  mostly earnings season noise. (3) Now: report days must beat the same stock's days 3 to 7 sessions either side
+  (same season) in a rank test, Bonferroni corrected across 26 bellwethers. 45 stocks qualify, the strongest ones
+  make economic sense (chip equipment and memory names on Micron's reports, Humana on UnitedHealth's).
+  Finding: sympathy moves exist on average, but for most single stocks a bellwether's report day is not reliably
+  bigger than the rest of earnings season.
+- Desk page, rail, API; "over the weekend" now holds through the next Monday open; perp liquidation check and
+  the highest leverage that clears the biggest measured move.
+- First deploy: https://shunt-eight.vercel.app. Nasdaq calendar, Bitget and the profiles all answer from Vercel.
