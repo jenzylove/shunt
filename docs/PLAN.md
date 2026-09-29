@@ -16,7 +16,7 @@ key the user provides. The model only parses and explains; every number comes fr
 | 3 | 1 Oct | Live data layer: Bitget books, fees, funding, candles; Nasdaq calendar; SEC; Fed and BLS dates | One real trade checked end to end from the command line with every source live |
 | 4 | 2 Oct | Language layer: parse to schema, editable chips, follow ups, one sentence answer | Twenty varied trade sentences parse correctly in a test file |
 | 5 | 3 Oct | The app: the rail, the switchpoint, cost panel, journal, /demo, /proof, /research | Real buttons pressed in a headless browser, dark and light, phone width |
-| 6 | 4 Oct | Agent Hub: signal skills as context, Demo order on press; forward journal running | A real Bitget Demo order id on screen; journal entries recorded |
+| 6 | 4 Oct | Agent Hub: signal skills as context, order ticket, Demo proof orders tagged shunt; forward journal running | Real Bitget Demo order ids on the proof page; journal entries recorded |
 | 7 | 5 Oct | Design pass and release readiness audit; fixes | Audit findings fixed or listed in Scope and limits |
 | 8 | 5 to 6 Oct | Your review of the live product | Your approval |
 | 9 | 6 Oct | README, demo video, X post, form answers | Repo public, video uploaded, text ready to paste |
