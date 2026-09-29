@@ -88,11 +88,16 @@ describe("switchpoint", () => {
 
 describe("calendar", () => {
   it("skips weekends and NYSE holidays", () => {
-    expect(tradingDaysAfter(new Date("2026-11-24T15:00:00Z"), 3)).toEqual(["2026-11-25", "2026-11-27", "2026-11-30"]);
+    expect(tradingDaysAfter(new Date("2026-11-24T22:00:00Z"), 3)).toEqual(["2026-11-25", "2026-11-27", "2026-11-30"]);
+  });
+  it("counts today's close when bought before 4pm New York time", () => {
+    expect(tradingDaysAfter(new Date("2026-09-29T14:00:00Z"), 2)).toEqual(["2026-09-29", "2026-09-30"]);
+    expect(tradingDaysAfter(new Date("2026-09-29T20:30:00Z"), 2)).toEqual(["2026-09-30", "2026-10-01"]);
+    expect(tradingDaysAfter(new Date("2026-10-03T12:00:00Z"), 1)).toEqual(["2026-10-05"]);
   });
   it("finds the openings that follow a weekend", () => {
-    const days = tradingDaysAfter(new Date("2026-10-01T15:00:00Z"), 4);
-    expect(gapDays(days, new Date("2026-10-01T15:00:00Z"))).toEqual(["2026-10-05"]);
+    const days = tradingDaysAfter(new Date("2026-10-01T21:00:00Z"), 4);
+    expect(gapDays(days, new Date("2026-10-01T21:00:00Z"))).toEqual(["2026-10-05"]);
   });
   it("maps after close earnings to the next trading day", () => {
     expect(reactionDay("2026-10-02", "after close")).toBe("2026-10-05");

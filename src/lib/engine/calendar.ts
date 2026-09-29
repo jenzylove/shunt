@@ -16,10 +16,23 @@ export function isTradingDay(d: Date): boolean {
   return wd !== 0 && wd !== 6 && !NYSE_HOLIDAYS.has(iso(d));
 }
 
-/** The next `n` trading days strictly after `start` (the trading days whose closes the position is exposed to). */
+/** New York calendar date and minutes after midnight for an instant. */
+export function newYork(at: Date): { date: string; minutes: number } {
+  const f = new Intl.DateTimeFormat("en-CA", { timeZone: "America/New_York", year: "numeric", month: "2-digit", day: "2-digit", hour: "2-digit", minute: "2-digit", hourCycle: "h23" });
+  const p = Object.fromEntries(f.formatToParts(at).map((x) => [x.type, x.value]));
+  return { date: `${p.year}-${p.month}-${p.day}`, minutes: Number(p.hour) * 60 + Number(p.minute) };
+}
+
+/**
+ * The `n` trading day closes a position opened at `start` is exposed to:
+ * today's close counts if it is a trading day and New York has not closed yet (16:00 ET).
+ */
 export function tradingDaysAfter(start: Date, n: number): string[] {
   const out: string[] = [];
-  let d = new Date(Date.UTC(start.getUTCFullYear(), start.getUTCMonth(), start.getUTCDate()));
+  const ny = newYork(start);
+  const today = new Date(ny.date + "T00:00:00Z");
+  if (isTradingDay(today) && ny.minutes < 16 * 60 && n > 0) out.push(ny.date);
+  let d = today;
   while (out.length < n) {
     d = addDays(d, 1);
     if (isTradingDay(d)) out.push(iso(d));
