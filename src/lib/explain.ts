@@ -17,10 +17,17 @@ export type Verdict = { headline: string; detail: string; tone: "go" | "caution"
 export function explain(r: CheckResult): Verdict {
   const { trade: t, assessment: a, profile: p } = r;
   const v = a.verdict;
-  const band = t.confidence === 0.8 ? "4 in 5" : "19 in 20";
   const worst = a.worst;
+  const odds = t.confidence === 0.8 ? "4 of 5" : "19 of 20";
+  const what = (b: { kind: string; label: string }) =>
+    ({ horizon: `past ${t.horizonDays} day stretches`, day: "ordinary days", earnings: `past ${p.ticker} earnings days`,
+       bellwether: `past ${b.label.split(" ")[0]} report days`, fed: "past Fed decision days", weekend: "past weekends" } as Record<string, string>)[b.kind];
   const worstLine = worst
-    ? `${worst.band.kind === "horizon" ? "Ordinary moves over the whole hold" : worst.band.label} ${worst.band.kind === "horizon" ? "have" : "has"} stayed within ${pct(worst.band.pct)} ${band} times for ${p.ticker}, about ${usd(worst.lossUsd)} at ${usd(t.sizeUsd)} including the cost to get out.`
+    ? `In ${odds} ${what(worst.band)}, ${p.ticker} moved less than ${pct(worst.band.pct)}. At ${usd(t.sizeUsd)} that is about ${usd(worst.lossUsd)}, including the cost to get out.`
+    : "";
+  const liq = [a.day, a.horizon, ...a.events].find((r) => r.liquidates);
+  const liqLine = liq && a.liquidationPct != null
+    ? ` At ${t.leverage}x you are liquidated by a ${pct(a.liquidationPct)} move, inside what ${p.ticker} has measured; ${a.safeLeverage}x or less clears it.`
     : "";
   const unmeasured = a.unmeasured.length
     ? ` Cannot measure: ${a.unmeasured.map((b) => `${b.label} (${b.n} past)`).join("; ")}.`
@@ -30,14 +37,14 @@ export function explain(r: CheckResult): Verdict {
     return {
       tone: "go",
       headline: `Fits your ${usd(t.lossLimitUsd)} limit.`,
-      detail: `Nothing scheduled in your ${t.horizonDays} trading day${t.horizonDays === 1 ? "" : "s"} is measured to cost more than your limit at this size. ${worstLine}${unmeasured}`,
+      detail: `Nothing scheduled in your ${t.horizonDays} trading day${t.horizonDays === 1 ? "" : "s"} is measured to cost more than your limit at this size. ${worstLine}${liqLine}${unmeasured}`,
     };
   }
   if (v.state === "does-not-fit") {
     return {
       tone: "stop",
       headline: `Doesn't fit. ${usd(v.maxSizeUsd)} or less would.`,
-      detail: `An ordinary ${p.ticker} day has moved up to ${pct(a.day.band.pct)} ${band} times, about ${usd(a.day.lossUsd)} at ${usd(t.sizeUsd)}, already more than your ${usd(t.lossLimitUsd)} before anything scheduled.${unmeasured}`,
+      detail: `In ${odds} ordinary days ${p.ticker} moved less than ${pct(a.day.band.pct)}, which is about ${usd(a.day.lossUsd)} at ${usd(t.sizeUsd)}: already more than your ${usd(t.lossLimitUsd)} before anything scheduled.${liqLine}${unmeasured}`,
     };
   }
   const exit = v.exitBefore;
@@ -46,6 +53,6 @@ export function explain(r: CheckResult): Verdict {
     headline: exit
       ? `Fits if you're out before ${day(exit.date)}, or hold ${usd(v.maxSizeUsd)} or less.`
       : `Fits if you hold ${usd(v.maxSizeUsd)} or less.`,
-    detail: `${worstLine} That is more than your ${usd(t.lossLimitUsd)}.${unmeasured}`,
+    detail: `${worstLine} That is more than your ${usd(t.lossLimitUsd)}.${liqLine}${unmeasured}`,
   };
 }

@@ -1,6 +1,7 @@
 // Plain words to a trade. The rule parser handles ordinary sentences with no model; a language model
 // handles the rest and its output passes through the same validator, so nothing unchecked reaches the engine.
 import type { Trade } from "./engine/types";
+import { gapDays, tradingDaysAfter } from "./engine/calendar";
 
 export type Draft = Partial<Trade> & { thesis?: string };
 export type Parsed = { trade: Trade | null; draft: Draft; missing: (keyof Trade)[]; notes: string[] };
@@ -19,7 +20,14 @@ const COMPANY: Record<string, string> = {
 };
 
 /** Deterministic parser for common phrasing: "buy $20k rNVDA, hold 5 days, max loss $600". */
-export function ruleParse(text: string, known: (t: string) => boolean): Draft {
+/** Trading days from now through the first open after the next weekend. */
+export function daysThroughWeekend(now: Date): number {
+  const days = tradingDaysAfter(now, 10);
+  const first = gapDays(days, now)[0];
+  return first ? days.indexOf(first) + 1 : 5;
+}
+
+export function ruleParse(text: string, known: (t: string) => boolean, now = new Date()): Draft {
   const s = " " + text.toLowerCase().replace(/[’']/g, "'") + " ";
   const d: Draft = {};
 
@@ -62,7 +70,7 @@ export function ruleParse(text: string, known: (t: string) => boolean): Draft {
   if (days) d.horizonDays = Number(days[1]);
   else if (weeks) d.horizonDays = 5 * (W[weeks[1]] ?? Number(weeks[1]));
   else if (/\bovernight\b|\btomorrow\b/.test(s)) d.horizonDays = 1;
-  else if (/\bweekend\b/.test(s)) d.horizonDays = 2;
+  else if (/\bweekend\b/.test(s)) d.horizonDays = daysThroughWeekend(now);
   else if (/\bmonth\b/.test(s)) d.horizonDays = 20;
 
   d.confidence = /\b95\b|worst case|bad case/.test(s) ? 0.95 : 0.8;

@@ -79,6 +79,13 @@ describe("switchpoint", () => {
     expect(liquidationPct(10, 0.005)).toBeCloseTo(0.095);
     expect(liquidationPct(undefined, 0.005)).toBeNull();
   });
+  it("flags a measured move that would liquidate a leveraged perp", () => {
+    const e = eventBand(profile, "earnings", 0.8, null, { label: "e", date: "2026-10-02" }); // 8% move
+    const a = assess({ ...trade, venue: "perp", leverage: 20, lossLimitUsd: 50_000 }, day, horizon, [e]);
+    expect(a.liquidationPct).toBeCloseTo(0.045);
+    expect(a.events[0].liquidates).toBe(true);
+    expect(a.safeLeverage).toBe(Math.floor(1 / (0.08 + 0.005)));
+  });
   it("lists events it cannot measure separately", () => {
     const a = assess(trade, day, horizon, [eventBand(profile, "fed", 0.8, null, { label: "Fed", date: "2026-10-28" })]);
     expect(a.unmeasured).toHaveLength(1);

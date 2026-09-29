@@ -1,6 +1,6 @@
 import type { Band, Trade } from "./types";
 
-export type EventRisk = { band: Band; lossUsd: number | null; breaches: boolean };
+export type EventRisk = { band: Band; lossUsd: number | null; breaches: boolean; liquidates: boolean };
 
 export type Verdict =
   | { state: "fits" }
@@ -16,6 +16,7 @@ export type Assessment = {
   unmeasured: Band[];
   exitCostUsd: number;
   liquidationPct: number | null;   // perp only: move that would liquidate
+  safeLeverage: number | null;     // perp only: highest leverage whose liquidation distance clears the biggest measured move
 };
 
 /** Loss if the price moves by `pct` against the position, plus the cost of getting out. */
@@ -43,16 +44,19 @@ export function assess(
   exitCostUsd = 0,
   maintenanceRate = 0.005,
 ): Assessment {
+  const liq = t.venue === "perp" ? liquidationPct(t.leverage, maintenanceRate) : null;
   const risk = (b: Band): EventRisk => {
     const l = b.measurable ? lossUsd(t, b.pct, exitCostUsd) : null;
-    return { band: b, lossUsd: l, breaches: l != null && l > t.lossLimitUsd };
+    return { band: b, lossUsd: l, breaches: l != null && l > t.lossLimitUsd,
+      liquidates: liq != null && b.pct != null && b.pct >= liq };
   };
   const dayR = risk(day), horizonR = risk(horizon);
   const measured = events.filter((e) => e.measurable).map(risk);
   const unmeasured = events.filter((e) => !e.measurable);
   const all = [...measured, horizonR].filter((r) => r.lossUsd != null);
   const worst = all.reduce<EventRisk | null>((w, r) => (w == null || (r.lossUsd ?? 0) > (w.lossUsd ?? 0) ? r : w), null);
-  const liq = t.venue === "perp" ? liquidationPct(t.leverage, maintenanceRate) : null;
+  const biggest = Math.max(0, ...all.map((r) => r.band.pct ?? 0), dayR.band.pct ?? 0);
+  const safeLeverage = t.venue === "perp" && biggest > 0 ? Math.max(1, Math.floor(1 / (biggest + maintenanceRate))) : null;
 
   let verdict: Verdict;
   if (dayR.breaches && day.pct != null) {
@@ -66,5 +70,5 @@ export function assess(
   } else {
     verdict = { state: "fits" };
   }
-  return { verdict, day: dayR, horizon: horizonR, events: measured, worst, unmeasured, exitCostUsd, liquidationPct: liq };
+  return { verdict, day: dayR, horizon: horizonR, events: measured, worst, unmeasured, exitCostUsd, liquidationPct: liq, safeLeverage };
 }

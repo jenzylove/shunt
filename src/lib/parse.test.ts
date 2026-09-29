@@ -3,12 +3,13 @@ import { ruleParse, validate } from "./parse";
 
 const KNOWN = new Set(["NVDA", "AAPL", "TSLA", "HOOD", "PLTR", "MSFT", "MU", "COIN", "AMD", "SMR"]);
 const known = (t: string) => KNOWN.has(t);
-const p = (s: string) => validate(ruleParse(s, known));
+const TUE = new Date("2026-09-29T14:00:00Z");
+const p = (s: string) => validate(ruleParse(s, known, TUE));
 
 describe("rule parser", () => {
   const cases: [string, Record<string, unknown>][] = [
     ["buy $20k rNVDA, holding 5 days, max loss $600", { ticker: "NVDA", venue: "rtoken", side: "long", sizeUsd: 20000, horizonDays: 5, lossLimitUsd: 600 }],
-    ["long 5x TSLA perp $10,000 over the weekend, can lose $400", { ticker: "TSLA", venue: "perp", leverage: 5, sizeUsd: 10000, horizonDays: 2, lossLimitUsd: 400 }],
+    ["long 5x TSLA perp $10,000 over the weekend, can lose $400", { ticker: "TSLA", venue: "perp", leverage: 5, sizeUsd: 10000, horizonDays: 5, lossLimitUsd: 400 }],
     ["short $15k of HOODUSDT for 2 weeks risk 750", { ticker: "HOOD", venue: "perp", side: "short", sizeUsd: 15000, horizonDays: 10, lossLimitUsd: 750 }],
     ["I want 8000 usdt of palantir for a week, max loss 3%", { ticker: "PLTR", venue: "rtoken", sizeUsd: 8000, horizonDays: 5, lossLimitUsd: 240 }],
     ["$5k rAAPL overnight, stop at -$150", { ticker: "AAPL", sizeUsd: 5000, horizonDays: 1, lossLimitUsd: 150 }],
