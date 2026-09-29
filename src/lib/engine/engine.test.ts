@@ -1,0 +1,101 @@
+import { describe, expect, it } from "vitest";
+import { cq, dayBand, eventBand, horizonBand, MIN_EVENTS } from "./bands";
+import { assess, liquidationPct, maxSize } from "./switchpoint";
+import { gapDays, reactionDay, tradingDaysAfter } from "./calendar";
+import type { Calibration, Profile, Trade } from "./types";
+
+const ev = (move: number, z: number) => ({ d: "2025-01-01", move, z });
+
+const profile: Profile = {
+  ticker: "TEST", name: "Test Co", sector: null, perp: true, asOf: "2026-09-28", lastClose: 100,
+  volNow: 0.02,
+  normalDay: { n: 700, p80: 0.02, p95: 0.035, z80: 1.2, z95: 2.0 },
+  kDay: { "1": { n: 700, z80: 1.2, z95: 2.0 }, "5": { n: 700, z80: 1.1, z95: 1.9, p80: 0.05 } },
+  overnight: { n: 700, z80: 0.6, z95: 1.2 },
+  weekend: { n: 150, z80: 0.8, z95: 1.5 },
+  earnings: { n: 20, z80: 4, z95: 6, p80: 0.08, events: [] },
+  fed: { n: 5, events: [] },
+  bellwethers: [{ hub: "NVDA", n: 10, meanZ: 2, events: Array.from({ length: 10 }, (_, i) => ev(0.01 * (i + 1), 0.5 * (i + 1))) }],
+};
+const cal: Calibration = { asOf: "x", target: 0.8, types: { weekend: { corrected: { factor: 1.4, apply: true, rateAfter: 0.85, uncorrectedRateAfter: 0.7, checkedAfter: 100 } } } };
+const trade: Trade = { ticker: "TEST", venue: "rtoken", side: "long", sizeUsd: 20_000, horizonDays: 5, lossLimitUsd: 600, confidence: 0.8 };
+
+describe("bands", () => {
+  it("small sample quantile picks the ceil((n+1)q)th value", () => {
+    expect(cq([1, 2, 3, 4, 5, 6, 7, 8, 9, 10], 0.8)).toBe(9);
+    expect(cq([5], 0.95)).toBe(5);
+  });
+  it("scales event bands by current volatility", () => {
+    const b = eventBand(profile, "earnings", 0.8, null, { label: "e" });
+    expect(b.measurable).toBe(true);
+    expect(b.pct).toBeCloseTo(4 * 0.02);
+  });
+  it("marks thin history as cannot measure instead of guessing", () => {
+    const b = eventBand(profile, "fed", 0.8, null, { label: "f" });
+    expect(profile.fed.n).toBeLessThan(MIN_EVENTS);
+    expect(b.measurable).toBe(false);
+    expect(b.pct).toBeNull();
+  });
+  it("applies a learned correction only at the 80% band it was fitted for", () => {
+    expect(eventBand(profile, "weekend", 0.8, cal, { label: "w" }).pct).toBeCloseTo(0.8 * 0.02 * 1.4);
+    expect(eventBand(profile, "weekend", 0.95, cal, { label: "w" }).pct).toBeCloseTo(1.5 * 0.02);
+  });
+  it("computes bellwether bands from that bellwether's events", () => {
+    const b = eventBand(profile, "bellwether", 0.8, null, { label: "b", hub: "NVDA" });
+    expect(b.n).toBe(10);
+    expect(b.pct).toBeCloseTo(cq([0.5, 1, 1.5, 2, 2.5, 3, 3.5, 4, 4.5, 5], 0.8) * 0.02);
+    expect(eventBand(profile, "bellwether", 0.8, null, { label: "b", hub: "AAPL" }).measurable).toBe(false);
+  });
+  it("scales the holding period band with the square root of time", () => {
+    const b = horizonBand(profile, 5, 0.8);
+    expect(b.pct).toBeCloseTo(1.1 * 0.02 * Math.sqrt(5));
+  });
+});
+
+describe("switchpoint", () => {
+  const day = dayBand(profile, 0.8, null);
+  const horizon = horizonBand(profile, 5, 0.8);
+  it("says fits when nothing scheduled breaches the limit", () => {
+    const a = assess({ ...trade, lossLimitUsd: 5_000 }, day, horizon, [eventBand(profile, "earnings", 0.8, null, { label: "e", date: "2026-10-02" })]);
+    expect(a.verdict.state).toBe("fits");
+  });
+  it("finds the size that fits and the exit before the breaching event", () => {
+    const e = eventBand(profile, "earnings", 0.8, null, { label: "TEST earnings", date: "2026-10-02" });
+    const a = assess({ ...trade, lossLimitUsd: 1_000 }, day, horizon, [e]);
+    expect(a.verdict.state).toBe("fits-if");
+    if (a.verdict.state === "fits-if") {
+      expect(a.verdict.maxSizeUsd).toBe(Math.floor(1_000 / 0.08));
+      expect(a.verdict.exitBefore?.date).toBe("2026-10-02");
+    }
+  });
+  it("says does not fit when an ordinary day already breaches", () => {
+    const a = assess({ ...trade, lossLimitUsd: 300 }, day, horizon, []);
+    expect(a.verdict.state).toBe("does-not-fit");
+  });
+  it("includes the cost of getting out in the loss", () => {
+    expect(maxSize({ ...trade, lossLimitUsd: 1_000 }, 0.04, 20)).toBe(Math.floor(1_000 / (0.04 + 0.001)));
+  });
+  it("reports perp liquidation distance", () => {
+    expect(liquidationPct(10, 0.005)).toBeCloseTo(0.095);
+    expect(liquidationPct(undefined, 0.005)).toBeNull();
+  });
+  it("lists events it cannot measure separately", () => {
+    const a = assess(trade, day, horizon, [eventBand(profile, "fed", 0.8, null, { label: "Fed", date: "2026-10-28" })]);
+    expect(a.unmeasured).toHaveLength(1);
+    expect(a.events).toHaveLength(0);
+  });
+});
+
+describe("calendar", () => {
+  it("skips weekends and NYSE holidays", () => {
+    expect(tradingDaysAfter(new Date("2026-11-24T15:00:00Z"), 3)).toEqual(["2026-11-25", "2026-11-27", "2026-11-30"]);
+  });
+  it("finds the openings that follow a weekend", () => {
+    const days = tradingDaysAfter(new Date("2026-10-01T15:00:00Z"), 4);
+    expect(gapDays(days, new Date("2026-10-01T15:00:00Z"))).toEqual(["2026-10-05"]);
+  });
+  it("maps after close earnings to the next trading day", () => {
+    expect(reactionDay("2026-10-02", "after close")).toBe("2026-10-05");
+    expect(reactionDay("2026-10-02", "before open")).toBe("2026-10-02");
+  });
+});
