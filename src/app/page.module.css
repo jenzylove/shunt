@@ -92,3 +92,10 @@
 .tries { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; }
 .tries button { border: 1px solid var(--line); background: none; padding: 5px 10px; font-family: var(--font-num); font-size: 13px; color: var(--muted); cursor: pointer; }
 .tries button:hover:not(:disabled) { color: var(--ink); border-color: var(--ink); }
+
+.ticket { margin-top: 40px; }
+.ticket h3 { font-weight: 800; font-stretch: 90%; text-transform: uppercase; letter-spacing: 0.06em; font-size: 15px; margin: 0 0 8px; }
+.cmd { display: flex; align-items: stretch; border: 1px solid var(--line); margin-top: 10px; max-width: 100%; }
+.cmd code { flex: 1; min-width: 0; overflow-x: auto; white-space: nowrap; padding: 12px 14px; font-size: 13px; background: var(--panel); }
+.cmd button { border: 0; border-left: 1px solid var(--line); background: none; padding: 0 16px; cursor: pointer; font-weight: 700; font-size: 13px; white-space: nowrap; }
+.cmd button:hover { background: var(--ink); color: var(--paper); }

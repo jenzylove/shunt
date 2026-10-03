@@ -1,0 +1,44 @@
+name: daily journal
+
+# After every US close: refresh each stock's current volatility, grade yesterday's locked ranges,
+# lock in the next session's ranges, commit. The push redeploys the site.
+on:
+  schedule:
+    - cron: "15 21 * * 1-5"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: daily-journal
+  cancel-in-progress: false
+
+jobs:
+  journal:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: npm ci
+      - run: pip install numpy
+      - name: Refresh current volatility
+        run: python scripts/refresh_vol.py
+      - name: Grade and lock the journal
+        run: npx tsx scripts/journal.mts
+      - name: Commit
+        run: |
+          git config user.name "jenzylove"
+          git config user.email "jennifereze12@gmail.com"
+          git add public/data
+          git diff --cached --quiet && exit 0
+          git commit -m "Daily journal: grade closed sessions, lock the next session's ranges, refresh volatility"
+          git pull --rebase
+          git push

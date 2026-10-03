@@ -89,6 +89,7 @@ export default function Desk() {
             <Rail r={r} />
             <Events r={r} />
             <Costs r={r} />
+            <Ticket r={r} />
             <Sources r={r} />
           </>
         )}
@@ -222,6 +223,34 @@ function Costs({ r }: { r: CheckResult }) {
         {r.weekendTrading && <div><dt>rToken traded last weekend</dt><dd>{r.weekendTrading.traded ? "yes" : "no"}</dd></div>}
       </dl>
       <p className={s.muted}>Walked through the live {c.venue === "perp" ? "perp" : "rToken"} order book at your size, with Bitget&apos;s live fee rate. Read {new Date(c.readAt).toLocaleTimeString()}.</p>
+    </section>
+  );
+}
+
+function Ticket({ r }: { r: CheckResult }) {
+  const [copied, setCopied] = useState("");
+  const t = r.trade, v = r.assessment.verdict;
+  const price = r.costs?.entry.mid ?? r.profile.lastClose;
+  if (!price) return null;
+  const size = v.state === "fits" ? t.sizeUsd : v.maxSizeUsd;
+  const perp = t.venue === "perp";
+  const qty = perp ? (Math.floor((size / price) * 100) / 100).toFixed(2) : (Math.floor((size / price) * 1e4) / 1e4).toFixed(4);
+  const cmd = perp
+    ? `bgc order --action place --category USDT-FUTURES --symbol ${t.ticker}USDT --side ${t.side === "long" ? "buy" : "sell"} --posSide ${t.side} --orderType market --qty ${qty} --clientOid shunt-${t.ticker.toLowerCase()}`
+    : `bgc order --action place --category SPOT --symbol R${t.ticker}USDT --side ${t.side === "long" ? "buy" : "sell"} --orderType market --qty ${qty} --clientOid shunt-${t.ticker.toLowerCase()}`;
+  const demo = cmd.replace("bgc ", "bgc --paper-trading ");
+  const copy = (txt: string, k: string) => { navigator.clipboard?.writeText(txt); setCopied(k); setTimeout(() => setCopied(""), 1500); };
+  return (
+    <section className={s.ticket}>
+      <h3>If you decide to go ahead</h3>
+      <p className={s.muted}>
+        {v.state === "fits" ? `Your size fits. ` : `Sized to fit your limit: ${usd(size)} instead of ${usd(t.sizeUsd)}. `}
+        Run it from your own machine with Bitget&apos;s Agent Hub CLI (<span className="num">npm i -g @bitget-ai/bitget-agent-cli</span>) and your own API key.
+        Shunt never holds a key and never places an order.
+      </p>
+      <div className={s.cmd}><code className="num">{demo}</code><button onClick={() => copy(demo, "demo")}>{copied === "demo" ? "Copied" : "Copy, Demo first"}</button></div>
+      <div className={s.cmd}><code className="num">{cmd}</code><button onClick={() => copy(cmd, "live")}>{copied === "live" ? "Copied" : "Copy"}</button></div>
+      <p className={s.muted}>{perp ? `${qty} ${t.ticker} perp contracts` : `${qty} r${t.ticker}`} at about {usd(price)} each, from the live Bitget mid price.</p>
     </section>
   );
 }
