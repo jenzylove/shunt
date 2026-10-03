@@ -31,7 +31,7 @@
 .in { color: var(--go); }
 .out { color: var(--stop); }
 .scroll { overflow-x: auto; }
-code, .code { font-family: var(--font-num); font-size: 13px; }
+.main code, .code { font-family: var(--font-num); font-size: 13px; }
 .cmd { display: block; background: var(--panel); border: 1px solid var(--line); padding: 10px 12px; overflow-x: auto; white-space: nowrap; margin-top: 6px; }
 
 .spike { display: grid; grid-template-columns: 110px 1fr; gap: 24px; padding: 22px 0; border-bottom: 1px solid var(--line); }
