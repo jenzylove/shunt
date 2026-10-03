@@ -1,15 +1,11 @@
-import { promises as fs } from "fs";
-import path from "path";
 import type { Metadata } from "next";
+import calData from "../../../public/data/calibration.json";
+import journalData from "../../../public/data/journal.json";
+import ordersData from "../../../public/data/proof-orders.json";
 import s from "../doc.module.css";
 
 export const metadata: Metadata = { title: "Shunt · Proof", description: "Shunt's ranges checked against what actually happened, in history and live." };
-export const dynamic = "force-dynamic";
-
-const DATA = path.join(process.cwd(), "public", "data");
-const read = async <T,>(f: string): Promise<T | null> => {
-  try { return JSON.parse(await fs.readFile(path.join(DATA, f), "utf8")); } catch { return null; }
-};
+// bundled at build time; the daily journal commit triggers a rebuild
 
 type Cal = { asOf: string; types: Record<string, { volScaled?: { rate: number; checked: number }; corrected?: { factor: number; apply: boolean; rateAfter: number; uncorrectedRateAfter: number } }> };
 type Journal = { summary: { graded: number; inside: number; rate: number | null; pending: number; updated: string };
@@ -29,8 +25,8 @@ const NAMES: Record<string, [string, string]> = {
 const pc = (x: number | null | undefined, d = 1) => (x == null ? "n/a" : (x * 100).toFixed(d) + "%");
 const usd = (x: number) => "$" + Math.round(x).toLocaleString("en-US");
 
-export default async function Proof() {
-  const [cal, journal, orders] = await Promise.all([read<Cal>("calibration.json"), read<Journal>("journal.json"), read<Orders>("proof-orders.json")]);
+export default function Proof() {
+  const cal = calData as unknown as Cal | null, journal = journalData as unknown as Journal | null, orders = ordersData as unknown as Orders | null;
   const recent = journal ? [...journal.entries].sort((a, b) => (a.for < b.for ? 1 : -1)).slice(0, 60) : [];
   return (
     <main className={s.main}>
