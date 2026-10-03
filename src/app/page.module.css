@@ -82,3 +82,13 @@
 .problem { color: var(--signal) !important; }
 
 @keyframes pulse { 50% { opacity: 0.45; } }
+
+.readBy { margin: 10px 0 0; font-size: 13px; color: var(--muted); }
+.follow { margin: 28px 0 8px; max-width: 760px; }
+.followRow { display: flex; border-bottom: 2px solid var(--ink); margin-top: 6px; }
+.followRow input { flex: 1; min-width: 0; background: transparent; border: 0; outline: none; padding: 10px 0; font-family: var(--font-num); font-size: 16px; }
+.followRow button { border: 0; background: none; font-weight: 800; font-stretch: 90%; text-transform: uppercase; letter-spacing: 0.08em; font-size: 13px; cursor: pointer; padding: 0 4px 0 16px; }
+.followRow button:disabled { opacity: 0.4; cursor: default; }
+.tries { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; }
+.tries button { border: 1px solid var(--line); background: none; padding: 5px 10px; font-family: var(--font-num); font-size: 13px; color: var(--muted); cursor: pointer; }
+.tries button:hover:not(:disabled) { color: var(--ink); border-color: var(--ink); }

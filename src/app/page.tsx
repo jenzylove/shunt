@@ -13,7 +13,7 @@ const EXAMPLES = [
   { text: "$5k rAAPL overnight, stop at -$150", note: "one night, a tight stop" },
 ];
 
-type Reply = { parsed: Parsed; result?: CheckResult; error?: string };
+type Reply = { parsed: Parsed; result?: CheckResult; error?: string; meta?: { readBy: "rules" | "model" | "edit"; model: string | null; modelNote?: string } };
 
 export default function Desk() {
   const [text, setText] = useState("");
@@ -80,10 +80,12 @@ export default function Desk() {
         {!busy && r && v && (
           <>
             <Chips r={r} onEdit={edit} notes={reply!.parsed.notes} />
+            <ReadBy meta={reply!.meta} />
             <section className={`${s.verdict} ${s[TONE[v.tone]]}`}>
               <h2>{v.headline}</h2>
               <p>{v.detail}</p>
             </section>
+            <FollowUp busy={busy} onAsk={(q) => run({ text: q, draft: reply!.parsed.draft })} />
             <Rail r={r} />
             <Events r={r} />
             <Costs r={r} />
@@ -92,6 +94,31 @@ export default function Desk() {
         )}
       </div>
     </main>
+  );
+}
+
+function ReadBy({ meta }: { meta?: Reply["meta"] }) {
+  if (!meta || meta.readBy === "edit") return null;
+  return (
+    <p className={s.readBy}>
+      {meta.readBy === "model" ? <>Read by Claude ({meta.model}). Every number below is computed by code, not the model.</> : <>Read by Shunt&apos;s rules.</>}
+      {meta.modelNote && <> The model was not used: {meta.modelNote}.</>}
+    </p>
+  );
+}
+
+function FollowUp({ busy, onAsk }: { busy: boolean; onAsk: (q: string) => void }) {
+  const [q, setQ] = useState("");
+  const tries = ["what if I hold till Friday?", "make it $10k", "what about the perp at 3x?", "use the worst case"];
+  return (
+    <form className={s.follow} onSubmit={(e) => { e.preventDefault(); if (q.trim()) { onAsk(q); setQ(""); } }}>
+      <label htmlFor="follow" className="eyebrow">Change anything</label>
+      <div className={s.followRow}>
+        <input id="follow" value={q} onChange={(e) => setQ(e.target.value)} placeholder="what if I hold till Friday?" autoComplete="off" />
+        <button disabled={busy || !q.trim()}>Ask</button>
+      </div>
+      <div className={s.tries}>{tries.map((t) => <button type="button" key={t} disabled={busy} onClick={() => onAsk(t)}>{t}</button>)}</div>
+    </form>
   );
 }
 
