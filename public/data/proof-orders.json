@@ -1,0 +1,73 @@
+{
+ "venue": "Bitget Demo (paper trading) via Agent Hub bgc",
+ "orders": [
+  {
+   "at": "2026-10-03T19:48:30.189Z",
+   "trade": {
+    "ticker": "HOOD",
+    "venue": "perp",
+    "side": "long",
+    "sizeUsd": 5000,
+    "horizonDays": 5,
+    "lossLimitUsd": 250,
+    "leverage": 2,
+    "confidence": 0.8,
+    "thesis": "a jumpy stock through a weekend"
+   },
+   "verdict": {
+    "state": "does-not-fit",
+    "maxSizeUsd": 4547
+   },
+   "sizedAtUsd": 4547,
+   "symbol": "HOODUSDT",
+   "qty": "40.11",
+   "price": 113.34,
+   "open": {
+    "command": "bgc --paper-trading order --action place --category USDT-FUTURES --symbol HOODUSDT --side buy --posSide long --orderType market --qty 40.11 --clientOid shunt-must0jg6-HOOD-open",
+    "orderId": "1490366076632322049",
+    "status": "filled",
+    "avgPrice": "112.95"
+   },
+   "close": {
+    "command": "bgc --paper-trading order --action place --category USDT-FUTURES --symbol HOODUSDT --side sell --posSide long --orderType market --qty 40.11 --clientOid shunt-must0jg6-HOOD-close",
+    "orderId": "1490366186107850772",
+    "status": "filled",
+    "avgPrice": "112.88"
+   }
+  },
+  {
+   "at": "2026-10-03T19:48:39.938Z",
+   "trade": {
+    "ticker": "COIN",
+    "venue": "perp",
+    "side": "short",
+    "sizeUsd": 4000,
+    "horizonDays": 3,
+    "lossLimitUsd": 200,
+    "leverage": 2,
+    "confidence": 0.8,
+    "thesis": "short into a quiet stretch"
+   },
+   "verdict": {
+    "state": "does-not-fit",
+    "maxSizeUsd": 3373
+   },
+   "sizedAtUsd": 3373,
+   "symbol": "COINUSDT",
+   "qty": "18.28",
+   "price": 184.49,
+   "open": {
+    "command": "bgc --paper-trading order --action place --category USDT-FUTURES --symbol COINUSDT --side sell --posSide short --orderType market --qty 18.28 --clientOid shunt-must0jg6-COIN-open",
+    "orderId": "1490366216239730689",
+    "status": "filled",
+    "avgPrice": "183.16"
+   },
+   "close": {
+    "command": "bgc --paper-trading order --action place --category USDT-FUTURES --symbol COINUSDT --side buy --posSide short --orderType market --qty 18.28 --clientOid shunt-must0jg6-COIN-close",
+    "orderId": "1490366226595467264",
+    "status": "filled",
+    "avgPrice": "183.25"
+   }
+  }
+ ]
+}
