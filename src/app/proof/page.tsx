@@ -43,6 +43,12 @@ export default async function Proof() {
         </p>
       </section>
 
+      {(!cal || !journal || !orders) && (
+        <p className={s.muted} style={{ color: "var(--stop)" }}>
+          Some proof data could not be read on this server: {[!cal && "calibration", !journal && "journal", !orders && "orders"].filter(Boolean).join(", ")}.
+        </p>
+      )}
+
       {cal && (
         <section className={s.section}>
           <h2>On ten years of history</h2>
