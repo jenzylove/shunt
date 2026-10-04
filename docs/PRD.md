@@ -147,3 +147,14 @@ track switches colour. Above it, one sentence: the switchpoint.
 - [ ] Qwen used through Bitget's endpoint once credits arrive (K3 subsidy field)
 - [ ] Agent Hub used: signal skills and Demo orders, visible in the product
 - [ ] Separate project from RESIDUAL (Track 1): own repo, own code
+
+
+## What changed after the spikes and the build (kept honest, 4 Oct 2026)
+
+| PRD said | What shipped | Why |
+|---|---|---|
+| Agent Hub signal skills (news, sentiment, macro) shown as context | Not used | The public signal MCP server (datahub.noxiaohao.com/mcp) answered but returned empty data on every check from 29 Sep to 3 Oct. Shunt does not depend on it for any number. Listed on the Research page under Scope and limits. |
+| Qwen through Bitget's endpoint | Claude Opus 5.5 for reading the sentence | The hackathon's Qwen credits never arrived. The model only turns words into the trade; every number is computed by code. |
+| Optional Demo order sent on a button press from the site | An order ticket to copy, plus Demo orders placed by the builder through Agent Hub's CLI and listed on the Proof page | The public site must hold no exchange key. |
+| Fed and CPI days | Fed days only | bls.gov blocks programs and a summarised date list contained wrong dates, so CPI is not used until dates come from a verified source. |
+| An exit cost for every trade | An explicit "illiquid" verdict when the live book cannot fill the size | Found in the 4 Oct audit: an empty book was priced at $0. |
