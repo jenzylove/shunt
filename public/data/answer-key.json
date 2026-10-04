@@ -1,0 +1,156 @@
+{
+ "summary": {
+  "sentences": 24,
+  "model": "claude-opus-5-5",
+  "ranAt": "2026-10-04T22:51:34.805Z",
+  "rulesOnlyAllRight": 24,
+  "modelAllRight": 24,
+  "rulesPlusModelAllRight": 24
+ },
+ "rows": [
+  {
+   "text": "buy $10k rNVDA, holding 5 days, max loss $600",
+   "rulesMisses": [],
+   "modelMisses": [],
+   "bothMisses": []
+  },
+  {
+   "text": "What happens if I hold 20k NVDA for 5 days with 600 limit?",
+   "rulesMisses": [],
+   "modelMisses": [],
+   "bothMisses": []
+  },
+  {
+   "text": "buy aapl for 5 days",
+   "rulesMisses": [],
+   "modelMisses": [],
+   "bothMisses": []
+  },
+  {
+   "text": "long $5,000 of TSLA for 3 days, I can lose 250",
+   "rulesMisses": [],
+   "modelMisses": [],
+   "bothMisses": []
+  },
+  {
+   "text": "short 8k AMD until Friday, stop me at 400",
+   "rulesMisses": [],
+   "modelMisses": [],
+   "bothMisses": []
+  },
+  {
+   "text": "NVDAUSDT perp 3x long 15000 hold 2 days risk 500",
+   "rulesMisses": [],
+   "modelMisses": [],
+   "bothMisses": []
+  },
+  {
+   "text": "is $3k of Microsoft ok over the weekend if I can only lose $100",
+   "rulesMisses": [],
+   "modelMisses": [],
+   "bothMisses": []
+  },
+  {
+   "text": "go long meta 12k, 1 week, max loss 3%",
+   "rulesMisses": [],
+   "modelMisses": [],
+   "bothMisses": []
+  },
+  {
+   "text": "bet against Tesla with 4000 for 10 days, 5% max loss",
+   "rulesMisses": [],
+   "modelMisses": [],
+   "bothMisses": []
+  },
+  {
+   "text": "buying 2.5k of coinbase tomorrow, 1 day, 80 max loss",
+   "rulesMisses": [],
+   "modelMisses": [],
+   "bothMisses": []
+  },
+  {
+   "text": "rAMZN 7500 two days limit 300",
+   "rulesMisses": [],
+   "modelMisses": [],
+   "bothMisses": []
+  },
+  {
+   "text": "hold googl perp 25k 3 days, cap loss at $900",
+   "rulesMisses": [],
+   "modelMisses": [],
+   "bothMisses": []
+  },
+  {
+   "text": "$10k long Apple for a week, 2% limit",
+   "rulesMisses": [],
+   "modelMisses": [],
+   "bothMisses": []
+  },
+  {
+   "text": "short MSTR 6000 for 4 days max loss $350",
+   "rulesMisses": [],
+   "modelMisses": [],
+   "bothMisses": []
+  },
+  {
+   "text": "what if I put 50k in nvidia for 2 days and can take 1,500 loss",
+   "rulesMisses": [],
+   "modelMisses": [],
+   "bothMisses": []
+  },
+  {
+   "text": "HOOD 1,500 dollars 1 day risk $60",
+   "rulesMisses": [],
+   "modelMisses": [],
+   "bothMisses": []
+  },
+  {
+   "text": "long NVDA",
+   "rulesMisses": [],
+   "modelMisses": [],
+   "bothMisses": []
+  },
+  {
+   "text": "10k tesla",
+   "rulesMisses": [],
+   "modelMisses": [],
+   "bothMisses": []
+  },
+  {
+   "text": "can I hold 30k of nvda through earnings with a 1k stop, 10 days",
+   "rulesMisses": [],
+   "modelMisses": [],
+   "bothMisses": []
+  },
+  {
+   "text": "buy 100 shares of AAPL for 3 days, I can lose $150",
+   "rulesMisses": [],
+   "modelMisses": [],
+   "bothMisses": []
+  },
+  {
+   "text": "sell short $9k of META perp at 2x, 5 days, risk 400",
+   "rulesMisses": [],
+   "modelMisses": [],
+   "bothMisses": []
+  },
+  {
+   "text": "thinking about a big nvda position for a while",
+   "rulesMisses": [],
+   "modelMisses": [],
+   "bothMisses": []
+  },
+  {
+   "text": "$12k rtsla three days, worst case matters, 500 limit",
+   "rulesMisses": [],
+   "modelMisses": [],
+   "bothMisses": []
+  },
+  {
+   "text": "swap my 5k into amazon and hold until the 9th, max loss $200",
+   "rulesMisses": [],
+   "modelMisses": [],
+   "bothMisses": []
+  }
+ ]
+}

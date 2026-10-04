@@ -1,12 +1,12 @@
 {
  "venue": "Bitget Demo (paper trading) via Agent Hub bgc",
- "generatedAt": "2026-10-04T22:18:40.109Z",
+ "generatedAt": "2026-10-04T22:57:57.548Z",
  "summary": {
-  "tradesTried": 68,
-  "roundTrips": 25,
-  "ordersPlaced": 54,
-  "symbols": 4,
-  "filled": 25,
+  "tradesTried": 113,
+  "roundTrips": 57,
+  "ordersPlaced": 118,
+  "symbols": 8,
+  "filled": 57,
   "notTradableOnDemo": [
    "MSFT",
    "ORCL",
@@ -41,15 +41,16 @@
    "ABNB"
   ],
   "skipped": 0,
-  "errors": 43,
+  "errors": 56,
   "verdicts": {
-   "does-not-fit": 24,
-   "fits-if": 1
+   "does-not-fit": 47,
+   "fits-if": 7,
+   "fits": 3
   },
-  "medianPredictedBps": 16.86610924363912,
-  "medianRealizedBps": 17.719056410257142,
-  "realizedAtOrBelowPredicted": 14,
-  "totalNotionalUsd": 129824
+  "medianPredictedBps": 15.656882061283332,
+  "medianRealizedBps": 16.809836120402085,
+  "realizedAtOrBelowPredicted": 24,
+  "totalNotionalUsd": 370768
  },
  "earlier": [
   {
@@ -1220,6 +1221,1414 @@
     "feesUsd": 1.5904071599999998,
     "totalUsd": 2.420707160000065,
     "bps": 17.984451411590378
+   }
+  },
+  {
+   "id": "NVDA-0",
+   "at": "2026-10-04T22:44:44.285Z",
+   "trade": {
+    "ticker": "NVDA",
+    "venue": "perp",
+    "side": "short",
+    "sizeUsd": 15000,
+    "horizonDays": 10,
+    "lossLimitUsd": 230,
+    "confidence": 0.8
+   },
+   "verdict": "does-not-fit",
+   "sizedAtUsd": 7557,
+   "predicted": {
+    "entryUsd": 5.276110216597779,
+    "exitUsd": 5.156031640929687,
+    "totalUsd": 10.432141857527466,
+    "bps": 13.804607460007233
+   },
+   "symbol": "NVDAUSDT",
+   "qty": "32.07",
+   "open": {
+    "command": "bgc --paper-trading order --action place --category USDT-FUTURES --symbol NVDAUSDT --side sell --posSide short --orderType market --qty 32.07 --clientOid shunt-muuerybh-NVDA-0-open",
+    "orderId": "1490772953354620929",
+    "status": "filled",
+    "avgPrice": 234.81,
+    "midBefore": 235.615,
+    "fee": 4.51821402
+   },
+   "close": {
+    "orderId": "1490772966231134208",
+    "status": "filled",
+    "avgPrice": 234.94,
+    "midBefore": 235.615,
+    "fee": 4.52071548
+   },
+   "realized": {
+    "slippageUsd": 4.169099999999855,
+    "feesUsd": 9.0389295,
+    "totalUsd": 13.208029499999855,
+    "bps": 17.47787415641108
+   }
+  },
+  {
+   "id": "NVDA-1",
+   "at": "2026-10-04T22:44:54.138Z",
+   "trade": {
+    "ticker": "NVDA",
+    "venue": "perp",
+    "side": "long",
+    "sizeUsd": 5000,
+    "horizonDays": 5,
+    "lossLimitUsd": 130,
+    "confidence": 0.8
+   },
+   "verdict": "does-not-fit",
+   "sizedAtUsd": 4276,
+   "predicted": {
+    "entryUsd": 2.7895212255285933,
+    "exitUsd": 2.8808164679788897,
+    "totalUsd": 5.6703376935074825,
+    "bps": 13.26084586882012
+   },
+   "symbol": "NVDAUSDT",
+   "qty": "18.14",
+   "open": {
+    "command": "bgc --paper-trading order --action place --category USDT-FUTURES --symbol NVDAUSDT --side buy --posSide long --orderType market --qty 18.14 --clientOid shunt-muuerybh-NVDA-1-open",
+    "orderId": "1490772994660126720",
+    "status": "filled",
+    "avgPrice": 234.94,
+    "midBefore": 235.615,
+    "fee": 2.55708696
+   },
+   "close": {
+    "orderId": "1490773007880572933",
+    "status": "filled",
+    "avgPrice": 234.81,
+    "midBefore": 235.615,
+    "fee": 2.55567204
+   },
+   "realized": {
+    "slippageUsd": 2.3581999999999184,
+    "feesUsd": 5.1127590000000005,
+    "totalUsd": 7.470958999999918,
+    "bps": 17.471840505144804
+   }
+  },
+  {
+   "id": "NVDA-2",
+   "at": "2026-10-04T22:45:04.144Z",
+   "trade": {
+    "ticker": "NVDA",
+    "venue": "perp",
+    "side": "long",
+    "sizeUsd": 5000,
+    "horizonDays": 5,
+    "lossLimitUsd": 80,
+    "confidence": 0.8
+   },
+   "verdict": "does-not-fit",
+   "sizedAtUsd": 2631,
+   "predicted": {
+    "entryUsd": 1.7433558775585216,
+    "exitUsd": 1.7128704362276872,
+    "totalUsd": 3.4562263137862086,
+    "bps": 13.13655003339494
+   },
+   "symbol": "NVDAUSDT",
+   "qty": "11.16",
+   "open": {
+    "command": "bgc --paper-trading order --action place --category USDT-FUTURES --symbol NVDAUSDT --side buy --posSide long --orderType market --qty 11.16 --clientOid shunt-muuerybh-NVDA-2-open",
+    "orderId": "1490773037555273728",
+    "status": "filled",
+    "avgPrice": 234.94,
+    "midBefore": 235.615,
+    "fee": 1.57315824
+   },
+   "close": {
+    "orderId": "1490773051010600960",
+    "status": "filled",
+    "avgPrice": 234.81,
+    "midBefore": 235.615,
+    "fee": 1.57228776
+   },
+   "realized": {
+    "slippageUsd": 1.4507999999999495,
+    "feesUsd": 3.1454459999999997,
+    "totalUsd": 4.596245999999949,
+    "bps": 17.469578107183388
+   }
+  },
+  {
+   "id": "NVDA-3",
+   "at": "2026-10-04T22:45:14.387Z",
+   "trade": {
+    "ticker": "NVDA",
+    "venue": "perp",
+    "side": "long",
+    "sizeUsd": 2500,
+    "horizonDays": 5,
+    "lossLimitUsd": 60,
+    "confidence": 0.8
+   },
+   "verdict": "does-not-fit",
+   "sizedAtUsd": 1976,
+   "predicted": {
+    "entryUsd": 1.2631912107878083,
+    "exitUsd": 1.268694899071662,
+    "totalUsd": 2.53188610985947,
+    "bps": 12.81318881507829
+   },
+   "symbol": "NVDAUSDT",
+   "qty": "8.38",
+   "open": {
+    "command": "bgc --paper-trading order --action place --category USDT-FUTURES --symbol NVDAUSDT --side buy --posSide long --orderType market --qty 8.38 --clientOid shunt-muuerybh-NVDA-3-open",
+    "orderId": "1490773080781770752",
+    "status": "filled",
+    "avgPrice": 234.94,
+    "midBefore": 235.625,
+    "fee": 1.18127832
+   },
+   "close": {
+    "orderId": "1490773094128046080",
+    "status": "filled",
+    "avgPrice": 234.81,
+    "midBefore": 235.625,
+    "fee": 1.18062468
+   },
+   "realized": {
+    "slippageUsd": 1.0893999999999613,
+    "feesUsd": 2.361903,
+    "totalUsd": 3.451302999999961,
+    "bps": 17.466108299594946
+   }
+  },
+  {
+   "id": "NVDA-4",
+   "at": "2026-10-04T22:45:24.697Z",
+   "trade": {
+    "ticker": "NVDA",
+    "venue": "perp",
+    "side": "short",
+    "sizeUsd": 5000,
+    "horizonDays": 5,
+    "lossLimitUsd": 80,
+    "confidence": 0.8
+   },
+   "verdict": "does-not-fit",
+   "sizedAtUsd": 2631,
+   "predicted": {
+    "entryUsd": 1.7077925968632877,
+    "exitUsd": 1.7195437902011057,
+    "totalUsd": 3.4273363870643934,
+    "bps": 13.026744154558697
+   },
+   "symbol": "NVDAUSDT",
+   "qty": "11.16",
+   "open": {
+    "command": "bgc --paper-trading order --action place --category USDT-FUTURES --symbol NVDAUSDT --side sell --posSide short --orderType market --qty 11.16 --clientOid shunt-muuerybh-NVDA-4-open",
+    "orderId": "1490773122825474048",
+    "status": "filled",
+    "avgPrice": 234.81,
+    "midBefore": 235.625,
+    "fee": 1.57228776
+   },
+   "close": {
+    "orderId": "1490773136985444352",
+    "status": "filled",
+    "avgPrice": 234.94,
+    "midBefore": 235.625,
+    "fee": 1.57315824
+   },
+   "realized": {
+    "slippageUsd": 1.4507999999999495,
+    "feesUsd": 3.1454459999999997,
+    "totalUsd": 4.596245999999949,
+    "bps": 17.469578107183388
+   }
+  },
+  {
+   "id": "NVDA-5",
+   "at": "2026-10-04T22:45:34.924Z",
+   "trade": {
+    "ticker": "NVDA",
+    "venue": "perp",
+    "side": "long",
+    "sizeUsd": 5000,
+    "horizonDays": 5,
+    "lossLimitUsd": 130,
+    "confidence": 0.8
+   },
+   "verdict": "does-not-fit",
+   "sizedAtUsd": 4278,
+   "predicted": {
+    "entryUsd": 2.882489005968912,
+    "exitUsd": 2.8119111675945314,
+    "totalUsd": 5.6944001735634435,
+    "bps": 13.31089334633811
+   },
+   "symbol": "NVDAUSDT",
+   "qty": "18.15",
+   "open": {
+    "command": "bgc --paper-trading order --action place --category USDT-FUTURES --symbol NVDAUSDT --side buy --posSide long --orderType market --qty 18.15 --clientOid shunt-muuerybh-NVDA-5-open",
+    "orderId": "1490773166723059712",
+    "status": "filled",
+    "avgPrice": 234.94,
+    "midBefore": 235.625,
+    "fee": 2.5584966
+   },
+   "close": {
+    "orderId": "1490773179842842624",
+    "status": "filled",
+    "avgPrice": 234.81,
+    "midBefore": 235.625,
+    "fee": 2.5570809
+   },
+   "realized": {
+    "slippageUsd": 2.359499999999919,
+    "feesUsd": 5.1155775,
+    "totalUsd": 7.4750774999999186,
+    "bps": 17.473299438989994
+   }
+  },
+  {
+   "id": "NVDA-7",
+   "at": "2026-10-04T22:45:51.833Z",
+   "trade": {
+    "ticker": "NVDA",
+    "venue": "perp",
+    "side": "long",
+    "sizeUsd": 2500,
+    "horizonDays": 1,
+    "lossLimitUsd": 60,
+    "confidence": 0.8
+   },
+   "verdict": "does-not-fit",
+   "sizedAtUsd": 1975,
+   "predicted": {
+    "entryUsd": 1.262527550905715,
+    "exitUsd": 1.2757310508628008,
+    "totalUsd": 2.538258601768516,
+    "bps": 12.851942287435522
+   },
+   "symbol": "NVDAUSDT",
+   "qty": "8.38",
+   "open": {
+    "command": "bgc --paper-trading order --action place --category USDT-FUTURES --symbol NVDAUSDT --side buy --posSide long --orderType market --qty 8.38 --clientOid shunt-muuerybh-NVDA-7-open",
+    "orderId": "1490773240488284160",
+    "status": "filled",
+    "avgPrice": 234.94,
+    "midBefore": 235.625,
+    "fee": 1.18127832
+   },
+   "close": {
+    "orderId": "1490773253058613248",
+    "status": "filled",
+    "avgPrice": 234.81,
+    "midBefore": 235.625,
+    "fee": 1.18062468
+   },
+   "realized": {
+    "slippageUsd": 1.0893999999999613,
+    "feesUsd": 2.361903,
+    "totalUsd": 3.451302999999961,
+    "bps": 17.47495189873398
+   }
+  },
+  {
+   "id": "NVDA-8",
+   "at": "2026-10-04T22:46:02.559Z",
+   "trade": {
+    "ticker": "NVDA",
+    "venue": "perp",
+    "side": "long",
+    "sizeUsd": 5000,
+    "horizonDays": 1,
+    "lossLimitUsd": 130,
+    "confidence": 0.8
+   },
+   "verdict": "does-not-fit",
+   "sizedAtUsd": 4278,
+   "predicted": {
+    "entryUsd": 2.9250911975498304,
+    "exitUsd": 2.8119111675945314,
+    "totalUsd": 5.737002365144361,
+    "bps": 13.410477711884901
+   },
+   "symbol": "NVDAUSDT",
+   "qty": "18.15",
+   "open": {
+    "command": "bgc --paper-trading order --action place --category USDT-FUTURES --symbol NVDAUSDT --side buy --posSide long --orderType market --qty 18.15 --clientOid shunt-muuerybh-NVDA-8-open",
+    "orderId": "1490773282842365952",
+    "status": "filled",
+    "avgPrice": 234.94,
+    "midBefore": 235.625,
+    "fee": 2.5584966
+   },
+   "close": {
+    "orderId": "1490773295609827372",
+    "status": "filled",
+    "avgPrice": 234.81,
+    "midBefore": 235.625,
+    "fee": 2.5570809
+   },
+   "realized": {
+    "slippageUsd": 2.359499999999919,
+    "feesUsd": 5.1155775,
+    "totalUsd": 7.4750774999999186,
+    "bps": 17.473299438989994
+   }
+  },
+  {
+   "id": "NVDA-9",
+   "at": "2026-10-04T22:46:12.791Z",
+   "trade": {
+    "ticker": "NVDA",
+    "venue": "perp",
+    "side": "long",
+    "sizeUsd": 15000,
+    "horizonDays": 10,
+    "lossLimitUsd": 600,
+    "confidence": 0.8
+   },
+   "verdict": "fits-if",
+   "sizedAtUsd": 5988,
+   "predicted": {
+    "entryUsd": 4.132022911124303,
+    "exitUsd": 4.022546320470142,
+    "totalUsd": 8.154569231594445,
+    "bps": 13.618185089503083
+   },
+   "symbol": "NVDAUSDT",
+   "qty": "25.41",
+   "open": {
+    "command": "bgc --paper-trading order --action place --category USDT-FUTURES --symbol NVDAUSDT --side buy --posSide long --orderType market --qty 25.41 --clientOid shunt-muuerybh-NVDA-9-open",
+    "orderId": "1490773324642799616",
+    "status": "filled",
+    "avgPrice": 234.94,
+    "midBefore": 235.625,
+    "fee": 3.58189524
+   },
+   "close": {
+    "orderId": "1490773337481564162",
+    "status": "filled",
+    "avgPrice": 234.81,
+    "midBefore": 235.625,
+    "fee": 3.57991326
+   },
+   "realized": {
+    "slippageUsd": 3.303299999999883,
+    "feesUsd": 7.1618085,
+    "totalUsd": 10.465108499999882,
+    "bps": 17.476801102204213
+   }
+  },
+  {
+   "id": "META-0",
+   "at": "2026-10-04T22:46:22.581Z",
+   "trade": {
+    "ticker": "META",
+    "venue": "perp",
+    "side": "long",
+    "sizeUsd": 5000,
+    "horizonDays": 5,
+    "lossLimitUsd": 130,
+    "confidence": 0.8
+   },
+   "verdict": "does-not-fit",
+   "sizedAtUsd": 3902,
+   "predicted": {
+    "entryUsd": 3.3464710042789827,
+    "exitUsd": 3.6843748694838148,
+    "totalUsd": 7.0308458737627975,
+    "bps": 18.018569640601736
+   },
+   "symbol": "METAUSDT",
+   "qty": "5.34",
+   "open": {
+    "command": "bgc --paper-trading order --action place --category USDT-FUTURES --symbol METAUSDT --side buy --posSide long --orderType market --qty 5.34 --clientOid shunt-muuerybh-META-0-open",
+    "orderId": "1490773365755367425",
+    "status": "filled",
+    "avgPrice": 729.41,
+    "midBefore": 730.29,
+    "fee": 2.33702964
+   },
+   "close": {
+    "orderId": "1490773381785997312",
+    "status": "filled",
+    "avgPrice": 729.23,
+    "midBefore": 730.29,
+    "fee": 2.33645292
+   },
+   "realized": {
+    "slippageUsd": 0.9611999999997334,
+    "feesUsd": 4.67348256,
+    "totalUsd": 5.634682559999733,
+    "bps": 14.440498616093628
+   }
+  },
+  {
+   "id": "META-1",
+   "at": "2026-10-04T22:46:33.707Z",
+   "trade": {
+    "ticker": "META",
+    "venue": "perp",
+    "side": "short",
+    "sizeUsd": 5000,
+    "horizonDays": 1,
+    "lossLimitUsd": 130,
+    "confidence": 0.8
+   },
+   "verdict": "does-not-fit",
+   "sizedAtUsd": 3913,
+   "predicted": {
+    "entryUsd": 3.695192273458213,
+    "exitUsd": 3.3560834207756236,
+    "totalUsd": 7.051275694233837,
+    "bps": 18.02012699778645
+   },
+   "symbol": "METAUSDT",
+   "qty": "5.35",
+   "open": {
+    "command": "bgc --paper-trading order --action place --category USDT-FUTURES --symbol METAUSDT --side sell --posSide short --orderType market --qty 5.35 --clientOid shunt-muuerybh-META-1-open",
+    "orderId": "1490773412450553856",
+    "status": "filled",
+    "avgPrice": 729.23,
+    "midBefore": 730.29,
+    "fee": 2.3408283
+   },
+   "close": {
+    "orderId": "1490773425520005120",
+    "status": "filled",
+    "avgPrice": 729.41,
+    "midBefore": 730.29,
+    "fee": 2.3414061
+   },
+   "realized": {
+    "slippageUsd": 0.9629999999997327,
+    "feesUsd": 4.6822344000000005,
+    "totalUsd": 5.645234399999733,
+    "bps": 14.426870431893006
+   }
+  },
+  {
+   "id": "META-3",
+   "at": "2026-10-04T22:46:49.456Z",
+   "trade": {
+    "ticker": "META",
+    "venue": "perp",
+    "side": "short",
+    "sizeUsd": 5000,
+    "horizonDays": 10,
+    "lossLimitUsd": 200,
+    "confidence": 0.8
+   },
+   "verdict": "fits-if",
+   "sizedAtUsd": 1513,
+   "predicted": {
+    "entryUsd": 1.3350256051006377,
+    "exitUsd": 1.2588299072099514,
+    "totalUsd": 2.593855512310589,
+    "bps": 17.143790563850555
+   },
+   "symbol": "METAUSDT",
+   "qty": "2.07",
+   "open": {
+    "command": "bgc --paper-trading order --action place --category USDT-FUTURES --symbol METAUSDT --side sell --posSide short --orderType market --qty 2.07 --clientOid shunt-muuerybh-META-3-open",
+    "orderId": "1490773478087217152",
+    "status": "filled",
+    "avgPrice": 729.23,
+    "midBefore": 730.29,
+    "fee": 0.90570366
+   },
+   "close": {
+    "orderId": "1490773491991334912",
+    "status": "filled",
+    "avgPrice": 729.41,
+    "midBefore": 730.29,
+    "fee": 0.90592722
+   },
+   "realized": {
+    "slippageUsd": 0.37259999999989635,
+    "feesUsd": 1.81163088,
+    "totalUsd": 2.1842308799998964,
+    "bps": 14.43642352941108
+   }
+  },
+  {
+   "id": "META-4",
+   "at": "2026-10-04T22:46:59.633Z",
+   "trade": {
+    "ticker": "META",
+    "venue": "perp",
+    "side": "long",
+    "sizeUsd": 5000,
+    "horizonDays": 5,
+    "lossLimitUsd": 80,
+    "confidence": 0.8
+   },
+   "verdict": "does-not-fit",
+   "sizedAtUsd": 2401,
+   "predicted": {
+    "entryUsd": 2.0397144221577683,
+    "exitUsd": 2.208289480198476,
+    "totalUsd": 4.248003902356244,
+    "bps": 17.692644324682398
+   },
+   "symbol": "METAUSDT",
+   "qty": "3.28",
+   "open": {
+    "command": "bgc --paper-trading order --action place --category USDT-FUTURES --symbol METAUSDT --side buy --posSide long --orderType market --qty 3.28 --clientOid shunt-muuerybh-META-4-open",
+    "orderId": "1490773521955442688",
+    "status": "filled",
+    "avgPrice": 729.41,
+    "midBefore": 730.29,
+    "fee": 1.43547888
+   },
+   "close": {
+    "orderId": "1490773534609657856",
+    "status": "filled",
+    "avgPrice": 729.23,
+    "midBefore": 730.29,
+    "fee": 1.43512464
+   },
+   "realized": {
+    "slippageUsd": 0.590399999999836,
+    "feesUsd": 2.87060352,
+    "totalUsd": 3.461003519999836,
+    "bps": 14.414841815909355
+   }
+  },
+  {
+   "id": "META-5",
+   "at": "2026-10-04T22:47:09.735Z",
+   "trade": {
+    "ticker": "META",
+    "venue": "perp",
+    "side": "long",
+    "sizeUsd": 5000,
+    "horizonDays": 5,
+    "lossLimitUsd": 80,
+    "confidence": 0.8
+   },
+   "verdict": "does-not-fit",
+   "sizedAtUsd": 2401,
+   "predicted": {
+    "entryUsd": 2.0397144221577683,
+    "exitUsd": 2.208289480198476,
+    "totalUsd": 4.248003902356244,
+    "bps": 17.692644324682398
+   },
+   "symbol": "METAUSDT",
+   "qty": "3.28",
+   "open": {
+    "command": "bgc --paper-trading order --action place --category USDT-FUTURES --symbol METAUSDT --side buy --posSide long --orderType market --qty 3.28 --clientOid shunt-muuerybh-META-5-open",
+    "orderId": "1490773564192083968",
+    "status": "filled",
+    "avgPrice": 729.41,
+    "midBefore": 730.29,
+    "fee": 1.43547888
+   },
+   "close": {
+    "orderId": "1490773583628488704",
+    "status": "filled",
+    "avgPrice": 729.23,
+    "midBefore": 730.29,
+    "fee": 1.43512464
+   },
+   "realized": {
+    "slippageUsd": 0.590399999999836,
+    "feesUsd": 2.87060352,
+    "totalUsd": 3.461003519999836,
+    "bps": 14.414841815909355
+   }
+  },
+  {
+   "id": "META-6",
+   "at": "2026-10-04T22:47:23.821Z",
+   "trade": {
+    "ticker": "META",
+    "venue": "perp",
+    "side": "long",
+    "sizeUsd": 5000,
+    "horizonDays": 1,
+    "lossLimitUsd": 130,
+    "confidence": 0.8
+   },
+   "verdict": "does-not-fit",
+   "sizedAtUsd": 3902,
+   "predicted": {
+    "entryUsd": 3.34667105256964,
+    "exitUsd": 3.6843748694838148,
+    "totalUsd": 7.031045922053455,
+    "bps": 18.019082322023205
+   },
+   "symbol": "METAUSDT",
+   "qty": "5.34",
+   "open": {
+    "command": "bgc --paper-trading order --action place --category USDT-FUTURES --symbol METAUSDT --side buy --posSide long --orderType market --qty 5.34 --clientOid shunt-muuerybh-META-6-open",
+    "orderId": "1490773624854302721",
+    "status": "filled",
+    "avgPrice": 729.41,
+    "midBefore": 730.29,
+    "fee": 2.33702964
+   },
+   "close": {
+    "orderId": "1490773639110742016",
+    "status": "filled",
+    "avgPrice": 729.23,
+    "midBefore": 730.29,
+    "fee": 2.33645292
+   },
+   "realized": {
+    "slippageUsd": 0.9611999999997334,
+    "feesUsd": 4.67348256,
+    "totalUsd": 5.634682559999733,
+    "bps": 14.440498616093628
+   }
+  },
+  {
+   "id": "META-7",
+   "at": "2026-10-04T22:47:34.591Z",
+   "trade": {
+    "ticker": "META",
+    "venue": "perp",
+    "side": "long",
+    "sizeUsd": 2500,
+    "horizonDays": 3,
+    "lossLimitUsd": 40,
+    "confidence": 0.8
+   },
+   "verdict": "does-not-fit",
+   "sizedAtUsd": 1201,
+   "predicted": {
+    "entryUsd": 0.9863874610684029,
+    "exitUsd": 1.0282011564707136,
+    "totalUsd": 2.0145886175391166,
+    "bps": 16.774259929551345
+   },
+   "symbol": "METAUSDT",
+   "qty": "1.64",
+   "open": {
+    "command": "bgc --paper-trading order --action place --category USDT-FUTURES --symbol METAUSDT --side buy --posSide long --orderType market --qty 1.64 --clientOid shunt-muuerybh-META-7-open",
+    "orderId": "1490773667510374400",
+    "status": "filled",
+    "avgPrice": 729.41,
+    "midBefore": 730.29,
+    "fee": 0.71773944
+   },
+   "close": {
+    "orderId": "1490773681150251008",
+    "status": "filled",
+    "avgPrice": 729.23,
+    "midBefore": 730.29,
+    "fee": 0.71756232
+   },
+   "realized": {
+    "slippageUsd": 0.295199999999918,
+    "feesUsd": 1.43530176,
+    "totalUsd": 1.730501759999918,
+    "bps": 14.408840632805312
+   }
+  },
+  {
+   "id": "META-8",
+   "at": "2026-10-04T22:47:44.665Z",
+   "trade": {
+    "ticker": "META",
+    "venue": "perp",
+    "side": "long",
+    "sizeUsd": 10000,
+    "horizonDays": 5,
+    "lossLimitUsd": 250,
+    "confidence": 0.8
+   },
+   "verdict": "does-not-fit",
+   "sizedAtUsd": 7501,
+   "predicted": {
+    "entryUsd": 6.486978208808374,
+    "exitUsd": 7.22363013468901,
+    "totalUsd": 13.710608343497384,
+    "bps": 18.27837400812876
+   },
+   "symbol": "METAUSDT",
+   "qty": "10.27",
+   "open": {
+    "command": "bgc --paper-trading order --action place --category USDT-FUTURES --symbol METAUSDT --side buy --posSide long --orderType market --qty 10.27 --clientOid shunt-muuerybh-META-8-open",
+    "orderId": "1490773709306613760",
+    "status": "filled",
+    "avgPrice": 729.41,
+    "midBefore": 730.29,
+    "fee": 4.49462442
+   },
+   "close": {
+    "orderId": "1490773724460634112",
+    "status": "filled",
+    "avgPrice": 729.23,
+    "midBefore": 730.29,
+    "fee": 4.49351526
+   },
+   "realized": {
+    "slippageUsd": 1.848599999999486,
+    "feesUsd": 8.98813968,
+    "totalUsd": 10.836739679999486,
+    "bps": 14.447059965337269
+   }
+  },
+  {
+   "id": "META-9",
+   "at": "2026-10-04T22:47:55.675Z",
+   "trade": {
+    "ticker": "META",
+    "venue": "perp",
+    "side": "short",
+    "sizeUsd": 2500,
+    "horizonDays": 1,
+    "lossLimitUsd": 60,
+    "confidence": 0.8
+   },
+   "verdict": "does-not-fit",
+   "sizedAtUsd": 1806,
+   "predicted": {
+    "entryUsd": 1.6231639688164972,
+    "exitUsd": 1.5103684699768425,
+    "totalUsd": 3.1335324387933396,
+    "bps": 17.35067795566633
+   },
+   "symbol": "METAUSDT",
+   "qty": "2.47",
+   "open": {
+    "command": "bgc --paper-trading order --action place --category USDT-FUTURES --symbol METAUSDT --side sell --posSide short --orderType market --qty 2.47 --clientOid shunt-muuerybh-META-9-open",
+    "orderId": "1490773755691421696",
+    "status": "filled",
+    "avgPrice": 729.23,
+    "midBefore": 730.29,
+    "fee": 1.08071886
+   },
+   "close": {
+    "orderId": "1490773771017408512",
+    "status": "filled",
+    "avgPrice": 729.41,
+    "midBefore": 730.29,
+    "fee": 1.08098562
+   },
+   "realized": {
+    "slippageUsd": 0.4445999999998764,
+    "feesUsd": 2.16170448,
+    "totalUsd": 2.6063044799998765,
+    "bps": 14.431364784052473
+   }
+  },
+  {
+   "id": "AMZN-1",
+   "at": "2026-10-04T22:48:12.784Z",
+   "trade": {
+    "ticker": "AMZN",
+    "venue": "perp",
+    "side": "long",
+    "sizeUsd": 10000,
+    "horizonDays": 3,
+    "lossLimitUsd": 150,
+    "confidence": 0.8
+   },
+   "verdict": "does-not-fit",
+   "sizedAtUsd": 4957,
+   "predicted": {
+    "entryUsd": 3.9422260677496204,
+    "exitUsd": 3.8188903700285266,
+    "totalUsd": 7.761116437778147,
+    "bps": 15.656882061283332
+   },
+   "symbol": "AMZNUSDT",
+   "qty": "19.62",
+   "open": {
+    "command": "bgc --paper-trading order --action place --category USDT-FUTURES --symbol AMZNUSDT --side buy --posSide long --orderType market --qty 19.62 --clientOid shunt-muuerybh-AMZN-1-open",
+    "orderId": "1490773825782435841",
+    "status": "filled",
+    "avgPrice": 252,
+    "midBefore": 252.525,
+    "fee": 2.966544
+   },
+   "close": {
+    "orderId": "1490773839254540288",
+    "status": "filled",
+    "avgPrice": 251.9,
+    "midBefore": 252.525,
+    "fee": 2.9653668
+   },
+   "realized": {
+    "slippageUsd": 1.9619999999998896,
+    "feesUsd": 5.9319108,
+    "totalUsd": 7.893910799999889,
+    "bps": 15.924774662093785
+   }
+  },
+  {
+   "id": "AMZN-2",
+   "at": "2026-10-04T22:48:22.367Z",
+   "trade": {
+    "ticker": "AMZN",
+    "venue": "perp",
+    "side": "long",
+    "sizeUsd": 2500,
+    "horizonDays": 1,
+    "lossLimitUsd": 40,
+    "confidence": 0.8
+   },
+   "verdict": "does-not-fit",
+   "sizedAtUsd": 1326,
+   "predicted": {
+    "entryUsd": 1.0447301504874318,
+    "exitUsd": 0.953119600855316,
+    "totalUsd": 1.9978497513427478,
+    "bps": 15.066740206204734
+   },
+   "symbol": "AMZNUSDT",
+   "qty": "5.25",
+   "open": {
+    "command": "bgc --paper-trading order --action place --category USDT-FUTURES --symbol AMZNUSDT --side buy --posSide long --orderType market --qty 5.25 --clientOid shunt-muuerybh-AMZN-2-open",
+    "orderId": "1490773868736303104",
+    "status": "filled",
+    "avgPrice": 252,
+    "midBefore": 252.525,
+    "fee": 0.7938
+   },
+   "close": {
+    "orderId": "1490773882275516416",
+    "status": "filled",
+    "avgPrice": 251.9,
+    "midBefore": 252.525,
+    "fee": 0.793485
+   },
+   "realized": {
+    "slippageUsd": 0.5249999999999702,
+    "feesUsd": 1.587285,
+    "totalUsd": 2.11228499999997,
+    "bps": 15.929751131221494
+   }
+  },
+  {
+   "id": "AMZN-3",
+   "at": "2026-10-04T22:48:32.600Z",
+   "trade": {
+    "ticker": "AMZN",
+    "venue": "perp",
+    "side": "long",
+    "sizeUsd": 10000,
+    "horizonDays": 10,
+    "lossLimitUsd": 150,
+    "confidence": 0.8
+   },
+   "verdict": "does-not-fit",
+   "sizedAtUsd": 4957,
+   "predicted": {
+    "entryUsd": 3.9422260677496204,
+    "exitUsd": 3.8188903700285266,
+    "totalUsd": 7.761116437778147,
+    "bps": 15.656882061283332
+   },
+   "symbol": "AMZNUSDT",
+   "qty": "19.62",
+   "open": {
+    "command": "bgc --paper-trading order --action place --category USDT-FUTURES --symbol AMZNUSDT --side buy --posSide long --orderType market --qty 19.62 --clientOid shunt-muuerybh-AMZN-3-open",
+    "orderId": "1490773913476943872",
+    "status": "filled",
+    "avgPrice": 252,
+    "midBefore": 252.525,
+    "fee": 2.966544
+   },
+   "close": {
+    "orderId": "1490773926689001472",
+    "status": "filled",
+    "avgPrice": 251.9,
+    "midBefore": 252.525,
+    "fee": 2.9653668
+   },
+   "realized": {
+    "slippageUsd": 1.9619999999998896,
+    "feesUsd": 5.9319108,
+    "totalUsd": 7.893910799999889,
+    "bps": 15.924774662093785
+   }
+  },
+  {
+   "id": "AMZN-4",
+   "at": "2026-10-04T22:48:43.247Z",
+   "trade": {
+    "ticker": "AMZN",
+    "venue": "perp",
+    "side": "long",
+    "sizeUsd": 2500,
+    "horizonDays": 10,
+    "lossLimitUsd": 100,
+    "confidence": 0.8
+   },
+   "verdict": "fits-if",
+   "sizedAtUsd": 905,
+   "predicted": {
+    "entryUsd": 0.6232800749887888,
+    "exitUsd": 0.6598143700121426,
+    "totalUsd": 1.2830944450009314,
+    "bps": 14.177839171281011
+   },
+   "symbol": "AMZNUSDT",
+   "qty": "3.58",
+   "open": {
+    "command": "bgc --paper-trading order --action place --category USDT-FUTURES --symbol AMZNUSDT --side buy --posSide long --orderType market --qty 3.58 --clientOid shunt-muuerybh-AMZN-4-open",
+    "orderId": "1490773957043179520",
+    "status": "filled",
+    "avgPrice": 252,
+    "midBefore": 252.555,
+    "fee": 0.541296
+   },
+   "close": {
+    "orderId": "1490773973866532864",
+    "status": "filled",
+    "avgPrice": 251.9,
+    "midBefore": 252.555,
+    "fee": 0.5410812
+   },
+   "realized": {
+    "slippageUsd": 0.35799999999997945,
+    "feesUsd": 1.0823772,
+    "totalUsd": 1.4403771999999795,
+    "bps": 15.915770165745629
+   }
+  },
+  {
+   "id": "AMZN-5",
+   "at": "2026-10-04T22:48:54.461Z",
+   "trade": {
+    "ticker": "AMZN",
+    "venue": "perp",
+    "side": "long",
+    "sizeUsd": 10000,
+    "horizonDays": 1,
+    "lossLimitUsd": 400,
+    "confidence": 0.8
+   },
+   "verdict": "fits",
+   "sizedAtUsd": 10000,
+   "predicted": {
+    "entryUsd": 7.750036775725289,
+    "exitUsd": 9.041575942897623,
+    "totalUsd": 16.79161271862291,
+    "bps": 16.79161271862291
+   },
+   "symbol": "AMZNUSDT",
+   "qty": "39.59",
+   "open": {
+    "command": "bgc --paper-trading order --action place --category USDT-FUTURES --symbol AMZNUSDT --side buy --posSide long --orderType market --qty 39.59 --clientOid shunt-muuerybh-AMZN-5-open",
+    "orderId": "1490774007408381952",
+    "status": "filled",
+    "avgPrice": 252,
+    "midBefore": 252.555,
+    "fee": 5.986008
+   },
+   "close": {
+    "orderId": "1490774091994910720",
+    "status": "filled",
+    "avgPrice": 251.9,
+    "midBefore": 252.54500000000002,
+    "fee": 5.9836326
+   },
+   "realized": {
+    "slippageUsd": 3.5631000000001336,
+    "feesUsd": 11.9696406,
+    "totalUsd": 15.532740600000134,
+    "bps": 15.532740600000134
+   }
+  },
+  {
+   "id": "AMZN-6",
+   "at": "2026-10-04T22:49:22.681Z",
+   "trade": {
+    "ticker": "AMZN",
+    "venue": "perp",
+    "side": "long",
+    "sizeUsd": 10000,
+    "horizonDays": 1,
+    "lossLimitUsd": 150,
+    "confidence": 0.8
+   },
+   "verdict": "does-not-fit",
+   "sizedAtUsd": 4952,
+   "predicted": {
+    "entryUsd": 3.6438645104406167,
+    "exitUsd": 3.997446121902528,
+    "totalUsd": 7.641310632343145,
+    "bps": 15.430756527348839
+   },
+   "symbol": "AMZNUSDT",
+   "qty": "19.60",
+   "open": {
+    "command": "bgc --paper-trading order --action place --category USDT-FUTURES --symbol AMZNUSDT --side buy --posSide long --orderType market --qty 19.60 --clientOid shunt-muuerybh-AMZN-6-open",
+    "orderId": "1490774121191460864",
+    "status": "filled",
+    "avgPrice": 252,
+    "midBefore": 252.54500000000002,
+    "fee": 2.96352
+   },
+   "close": {
+    "orderId": "1490774135112355840",
+    "status": "filled",
+    "avgPrice": 251.9,
+    "midBefore": 252.54500000000002,
+    "fee": 2.962344
+   },
+   "realized": {
+    "slippageUsd": 1.959999999999889,
+    "feesUsd": 5.925864,
+    "totalUsd": 7.885863999999889,
+    "bps": 15.924604200322879
+   }
+  },
+  {
+   "id": "AMZN-7",
+   "at": "2026-10-04T22:49:33.146Z",
+   "trade": {
+    "ticker": "AMZN",
+    "venue": "perp",
+    "side": "long",
+    "sizeUsd": 5000,
+    "horizonDays": 5,
+    "lossLimitUsd": 130,
+    "confidence": 0.8
+   },
+   "verdict": "does-not-fit",
+   "sizedAtUsd": 4301,
+   "predicted": {
+    "entryUsd": 3.3942848647914863,
+    "exitUsd": 3.300324189087219,
+    "totalUsd": 6.694609053878706,
+    "bps": 15.565238441940725
+   },
+   "symbol": "AMZNUSDT",
+   "qty": "17.02",
+   "open": {
+    "command": "bgc --paper-trading order --action place --category USDT-FUTURES --symbol AMZNUSDT --side buy --posSide long --orderType market --qty 17.02 --clientOid shunt-muuerybh-AMZN-7-open",
+    "orderId": "1490774211641626624",
+    "status": "filled",
+    "avgPrice": 252,
+    "midBefore": 252.555,
+    "fee": 2.573424
+   },
+   "close": {
+    "orderId": "1490774226749509632",
+    "status": "filled",
+    "avgPrice": 251.9,
+    "midBefore": 252.57,
+    "fee": 2.5724028
+   },
+   "realized": {
+    "slippageUsd": 1.9572999999996696,
+    "feesUsd": 5.1458268,
+    "totalUsd": 7.10312679999967,
+    "bps": 16.515058823528644
+   }
+  },
+  {
+   "id": "AMZN-8",
+   "at": "2026-10-04T22:49:54.965Z",
+   "trade": {
+    "ticker": "AMZN",
+    "venue": "perp",
+    "side": "short",
+    "sizeUsd": 2500,
+    "horizonDays": 5,
+    "lossLimitUsd": 100,
+    "confidence": 0.8
+   },
+   "verdict": "fits-if",
+   "sizedAtUsd": 1395,
+   "predicted": {
+    "entryUsd": 1.049321413456229,
+    "exitUsd": 0.9983895809178149,
+    "totalUsd": 2.047710994374044,
+    "bps": 14.678931859312144
+   },
+   "symbol": "AMZNUSDT",
+   "qty": "5.52",
+   "open": {
+    "command": "bgc --paper-trading order --action place --category USDT-FUTURES --symbol AMZNUSDT --side sell --posSide short --orderType market --qty 5.52 --clientOid shunt-muuerybh-AMZN-8-open",
+    "orderId": "1490774258231955456",
+    "status": "filled",
+    "avgPrice": 251.9,
+    "midBefore": 252.57,
+    "fee": 0.8342928
+   },
+   "close": {
+    "orderId": "1490774272240930816",
+    "status": "filled",
+    "avgPrice": 252,
+    "midBefore": 252.535,
+    "fee": 0.834624
+   },
+   "realized": {
+    "slippageUsd": 0.7451999999999499,
+    "feesUsd": 1.6689167999999999,
+    "totalUsd": 2.4141167999999498,
+    "bps": 17.305496774193188
+   }
+  },
+  {
+   "id": "AMZN-9",
+   "at": "2026-10-04T22:50:05.730Z",
+   "trade": {
+    "ticker": "AMZN",
+    "venue": "perp",
+    "side": "long",
+    "sizeUsd": 10000,
+    "horizonDays": 3,
+    "lossLimitUsd": 150,
+    "confidence": 0.8
+   },
+   "verdict": "does-not-fit",
+   "sizedAtUsd": 4949,
+   "predicted": {
+    "entryUsd": 3.552983080354832,
+    "exitUsd": 4.095290098011505,
+    "totalUsd": 7.6482731783663365,
+    "bps": 15.454178982352671
+   },
+   "symbol": "AMZNUSDT",
+   "qty": "19.59",
+   "open": {
+    "command": "bgc --paper-trading order --action place --category USDT-FUTURES --symbol AMZNUSDT --side buy --posSide long --orderType market --qty 19.59 --clientOid shunt-muuerybh-AMZN-9-open",
+    "orderId": "1490774305333989376",
+    "status": "filled",
+    "avgPrice": 252,
+    "midBefore": 252.535,
+    "fee": 2.962008
+   },
+   "close": {
+    "orderId": "1490774321498836992",
+    "status": "filled",
+    "avgPrice": 251.9,
+    "midBefore": 252.535,
+    "fee": 2.9608326
+   },
+   "realized": {
+    "slippageUsd": 1.9589999999998877,
+    "feesUsd": 5.9228406,
+    "totalUsd": 7.8818405999998875,
+    "bps": 15.926127702565948
+   }
+  },
+  {
+   "id": "AAPL-2",
+   "at": "2026-10-04T22:50:50.051Z",
+   "trade": {
+    "ticker": "AAPL",
+    "venue": "perp",
+    "side": "long",
+    "sizeUsd": 2500,
+    "horizonDays": 5,
+    "lossLimitUsd": 60,
+    "confidence": 0.8
+   },
+   "verdict": "fits-if",
+   "sizedAtUsd": 1108,
+   "predicted": {
+    "entryUsd": 0.7524432310349609,
+    "exitUsd": 0.6813955216056166,
+    "totalUsd": 1.4338387526405776,
+    "bps": 12.940782966070195
+   },
+   "symbol": "AAPLUSDT",
+   "qty": "3.31",
+   "open": {
+    "command": "bgc --paper-trading order --action place --category USDT-FUTURES --symbol AAPLUSDT --side buy --posSide long --orderType market --qty 3.31 --clientOid shunt-muuerybh-AAPL-2-open",
+    "orderId": "1490774491066159105",
+    "status": "filled",
+    "avgPrice": 334.73,
+    "midBefore": 333.825,
+    "fee": 0.66477378
+   },
+   "close": {
+    "orderId": "1490774507423944704",
+    "status": "filled",
+    "avgPrice": 334.57,
+    "midBefore": 333.825,
+    "fee": 0.66445602
+   },
+   "realized": {
+    "slippageUsd": 0.5296000000000829,
+    "feesUsd": 1.3292298,
+    "totalUsd": 1.858829800000083,
+    "bps": 16.776442238267897
+   }
+  },
+  {
+   "id": "AAPL-4",
+   "at": "2026-10-04T22:51:09.794Z",
+   "trade": {
+    "ticker": "AAPL",
+    "venue": "perp",
+    "side": "long",
+    "sizeUsd": 5000,
+    "horizonDays": 1,
+    "lossLimitUsd": 130,
+    "confidence": 0.8
+   },
+   "verdict": "fits",
+   "sizedAtUsd": 5000,
+   "predicted": {
+    "entryUsd": 4.129980270709181,
+    "exitUsd": 3.713002467049396,
+    "totalUsd": 7.842982737758577,
+    "bps": 15.685965475517154
+   },
+   "symbol": "AAPLUSDT",
+   "qty": "14.97",
+   "open": {
+    "command": "bgc --paper-trading order --action place --category USDT-FUTURES --symbol AAPLUSDT --side buy --posSide long --orderType market --qty 14.97 --clientOid shunt-muuerybh-AAPL-4-open",
+    "orderId": "1490774579561779200",
+    "status": "filled",
+    "avgPrice": 334.73,
+    "midBefore": 333.825,
+    "fee": 3.00654486
+   },
+   "close": {
+    "orderId": "1490774597865721856",
+    "status": "filled",
+    "avgPrice": 334.57,
+    "midBefore": 333.825,
+    "fee": 3.00510774
+   },
+   "realized": {
+    "slippageUsd": 2.395200000000374,
+    "feesUsd": 6.0116526,
+    "totalUsd": 8.406852600000374,
+    "bps": 16.813705200000747
+   }
+  },
+  {
+   "id": "AAPL-6",
+   "at": "2026-10-04T22:51:37.125Z",
+   "trade": {
+    "ticker": "AAPL",
+    "venue": "perp",
+    "side": "long",
+    "sizeUsd": 5000,
+    "horizonDays": 1,
+    "lossLimitUsd": 80,
+    "confidence": 0.8
+   },
+   "verdict": "does-not-fit",
+   "sizedAtUsd": 4186,
+   "predicted": {
+    "entryUsd": 3.0172539658393216,
+    "exitUsd": 2.962960265369401,
+    "totalUsd": 5.9802142312087225,
+    "bps": 14.286226065954903
+   },
+   "symbol": "AAPLUSDT",
+   "qty": "12.53",
+   "open": {
+    "command": "bgc --paper-trading order --action place --category USDT-FUTURES --symbol AAPLUSDT --side buy --posSide long --orderType market --qty 12.53 --clientOid shunt-muuerybh-AAPL-6-open",
+    "orderId": "1490774836437733394",
+    "status": "filled",
+    "avgPrice": 334.73,
+    "midBefore": 333.845,
+    "fee": 2.51650014
+   },
+   "close": {
+    "orderId": "1490774906956566528",
+    "status": "filled",
+    "avgPrice": 334.57,
+    "midBefore": 333.845,
+    "fee": 2.51529726
+   },
+   "realized": {
+    "slippageUsd": 2.004800000000312,
+    "feesUsd": 5.0317974,
+    "totalUsd": 7.036597400000312,
+    "bps": 16.809836120402085
+   }
+  },
+  {
+   "id": "AAPL-7",
+   "at": "2026-10-04T22:52:41.646Z",
+   "trade": {
+    "ticker": "AAPL",
+    "venue": "perp",
+    "side": "long",
+    "sizeUsd": 5000,
+    "horizonDays": 3,
+    "lossLimitUsd": 130,
+    "confidence": 0.8
+   },
+   "verdict": "fits-if",
+   "sizedAtUsd": 3306,
+   "predicted": {
+    "entryUsd": 2.2959692831017717,
+    "exitUsd": 2.348051643827983,
+    "totalUsd": 4.6440209269297545,
+    "bps": 14.047250232697383
+   },
+   "symbol": "AAPLUSDT",
+   "qty": "9.90",
+   "open": {
+    "command": "bgc --paper-trading order --action place --category USDT-FUTURES --symbol AAPLUSDT --side buy --posSide long --orderType market --qty 9.90 --clientOid shunt-muuerybh-AAPL-7-open",
+    "orderId": "1490775079787057152",
+    "status": "filled",
+    "avgPrice": 334.73,
+    "midBefore": 333.845,
+    "fee": 1.9882962
+   },
+   "close": {
+    "orderId": "1490775112544571392",
+    "status": "filled",
+    "avgPrice": 334.57,
+    "midBefore": 333.845,
+    "fee": 1.9873458
+   },
+   "realized": {
+    "slippageUsd": 1.5840000000002483,
+    "feesUsd": 3.9756419999999997,
+    "totalUsd": 5.559642000000248,
+    "bps": 16.81682395644358
+   }
+  },
+  {
+   "id": "AAPL-8",
+   "at": "2026-10-04T22:53:27.952Z",
+   "trade": {
+    "ticker": "AAPL",
+    "venue": "perp",
+    "side": "long",
+    "sizeUsd": 5000,
+    "horizonDays": 3,
+    "lossLimitUsd": 200,
+    "confidence": 0.8
+   },
+   "verdict": "fits",
+   "sizedAtUsd": 5000,
+   "predicted": {
+    "entryUsd": 3.578412747837314,
+    "exitUsd": 3.963002463332337,
+    "totalUsd": 7.541415211169651,
+    "bps": 15.082830422339303
+   },
+   "symbol": "AAPLUSDT",
+   "qty": "14.97",
+   "open": {
+    "command": "bgc --paper-trading order --action place --category USDT-FUTURES --symbol AAPLUSDT --side buy --posSide long --orderType market --qty 14.97 --clientOid shunt-muuerybh-AAPL-8-open",
+    "orderId": "1490775149970345984",
+    "status": "filled",
+    "avgPrice": 334.73,
+    "midBefore": 333.845,
+    "fee": 3.00654486
+   },
+   "close": {
+    "orderId": "1490775172523118593",
+    "status": "filled",
+    "avgPrice": 334.57,
+    "midBefore": 333.845,
+    "fee": 3.00510774
+   },
+   "realized": {
+    "slippageUsd": 2.3952000000003757,
+    "feesUsd": 6.0116526,
+    "totalUsd": 8.406852600000375,
+    "bps": 16.81370520000075
    }
   }
  ]

@@ -55,4 +55,14 @@ describe("rule parser", () => {
     expect(r.trade?.leverage).toBe(100);
     expect(r.notes.length).toBe(2);
   });
+  it("reads the sentences the first answer key missed", () => {
+    const now = new Date("2026-10-05T16:00:00Z");
+    const q = (t: string) => ruleParse(t, known, now);
+    expect(q("rNVDA 7500 two days limit 300")).toMatchObject({ sizeUsd: 7500, horizonDays: 2, lossLimitUsd: 300 });
+    expect(q("hold NVDA perp 25k 3 days, cap loss at $900")).toMatchObject({ sizeUsd: 25000, lossLimitUsd: 900 });
+    expect(q("$10k long NVDA for a week, 2% limit").lossLimitUsd).toBe(200);
+    expect(q("put 50k in NVDA for 2 days and can take 1,500 loss")).toMatchObject({ sizeUsd: 50000, lossLimitUsd: 1500 });
+    expect(q("short 8k NVDA until Friday, stop me at 400")).toMatchObject({ horizonDays: 5, lossLimitUsd: 400 });
+    expect(q("5k NVDA until the 9th, max loss $200").horizonDays).toBe(5);
+  });
 });

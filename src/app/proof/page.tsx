@@ -4,6 +4,8 @@ import journalData from "../../../public/data/journal.json";
 import ordersData from "../../../public/data/proof-orders.json";
 import s from "../doc.module.css";
 import Strip from "./Strip";
+import keyData from "../../../public/data/answer-key.json";
+import firstData from "../../../public/data/answer-key-first.json";
 
 export const metadata: Metadata = { title: "Shunt · Proof", description: "Shunt's ranges checked against what actually happened, in history and live." };
 // bundled at build time; the daily journal commit triggers a rebuild
@@ -116,6 +118,46 @@ export default function Proof() {
         </section>
       )}
 
+      <section className={s.section}>
+        <h2>Does it read you right?</h2>
+        <p>
+          Shunt turns your sentence into a trade before it measures anything. To test that, 24 sentences were written the way traders type,
+          each with the trade a careful person would read from it. Every field (stock, side, size, days, loss limit) is checked.
+        </p>
+        <dl className={s.stats}>
+          <div><dt>First run, rules alone</dt><dd>{firstData.rulesOnlyAllRight} of {firstData.sentences}</dd></div>
+          <div><dt>First run, with Claude</dt><dd>{firstData.rulesPlusModelAllRight} of {firstData.sentences}</dd></div>
+          <div><dt>After the fixes, rules alone</dt><dd>{keyData.summary.rulesOnlyAllRight} of {keyData.summary.sentences}</dd></div>
+          <div><dt>After the fixes, with Claude</dt><dd>{keyData.summary.rulesPlusModelAllRight} of {keyData.summary.sentences}</dd></div>
+        </dl>
+        <p className={s.muted}>
+          The fixes were made after seeing the misses, so the second row is not an unbiased score. The first run is. Claude only reads words here;
+          it never produces a number you see. Claude version {keyData.summary.model}.
+        </p>
+        <details className={s.more}>
+          <summary>Show what the first run got wrong, and the fix</summary>
+          <div className={s.scroll}>
+            <table className={s.table}>
+              <thead><tr><th>Sentence</th><th>What went wrong</th><th>Fix</th></tr></thead>
+              <tbody>
+                {firstData.misses.map((m) => (<tr key={m.text}><td>{m.text}</td><td>{m.what}</td><td>{m.fix}</td></tr>))}
+              </tbody>
+            </table>
+          </div>
+        </details>
+        <details className={s.more}>
+          <summary>Show all {keyData.rows.length} sentences</summary>
+          <div className={s.scroll}>
+            <table className={s.table}>
+              <thead><tr><th>Sentence</th><th>Rules alone</th><th>With Claude</th></tr></thead>
+              <tbody>
+                {keyData.rows.map((r) => (<tr key={r.text}><td>{r.text}</td><td className={r.rulesMisses.length ? s.out : s.in}>{r.rulesMisses.length ? "missed" : "right"}</td><td className={r.bothMisses.length ? s.out : s.in}>{r.bothMisses.length ? "missed" : "right"}</td></tr>))}
+              </tbody>
+            </table>
+          </div>
+        </details>
+      </section>
+
       {orders && orders.orders.length > 0 && (() => {
         const sm = orders.summary;
         const rows = orders.orders;
@@ -160,7 +202,7 @@ export default function Proof() {
           </details>
           <code className={`${s.cmd}`}>{rows[0].open.command}</code>
           <p className={s.muted}>
-            {orders.venue}.{sm?.notTradableOnDemo?.length ? ` Demo does not list ${sm.notTradableOnDemo.length} other stock perps Shunt checks, so those could not be ordered.` : ""} The public site never holds an exchange key; these were placed from the builder&apos;s machine.
+            {orders.venue}.{sm?.notTradableOnDemo?.length ? ` Demo does not list ${sm.notTradableOnDemo.length} other stock perps Shunt checks, so those could not be ordered.` : ""} NVDA, META, AMZN, AAPL and TSLA orders were placed on the same Demo account another of the builder's projects also trades on; every order here carries a shunt client id so the two can be told apart. The public site never holds an exchange key; these were placed from the builder&apos;s machine.
           </p>
         </section>
         );
