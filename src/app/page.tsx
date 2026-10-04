@@ -43,7 +43,7 @@ export default function Desk() {
     <main className={s.main}>
       <section className={s.hero}>
         <p className="eyebrow">For US stocks on Bitget, rTokens and stock perps</p>
-        <h1 className={s.title}>Will your trade survive what&apos;s&nbsp;scheduled?</h1>
+        <h1 className={s.title}>Will your trade survive what&apos;s scheduled?</h1>
         <p className={s.lede}>
           Type it the way you&apos;d say it. Shunt reads the calendar, measures every event for that exact stock from its own
           history, and shows where your trade stops fitting your loss limit.
@@ -86,7 +86,7 @@ export default function Desk() {
               <p>{v.detail}</p>
             </section>
             <FollowUp busy={busy} onAsk={(q) => run({ text: q, draft: reply!.parsed.draft })} />
-            <Rail r={r} />
+            {r.assessment.verdict.state !== "illiquid" && <Rail r={r} />}
             <Events r={r} />
             <Costs r={r} />
             <Ticket r={r} />
@@ -209,6 +209,11 @@ function Events({ r }: { r: CheckResult }) {
   );
 }
 
+function fillText(f: { filledUsd: number; complete: boolean }, size: number, cost: number) {
+  if (f.complete) return usd(cost);
+  return f.filledUsd <= 0 ? "no book" : `only ${usd(f.filledUsd)} of ${usd(size)} fills`;
+}
+
 function Costs({ r }: { r: CheckResult }) {
   const c = r.costs;
   if (!c) return null;
@@ -216,8 +221,8 @@ function Costs({ r }: { r: CheckResult }) {
     <section className={s.costs}>
       <h3>On Bitget right now</h3>
       <dl>
-        <div><dt>Cost to get in</dt><dd className="num">{usd((c.entry.impactPct ?? 0) * r.trade.sizeUsd + c.entry.feeUsd)}</dd></div>
-        <div><dt>Cost to get out</dt><dd className="num">{usd(c.exitCostUsd)}</dd></div>
+        <div><dt>Cost to get in</dt><dd className="num">{fillText(c.entry, r.trade.sizeUsd, (c.entry.impactPct ?? 0) * r.trade.sizeUsd + c.entry.feeUsd)}</dd></div>
+        <div><dt>Cost to get out</dt><dd className="num">{fillText(c.exit, r.trade.sizeUsd, c.exitCostUsd)}</dd></div>
         {c.fundingUsd != null && <div><dt>Funding over the hold</dt><dd className="num">{usd(c.fundingUsd)}</dd></div>}
         {r.assessment.liquidationPct != null && <div><dt>Liquidated by a move of</dt><dd className="num">{pct(r.assessment.liquidationPct)}</dd></div>}
         {r.weekendTrading && <div><dt>rToken traded last weekend</dt><dd>{r.weekendTrading.traded ? "yes" : "no"}</dd></div>}
@@ -231,7 +236,7 @@ function Ticket({ r }: { r: CheckResult }) {
   const [copied, setCopied] = useState("");
   const t = r.trade, v = r.assessment.verdict;
   const price = r.costs?.entry.mid ?? r.profile.lastClose;
-  if (!price) return null;
+  if (!price || v.state === "illiquid") return null;
   const size = v.state === "fits" ? t.sizeUsd : v.maxSizeUsd;
   const perp = t.venue === "perp";
   const qty = perp ? (Math.floor((size / price) * 100) / 100).toFixed(2) : (Math.floor((size / price) * 1e4) / 1e4).toFixed(4);
@@ -250,7 +255,7 @@ function Ticket({ r }: { r: CheckResult }) {
       </p>
       <div className={s.cmd}><code className="num">{demo}</code><button onClick={() => copy(demo, "demo")}>{copied === "demo" ? "Copied" : "Copy, Demo first"}</button></div>
       <div className={s.cmd}><code className="num">{cmd}</code><button onClick={() => copy(cmd, "live")}>{copied === "live" ? "Copied" : "Copy"}</button></div>
-      <p className={s.muted}>{perp ? `${qty} ${t.ticker} perp contracts` : `${qty} r${t.ticker}`} at about {usd(price)} each, from the live Bitget mid price.</p>
+      <p className={s.muted}>{perp ? `${qty} ${t.ticker} perp contracts` : `${qty} r${t.ticker}`} at about {usd(price)} each, from the live Bitget mid price.{perp && t.leverage ? ` This order does not set leverage: set ${t.leverage}x on Bitget first, because the check above assumed it.` : ""}</p>
     </section>
   );
 }

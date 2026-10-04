@@ -68,7 +68,7 @@ async function costs(t: Trade, problems: string[]): Promise<Costs | null> {
       // positive funding: longs pay; a short receives it
       fundingUsd = t.sizeUsd * f.avgRate * fundingRuns * (t.side === "long" ? 1 : -1);
     }
-    if (!exit.complete) problems.push(`The ${t.venue === "perp" ? "perp" : "rToken"} book cannot absorb $${Math.round(t.sizeUsd).toLocaleString()} right now; exit cost is for the part it can.`);
+    if (!exit.complete || !entry.complete) problems.push(`The ${t.venue === "perp" ? "perp" : "rToken"} book cannot absorb $${Math.round(t.sizeUsd).toLocaleString()} right now.`);
     return {
       venue: t.venue, entry: { ...entry, feeUsd: fee(entry) }, exit: { ...exit, feeUsd: fee(exit) },
       exitCostUsd: Number.isFinite(exitCostUsd) ? exitCostUsd : 0, fundingUsd, fundingRuns, readAt: new Date().toISOString(),
@@ -116,7 +116,10 @@ export async function checkTrade(trade: Trade, now = new Date()): Promise<CheckR
     trade.venue === "rtoken" ? bg.tradedLastWeekend(trade.ticker, now).catch(() => null) : Promise.resolve(null),
     trade.venue === "perp" ? bg.maintenanceRate(trade.ticker, trade.sizeUsd).catch(() => 0.005) : Promise.resolve(0.005),
   ]);
-  const assessment = assess(trade, day, horizon, eventBands, c?.exitCostUsd ?? 0, mmr);
+  const liquidity = c
+    ? { absorbableUsd: Math.min(c.entry.filledUsd, c.exit.filledUsd), complete: c.entry.complete && c.exit.complete }
+    : undefined;
+  const assessment = assess(trade, day, horizon, eventBands, c?.exitCostUsd ?? 0, mmr, liquidity);
   return {
     trade,
     profile: { ticker: p.ticker, name: p.name, sector: p.sector, asOf: p.asOf, lastClose: p.lastClose, volNow: p.volNow, perp: p.perp },

@@ -15,12 +15,12 @@ type Orders = { venue: string; orders: { at: string; trade: { ticker: string; si
   open: { command: string; orderId: string; status: string; avgPrice?: string }; close: { orderId: string; status: string; avgPrice?: string } }[] };
 
 const NAMES: Record<string, [string, string]> = {
-  day: ["Ordinary days", "close to close, outside the stock's own earnings"],
-  overnight: ["Overnight gaps", "close to the next open"],
-  earnings: ["Own earnings days", "the session that reacts to the report"],
-  bellwether: ["Bellwether report days", "for the 45 stocks with a tested link"],
-  fed: ["Fed decision days", "statement days since 2023"],
-  weekend: ["Weekends", "Friday close to Monday open"],
+  day: ["Ordinary days", "close to close, last 3 years, outside the stock's own earnings"],
+  overnight: ["Overnight gaps", "close to the next open, last 3 years"],
+  earnings: ["Own earnings days", "the session that reacts to the report, since 2016"],
+  bellwether: ["Bellwether report days", "since 2017, for the 45 stocks with a tested link"],
+  fed: ["Fed decision days", "statement days, last 3 years"],
+  weekend: ["Weekends", "Friday close to Monday open, last 3 years"],
 };
 const pc = (x: number | null | undefined, d = 1) => (x == null ? "n/a" : (x * 100).toFixed(d) + "%");
 const usd = (x: number) => "$" + Math.round(x).toLocaleString("en-US");
@@ -47,8 +47,8 @@ export default function Proof() {
 
       {cal && (
         <section className={s.section}>
-          <h2>On ten years of history</h2>
-          <p>For every stock, the range was built only from events before each day, then checked against that day. The amber line is the 80% target.</p>
+          <h2>On history the range never saw</h2>
+          <p>For every stock, the range was built only from events before each day, then checked against that day. Price history reaches back ten years; each row below says which window it uses. The amber line is the 80% target.</p>
           <div className={s.bars}>
             {Object.entries(NAMES).map(([k, [name, note]]) => {
               const t = cal.types[k];

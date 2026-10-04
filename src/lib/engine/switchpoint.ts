@@ -5,7 +5,8 @@ export type EventRisk = { band: Band; lossUsd: number | null; breaches: boolean;
 export type Verdict =
   | { state: "fits" }
   | { state: "fits-if"; maxSizeUsd: number; exitBefore: { date: string; label: string } | null }
-  | { state: "does-not-fit"; maxSizeUsd: number };
+  | { state: "does-not-fit"; maxSizeUsd: number }
+  | { state: "illiquid"; absorbableUsd: number };   // the live book cannot take this size in or out
 
 export type Assessment = {
   verdict: Verdict;
@@ -43,6 +44,7 @@ export function assess(
   events: Band[],
   exitCostUsd = 0,
   maintenanceRate = 0.005,
+  liquidity?: { absorbableUsd: number; complete: boolean },
 ): Assessment {
   const liq = t.venue === "perp" ? liquidationPct(t.leverage, maintenanceRate) : null;
   const risk = (b: Band): EventRisk => {
@@ -59,7 +61,10 @@ export function assess(
   const safeLeverage = t.venue === "perp" && biggest > 0 ? Math.max(1, Math.floor(1 / (biggest + maintenanceRate))) : null;
 
   let verdict: Verdict;
-  if (dayR.breaches && day.pct != null) {
+  if (liquidity && !liquidity.complete) {
+    // never price an exit that cannot be filled: say so instead of showing a cost of zero
+    verdict = { state: "illiquid", absorbableUsd: Math.max(0, Math.floor(liquidity.absorbableUsd)) };
+  } else if (dayR.breaches && day.pct != null) {
     verdict = { state: "does-not-fit", maxSizeUsd: maxSize(t, day.pct, exitCostUsd) };
   } else if (all.some((r) => r.breaches) && worst?.band.pct != null) {
     // exiting before the first breaching scheduled event works only if the rest of the hold fits

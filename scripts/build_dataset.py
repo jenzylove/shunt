@@ -41,11 +41,21 @@ def fetch(url, headers=None, pause=0.0, tries=4):
 
 
 # ---------- universe ----------
+def sec_tickers():
+    """SEC's ticker to company file; fetched once and cached."""
+    p = CACHE / "sec_tickers.json"
+    if not p.exists():
+        CACHE.mkdir(parents=True, exist_ok=True)
+        p.write_text(fetch("https://www.sec.gov/files/company_tickers.json", UA).decode())
+    return json.loads(p.read_text())
+
+
 def universe():
     p = CACHE / "universe.json"
     if p.exists():
         return json.loads(p.read_text())
-    sec = json.loads(fetch("https://www.sec.gov/files/company_tickers.json", UA))
+    CACHE.mkdir(parents=True, exist_ok=True)
+    sec = sec_tickers()
     t2c = {v["ticker"].upper(): v["cik_str"] for v in sec.values()}
     spot = json.loads(fetch("https://api.bitget.com/api/v2/spot/public/symbols"))["data"]
     rt = sorted({s["symbol"][1:-4] for s in spot if s["symbol"].startswith("R") and s["symbol"].endswith("USDT")
@@ -58,7 +68,7 @@ def universe():
 
 
 def names_by_cik():
-    sec = json.loads((CACHE / "sec_tickers.json").read_text())
+    sec = sec_tickers()
     return {v["cik_str"]: v["title"] for v in sec.values()}
 
 
@@ -185,7 +195,8 @@ def main(limit=None):
     since = last - pd.DateOffset(years=YEARS_BACK)
     recent = days[days > since]
     gapdays = [d for i, d in enumerate(days[1:], 1) if (d - days[i - 1]).days >= 3]
-    fomc = [pd.Timestamp(x) for x in json.loads((CACHE / "fomc.json").read_text())]
+    # statement days read from federalreserve.gov/monetarypolicy/fomccalendars.htm, kept in the repo
+    fomc = [pd.Timestamp(x) for x in json.loads((ROOT / "scripts" / "fomc_dates.json").read_text())]
 
     subs = {}
     with ThreadPoolExecutor(4) as ex:

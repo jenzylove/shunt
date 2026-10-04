@@ -18,6 +18,7 @@ export async function earningsOn(date: string): Promise<EarningsRow[]> {
   const r = await fetch(`https://api.nasdaq.com/api/calendar/earnings?date=${date}`, {
     headers: { "user-agent": "Mozilla/5.0 (compatible; Shunt research)", accept: "application/json" },
     next: { revalidate: 21600 },
+    signal: AbortSignal.timeout(8000),
   } as RequestInit);
   if (!r.ok) throw new Error(`Nasdaq calendar ${date} HTTP ${r.status}`);
   const j = await r.json();

@@ -86,6 +86,15 @@ describe("switchpoint", () => {
     expect(a.events[0].liquidates).toBe(true);
     expect(a.safeLeverage).toBe(Math.floor(1 / (0.08 + 0.005)));
   });
+  it("refuses to price an exit the book cannot fill, instead of showing zero cost", () => {
+    const e = eventBand(profile, "earnings", 0.8, null, { label: "e", date: "2026-10-02" });
+    const empty = assess({ ...trade, lossLimitUsd: 50_000 }, day, horizon, [e], 0, 0.005, { absorbableUsd: 0, complete: false });
+    expect(empty.verdict).toEqual({ state: "illiquid", absorbableUsd: 0 });
+    const thin = assess({ ...trade, lossLimitUsd: 50_000 }, day, horizon, [e], 0, 0.005, { absorbableUsd: 11_234.9, complete: false });
+    expect(thin.verdict).toEqual({ state: "illiquid", absorbableUsd: 11_234 });
+    const deep = assess({ ...trade, lossLimitUsd: 50_000 }, day, horizon, [e], 0, 0.005, { absorbableUsd: 20_000, complete: true });
+    expect(deep.verdict.state).toBe("fits");
+  });
   it("lists events it cannot measure separately", () => {
     const a = assess(trade, day, horizon, [eventBand(profile, "fed", 0.8, null, { label: "Fed", date: "2026-10-28" })]);
     expect(a.unmeasured).toHaveLength(1);

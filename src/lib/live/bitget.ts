@@ -2,7 +2,7 @@
 const API = "https://api.bitget.com/api/v2";
 
 async function get<T>(path: string, revalidate = 30): Promise<T> {
-  const r = await fetch(API + path, { next: { revalidate } } as RequestInit);
+  const r = await fetch(API + path, { next: { revalidate }, signal: AbortSignal.timeout(8000) } as RequestInit);
   if (!r.ok) throw new Error(`Bitget ${path} HTTP ${r.status}`);
   const j = await r.json();
   if (j.code !== "00000") throw new Error(`Bitget ${path}: ${j.msg}`);

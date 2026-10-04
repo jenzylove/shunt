@@ -33,6 +33,18 @@ export function explain(r: CheckResult): Verdict {
     ? ` Cannot measure: ${a.unmeasured.map((b) => `${b.label} (${b.n} past)`).join("; ")}.`
     : "";
 
+  if (v.state === "illiquid") {
+    const venue = t.venue === "perp" ? `the ${p.ticker} perp` : `r${p.ticker}`;
+    return {
+      tone: "stop",
+      headline: v.absorbableUsd === 0
+        ? `No one is trading ${venue} right now.`
+        : `Bitget's book takes about ${usd(v.absorbableUsd)} of this right now.`,
+      detail: v.absorbableUsd === 0
+        ? `Bitget's order book for ${venue} has nothing to fill ${usd(t.sizeUsd)} against, so Shunt cannot price getting in or out and will not guess. Check again when the market is open, or try the ${t.venue === "perp" ? "rToken" : "perp"}.`
+        : `You asked for ${usd(t.sizeUsd)}. The live book fills only about ${usd(v.absorbableUsd)} on the way in or out, so Shunt cannot price the rest of an exit and will not guess. Size to that or less, or split it over time.`,
+    };
+  }
   if (v.state === "fits") {
     return {
       tone: "go",

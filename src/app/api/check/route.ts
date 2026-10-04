@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { checkTrade } from "@/lib/check";
 import { hasModel, modelParse } from "@/lib/llm";
 import { ruleParse, validate, type Draft } from "@/lib/parse";
+import { clientKey, limited } from "@/lib/ratelimit";
 import { universe } from "@/lib/universe";
 
 export const runtime = "nodejs";
@@ -16,12 +17,22 @@ const defined = (d: Draft) => Object.fromEntries(Object.entries(d).filter(([, v]
  * Returns what was understood (and by what), plus the measured check when the trade is complete.
  */
 export async function POST(req: Request) {
+  const who = clientKey(req);
+  if (limited("req:" + who, 40, 10 * 60_000)) {
+    return NextResponse.json({ error: "Too many checks from one place in a short time. Wait a few minutes and try again." }, { status: 429 });
+  }
+  const raw = await req.text();
+  if (raw.length > 20_000) return NextResponse.json({ error: "That request is too large." }, { status: 413 });
   let body: { text?: string; draft?: Draft };
   try {
-    body = await req.json();
+    body = JSON.parse(raw);
   } catch {
     return NextResponse.json({ error: "Send JSON: { text } or { draft }." }, { status: 400 });
   }
+  // the model is the only metered part: a smaller allowance of its own, with the rules as the fallback
+  const modelOk = !limited("model:" + who, 12, 10 * 60_000);
+  const readWithModel: typeof modelParse = async (...a) =>
+    modelOk ? modelParse(...a) : { draft: null, error: "model allowance used up for now, rules only" };
   const u = await universe();
   const known = (t: string) => u.set.has(t);
   const text = body.text ? String(body.text).slice(0, 500) : "";
@@ -31,7 +42,7 @@ export async function POST(req: Request) {
 
   if (text && body.draft) {
     // follow up: the model applies the change; without a model, the rules overlay what they can read
-    const m = await modelParse(text, body.draft);
+    const m = await readWithModel(text, body.draft);
     if (m.draft) { draft = { ...body.draft, ...defined(m.draft) }; readBy = "model"; }
     else { draft = { ...body.draft, ...defined(ruleParse(text, known)) }; readBy = "rules"; modelNote = m.error; }
   } else if (text) {
@@ -40,7 +51,7 @@ export async function POST(req: Request) {
     readBy = "rules";
     const r = validate(rules);
     if (r.missing.length || (r.trade && !known(r.trade.ticker))) {
-      const m = await modelParse(text, null);
+      const m = await readWithModel(text, null);
       if (m.draft) { draft = { ...defined(rules), ...defined(m.draft) }; readBy = "model"; }
       else modelNote = m.error;
     }
