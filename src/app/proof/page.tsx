@@ -202,7 +202,7 @@ export default function Proof() {
           </details>
           <code className={`${s.cmd}`}>{rows[0].open.command}</code>
           <p className={s.muted}>
-            {orders.venue}.{sm?.notTradableOnDemo?.length ? ` Demo does not list ${sm.notTradableOnDemo.length} other stock perps Shunt checks, so those could not be ordered.` : ""} NVDA, META, AMZN, AAPL and TSLA orders were placed on the same Demo account another of the builder's projects also trades on; every order here carries a shunt client id so the two can be told apart. The public site never holds an exchange key; these were placed from the builder&apos;s machine.
+            {orders.venue}.{sm?.notTradableOnDemo?.length ? ` Demo does not list ${sm.notTradableOnDemo.length} other stock perps Shunt checks, so those could not be ordered.` : ""} NVDA, META, AMZN, AAPL and TSLA orders were placed on the same Demo account that another of the builder&apos;s projects also trades on; every order here carries a shunt client id so the two can be told apart. The public site never holds an exchange key; these were placed from the builder&apos;s machine.
           </p>
         </section>
         );
