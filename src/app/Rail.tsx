@@ -32,6 +32,7 @@ export default function Rail({ r }: { r: CheckResult }) {
 
   return (
     <figure className={s.rail} aria-label="Your holding period with scheduled events and your loss limit">
+      <p className={s.hint}>Scroll sideways to see the whole rail</p>
       <div className={s.scroll}>
         <svg viewBox={`0 0 ${W} ${H}`} role="img">
           <text x={LEFT - 40} y={TOP - 18} className={s.axis}>possible loss</text>

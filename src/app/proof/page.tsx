@@ -31,8 +31,8 @@ export default function Proof() {
   return (
     <main className={s.main}>
       <section className={s.hero}>
-        <p className="eyebrow">Proof</p>
-        <h1 className={s.title}>Does &ldquo;4 in 5&rdquo; actually mean 4 in 5?</h1>
+        <p className="pill">Proof</p>
+        <h1 className={s.title}>Does &ldquo;4 in 5&rdquo; actually mean <span className={s.hl}>4 in 5</span>?</h1>
         <p className={s.lede}>
           Every range Shunt shows is the size a stock stayed within 4 times in 5 on past events of that kind. That only means
           something if it holds on days the range never saw. Here is the check, on history and live.
@@ -40,7 +40,7 @@ export default function Proof() {
       </section>
 
       {(!cal || !journal || !orders) && (
-        <p className={s.muted} style={{ color: "var(--stop)" }}>
+        <p className={`${s.muted} ${s.alert}`}>
           Some proof data could not be read on this server: {[!cal && "calibration", !journal && "journal", !orders && "orders"].filter(Boolean).join(", ")}.
         </p>
       )}
@@ -48,7 +48,7 @@ export default function Proof() {
       {cal && (
         <section className={s.section}>
           <h2>On history the range never saw</h2>
-          <p>For every stock, the range was built only from events before each day, then checked against that day. Price history reaches back ten years; each row below says which window it uses. The amber line is the 80% target.</p>
+          <p>For every stock, the range was built only from events before each day, then checked against that day. Price history reaches back ten years; each row below says which window it uses. The dark tick marks the 80% target.</p>
           <div className={s.bars}>
             {Object.entries(NAMES).map(([k, [name, note]]) => {
               const t = cal.types[k];
@@ -78,9 +78,11 @@ export default function Proof() {
           <p>After every US close, Shunt locks in tomorrow&apos;s 4 in 5 range for 30 stocks (the earnings range if one reports). After that session closes, each one is graded. Entries are never edited once written.</p>
           <dl className={s.stats}>
             <div><dt>Graded</dt><dd>{journal.summary.graded}</dd></div>
-            <div><dt>Inside the range</dt><dd>{journal.summary.graded ? pc(journal.summary.rate) : "first grades after the next close"}</dd></div>
+            <div><dt>Inside the range</dt><dd>{journal.summary.graded ? pc(journal.summary.rate) : "not yet"}</dd></div>
             <div><dt>Waiting for their session</dt><dd>{journal.summary.pending}</dd></div>
           </dl>
+          <details className={s.more}>
+            <summary>Show the {recent.length} locked ranges</summary>
           <div className={s.scroll}>
             <table className={s.table}>
               <thead><tr><th>Session</th><th>Stock</th><th>Kind</th><th className={s.r}>Range</th><th className={s.r}>Actual move</th><th className={s.r}>Result</th></tr></thead>
@@ -96,6 +98,7 @@ export default function Proof() {
               </tbody>
             </table>
           </div>
+          </details>
           <p className={s.muted}>Updated {new Date(journal.summary.updated).toUTCString()}. Script: scripts/journal.mts, run by a scheduled GitHub Action.</p>
         </section>
       )}

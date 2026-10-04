@@ -26,7 +26,7 @@ const SPIKES: { pass: boolean; title: string; body: string[] }[] = [
     title: "Do past reactions to a company's reports predict who moves next time?",
     body: [
       "A lead from the test above, confirmed on 15 companies it had never seen (495 report days): ranking by past reactions picked 1.5 real movers in the top 20 against 1.3 for correlation and 0.9 by chance (p = 0.002).",
-      "Real but modest. In Shunt, a bellwether's report is only flagged for your stock when that stock's report-day moves beat its own days in the same earnings season in a rank test, corrected for testing 26 companies. 45 of 2,218 stocks qualify, and the strongest make economic sense: chip equipment and memory makers on Micron's reports, Humana on UnitedHealth's.",
+      "Real but modest. In Shunt, a bellwether's report is only flagged for your stock when that stock's moves on report days beat its own days in the same earnings season in a rank test, corrected for testing 26 companies. 45 of 2,218 stocks qualify, and the strongest make economic sense: chip equipment and memory makers on Micron's reports, Humana on UnitedHealth's.",
     ],
   },
   {
@@ -53,8 +53,8 @@ export default function Research() {
   return (
     <main className={s.main}>
       <section className={s.hero}>
-        <p className="eyebrow">Research</p>
-        <h1 className={s.title}>What we tested before building, including what failed.</h1>
+        <p className="pill">Research</p>
+        <h1 className={s.title}>What we tested before building, including <span className={s.hl}>what failed</span>.</h1>
         <p className={s.lede}>Each test was written down before it ran, with the bar it had to clear. Two ideas failed and changed what Shunt is.</p>
       </section>
 
@@ -70,7 +70,7 @@ export default function Research() {
         ))}
       </section>
 
-      <section className={s.section}>
+      <section className={s.section} id="limits">
         <h2>Scope and limits</h2>
         <ul>{LIMITS.map((l) => <li key={l} style={{ margin: "8px 0", maxWidth: "75ch" }}>{l}</li>)}</ul>
       </section>
