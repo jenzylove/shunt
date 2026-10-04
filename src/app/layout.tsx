@@ -1,15 +1,15 @@
 import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
+import { JetBrains_Mono } from "next/font/google";
 import Link from "next/link";
+import FocusLink from "./FocusLink";
 import Reveal from "./Reveal";
 import "./globals.css";
 
-const geist = Geist({ variable: "--font-geist", subsets: ["latin"] });
-const geistMono = Geist_Mono({ variable: "--font-geist-mono", subsets: ["latin"] });
+const mono = JetBrains_Mono({ variable: "--font-jbmono", subsets: ["latin"] });
 
 export const metadata: Metadata = {
   title: "Shunt",
-  description: "Tell it your trade. Shunt finds what is scheduled while you hold, measures each event for that stock, and shows where the trade stops fitting your loss limit.",
+  description: "Shunt finds what is scheduled while you hold a trade, measures each event for that stock, and shows where the trade stops fitting your loss limit.",
 };
 
 const Mark = () => (
@@ -18,7 +18,12 @@ const Mark = () => (
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en" className={`${geist.variable} ${geistMono.variable}`}>
+    <html lang="en" className={mono.variable}>
+      <head>
+        <link rel="preconnect" href="https://api.fontshare.com" />
+        <link rel="preconnect" href="https://cdn.fontshare.com" crossOrigin="" />
+        <link rel="stylesheet" href="https://api.fontshare.com/v2/css?f[]=satoshi@400,500,700,900&display=swap" />
+      </head>
       <body>
         <header className="site-head">
           <Link href="/" className="wordmark" aria-label="Shunt home"><Mark />shunt</Link>
@@ -28,7 +33,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             <Link href="/proof">Proof</Link>
             <Link href="/research">Research</Link>
           </nav>
-          <Link href="/#desk" className="head-cta">Check a trade</Link>
+          <FocusLink className="head-cta">Check a trade</FocusLink>
         </header>
         {children}
         <div className="site-foot-wrap">

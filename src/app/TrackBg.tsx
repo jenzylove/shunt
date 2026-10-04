@@ -1,7 +1,5 @@
-// The hero backdrop, after pin 39: thin routed lines with rounded corners, small embossed tiles at the nodes.
-// Each tile is one of the things Shunt measures. One dot runs the main line, like a train. Purely decorative.
-import { ICON, type IconName } from "./Icon";
-
+// The hero backdrop, after pin 39: thin routed lines with rounded corners, and named stations where an event
+// sits on the track. No boxes, no icons. One runner travels the left line. Purely decorative.
 type Pt = [number, number];
 
 /** Orthogonal polyline with rounded corners. */
@@ -18,51 +16,41 @@ function route(pts: Pt[], r = 22): string {
   return d + ` L ${lx} ${ly}`;
 }
 
-
 const LINES: Pt[][] = [
-  [[-20, 330], [90, 330], [90, 150]],
-  [[-20, 520], [170, 520], [170, 400]],
-  [[170, 520], [170, 650], [400, 650], [400, 715]],
-  [[1460, 250], [1350, 250], [1350, 120]],
-  [[1460, 500], [1280, 500], [1280, 340]],
-  [[1280, 500], [1280, 640], [1040, 640], [1040, 715]],
-  [[400, 715], [1040, 715]],
+  [[-20, 230], [64, 230], [64, 110]],
+  [[-20, 520], [112, 520], [112, 380]],
+  [[112, 520], [112, 760], [44, 760], [44, 900]],
+  [[1460, 200], [1376, 200], [1376, 100]],
+  [[1460, 470], [1328, 470], [1328, 340]],
+  [[1328, 470], [1328, 720], [1396, 720], [1396, 880]],
 ];
-// the dot follows one continuous route along the bottom and up the right side
-const RUN: Pt[] = [[-20, 520], [170, 520], [170, 650], [400, 650], [400, 715], [1040, 715], [1040, 640], [1280, 640], [1280, 500], [1460, 500]];
+const RUN: Pt[] = [[-20, 520], [112, 520], [112, 760], [44, 760], [44, 900]];
 
-const TILES: { x: number; y: number; icon: IconName }[] = [
-  { x: 90, y: 150, icon: "fed" },
-  { x: 170, y: 400, icon: "earnings" },
-  { x: 400, y: 715, icon: "weekend" },
-  { x: 1350, y: 120, icon: "liquidity" },
-  { x: 1280, y: 340, icon: "bellwether" },
-  { x: 1040, y: 715, icon: "limit" },
+const STATIONS: { x: number; y: number; label: string; side: "r" | "l" }[] = [
+  { x: 64, y: 110, label: "FED DECISION", side: "r" },
+  { x: 112, y: 380, label: "EARNINGS", side: "r" },
+  { x: 44, y: 900, label: "WEEKEND", side: "r" },
+  { x: 1376, y: 100, label: "OTHER REPORTS", side: "l" },
+  { x: 1328, y: 340, label: "BITGET COSTS", side: "l" },
+  { x: 1396, y: 880, label: "YOUR LIMIT", side: "l" },
 ];
 
 export default function TrackBg() {
   return (
-    <svg className="trackbg" viewBox="0 0 1440 780" preserveAspectRatio="xMidYMin slice" aria-hidden="true">
+    <svg className="trackbg" viewBox="0 0 1440 1100" aria-hidden="true">
       <g fill="none" stroke="var(--route)" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round">
         {LINES.map((l, i) => <path key={i} d={route(l)} />)}
       </g>
-      {TILES.map((t, i) => (
-        <g key={i} transform={`translate(${t.x - 28} ${t.y - 28})`} className="tile" style={{ animationDelay: `${0.15 + i * 0.1}s` }}>
-          <rect width="56" height="56" rx="15" fill="var(--tile)" stroke="var(--line)" />
-          <g transform="translate(16 16)" fill="none" stroke="var(--muted)" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round">
-            <path d={ICON[t.icon]} transform="scale(1)" />
-          </g>
+      {STATIONS.map((t, i) => (
+        <g key={t.label} className="station" style={{ animationDelay: `${0.2 + i * 0.12}s` }}>
+          <circle cx={t.x} cy={t.y} r="12" fill="var(--bg)" stroke="var(--route)" strokeWidth="2.4" />
+          <circle cx={t.x} cy={t.y} r="5" fill="var(--ink)" />
+          <text x={t.x + (t.side === "r" ? 24 : -24)} y={t.y + 4} textAnchor={t.side === "r" ? "start" : "end"}
+            fontFamily="var(--font-num)" fontSize="12" letterSpacing="1.4" fill="var(--muted)">{t.label}</text>
         </g>
       ))}
-      {/* the hub: where the track switches */}
-      <g transform="translate(720 715)" className="tile" style={{ animationDelay: "0.9s" }}>
-        <circle r="19" fill="var(--accent)" />
-        <g transform="translate(-12 -12)" fill="none" stroke="#fff" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round">
-          <path d="M3 12h6 M9 12l6-5 M9 12l6 5 M15 7h3 M15 17h3" />
-        </g>
-      </g>
       <circle r="6" fill="var(--accent)" className="runner">
-        <animateMotion dur="16s" repeatCount="indefinite" path={route(RUN)} />
+        <animateMotion dur="9s" repeatCount="indefinite" path={route(RUN)} />
       </circle>
     </svg>
   );

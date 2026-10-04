@@ -1,5 +1,5 @@
 "use client";
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import type { CheckResult } from "@/lib/check";
 import { day, explain, pct, usd } from "@/lib/explain";
 import type { Draft, Parsed } from "@/lib/parse";
@@ -7,6 +7,7 @@ import Rail from "./Rail";
 import TrackBg from "./TrackBg";
 import s from "./page.module.css";
 
+// The way in is examples first: pick a trade and the answer swaps in place. Your own trade is the fields row and one line of words.
 const EXAMPLES = [
   { label: "$20k rNVDA, 5 days", text: "buy $20k rNVDA, holding 5 days, max loss $600" },
   { label: "5x TSLA perp, weekend", text: "long 5x TSLA perp $10k over the weekend, can lose $400" },
@@ -14,24 +15,32 @@ const EXAMPLES = [
   { label: "$5k rAAPL, overnight", text: "$5k rAAPL overnight, stop at -$150" },
 ];
 
-type Reply = { parsed: Parsed; result?: CheckResult; error?: string; meta?: { readBy: "rules" | "model" | "edit"; model: string | null; modelNote?: string } };
+type Meta = { readBy: "rules" | "model" | "edit"; model: string | null; modelNote?: string };
+type Reply = { parsed: Parsed; result?: CheckResult; error?: string; meta?: Meta };
 
-const PLACEHOLDER = "$20k rNVDA, 5 days, max loss $600";
 const STATUS: Record<string, string> = { fits: "Fits", "fits-if": "Fits with a change", "does-not-fit": "Doesn't fit", illiquid: "Can't fill" };
+const LABEL: Record<string, string> = { ticker: "which stock", sizeUsd: "how much", horizonDays: "how long you'll hold", lossLimitUsd: "the most you're willing to lose" };
 
-export default function Desk() {
-  const [text, setText] = useState("");
-  const [reply, setReply] = useState<Reply | null>(null);
+const fromResult = (r: CheckResult): Reply => ({
+  parsed: { trade: r.trade, draft: { ...r.trade }, missing: [], notes: [] },
+  result: r,
+  meta: { readBy: "rules", model: null },
+});
+
+export default function Desk({ initial }: { initial: CheckResult | null }) {
+  const [reply, setReply] = useState<Reply | null>(initial ? fromResult(initial) : null);
+  const [active, setActive] = useState<number | null>(0);
   const [busy, setBusy] = useState(false);
-  const resultRef = useRef<HTMLDivElement>(null);
+  const [words, setWords] = useState("");
+  const cache = useRef<Record<number, Reply>>(initial ? { 0: fromResult(initial) } : {});
 
-  async function run(body: { text?: string; draft?: Draft }) {
+  async function run(body: { text?: string; draft?: Draft }, tab: number | null = null) {
     setBusy(true);
     try {
       const r = await fetch("/api/check", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify(body) });
       const j: Reply = await r.json();
       setReply(j);
-      requestAnimationFrame(() => resultRef.current?.scrollIntoView({ behavior: "smooth", block: "start" }));
+      if (tab != null && j.result) cache.current[tab] = j;
     } catch {
       setReply({ parsed: { trade: null, draft: {}, missing: [], notes: [] }, error: "Could not reach Shunt. Try again." });
     } finally {
@@ -39,7 +48,21 @@ export default function Desk() {
     }
   }
 
-  const edit = (patch: Partial<Draft>) => reply && run({ draft: { ...reply.parsed.draft, ...patch } });
+  // if the server could not read the first example, fetch it here so the panel is never empty
+  useEffect(() => {
+    if (initial) return;
+    const t = setTimeout(() => run({ text: EXAMPLES[0].text }, 0), 0);
+    return () => clearTimeout(t);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  const pick = (i: number) => {
+    setActive(i);
+    if (cache.current[i]) setReply(cache.current[i]);
+    else run({ text: EXAMPLES[i].text }, i);
+  };
+  const edit = (patch: Partial<Draft>) => { if (reply) { setActive(null); run({ draft: { ...reply.parsed.draft, ...patch } }); } };
+  const say = (q: string) => { setActive(null); run(reply ? { text: q, draft: reply.parsed.draft } : { text: q }); };
   const r = reply?.result;
   const v = r ? explain(r) : null;
 
@@ -50,91 +73,97 @@ export default function Desk() {
         <div className={s.heroInner}>
           <p className={`pill ${s.heroPill}`}>US stocks on Bitget, as rTokens and stock perps</p>
           <h1 className={s.title}>Will your trade survive what&apos;s <span className={s.hl}>scheduled?</span></h1>
-          <p className={s.lede}>
-            Tell Shunt your trade in plain words. It finds every earnings report, Fed decision and weekend inside your hold,
-            measures each one for that exact stock, and shows where the trade stops fitting your loss limit.
-          </p>
-          <form className={s.panel} onSubmit={(e) => { e.preventDefault(); run({ text: text.trim() || PLACEHOLDER }); }}>
-            <label htmlFor="trade" className={s.srOnly}>Your trade</label>
-            <input id="trade" value={text} onChange={(e) => setText(e.target.value)} autoComplete="off"
-              placeholder={PLACEHOLDER} className={s.input} />
-            <button className={s.go} disabled={busy}>{busy ? "Checking" : "Check it"}</button>
-          </form>
-          <div className={s.examples} role="list" aria-label="Example trades">
-            <span className={s.tryLabel}>Or try</span>
-            {EXAMPLES.map((ex) => (
-              <button key={ex.text} role="listitem" className={s.ex} disabled={busy} title={ex.text}
-                onClick={() => { setText(ex.text); run({ text: ex.text }); }}>{ex.label}</button>
-            ))}
-          </div>
+          <p className={s.lede}>Every earnings report, Fed decision and weekend inside your hold, measured for that exact stock. Pick a trade, or build your own.</p>
         </div>
-      </section>
 
-      <div ref={resultRef} className={s.result} id="result" aria-live="polite">
-        {busy && <p className={s.working}>Reading the calendar, the stock&apos;s history and Bitget&apos;s order book…</p>}
-        {!busy && reply && !r && (
-          <div className={s.need}>
-            {reply.error ? <p>{reply.error}</p> : (
-              <p>To check it, Shunt still needs: {reply.parsed.missing.map((m) => LABEL[m]).join(", ")}.
-                Try something like <em>buy $20k rNVDA, holding 5 days, max loss $600</em>.</p>
+        <section className={s.panel} aria-label="Live trade check">
+          <header className={s.panelTop}>
+            <span className={s.live}><i />Live check<ReadAt iso={r?.costs?.readAt} /></span>
+            <div className={s.tabs} role="tablist" aria-label="Example trades">
+              {EXAMPLES.map((ex, i) => (
+                <button key={ex.text} role="tab" aria-selected={active === i} className={s.tab} disabled={busy} title={ex.text} onClick={() => pick(i)}>{ex.label}</button>
+              ))}
+            </div>
+          </header>
+
+          <div className={s.panelBody} aria-live="polite" data-busy={busy || undefined}>
+            {!reply && <p className={s.working}>Reading the calendar, the stock&apos;s history and Bitget&apos;s order book…</p>}
+            {reply && !r && (
+              <p className={s.need}>
+                {reply.error ?? <>To check it, Shunt still needs: {reply.parsed.missing.map((m) => LABEL[m]).join(", ")}. Try <em>buy $20k rNVDA, holding 5 days, max loss $600</em>.</>}
+              </p>
+            )}
+            {r && v && (
+              <>
+                <div className={s.answer} data-tone={v.tone}>
+                  <div className={s.answerText}>
+                    <span className={s.status}><i />{STATUS[r.assessment.verdict.state]}</span>
+                    <h2 className={s.vh}>{v.headline}</h2>
+                    <p className={s.vd}>{v.detail}</p>
+                  </div>
+                  <dl className={s.keys}>
+                    <div><dt>Your limit</dt><dd className="num">{usd(r.trade.lossLimitUsd)}</dd></div>
+                    <div><dt>Worst measured</dt><dd className="num">{usd(r.assessment.worst?.lossUsd)}</dd></div>
+                    <div><dt>Cost to get out</dt><dd className="num">{r.costs ? fillText(r.costs.exit, r.trade.sizeUsd, r.costs.exitCostUsd) : "n/a"}</dd></div>
+                  </dl>
+                </div>
+                {r.assessment.verdict.state !== "illiquid" && <Rail r={r} />}
+              </>
             )}
           </div>
-        )}
-        {!busy && r && v && (
-          <>
-            <Fields r={r} onEdit={edit} notes={reply!.parsed.notes} />
-            <ReadBy meta={reply!.meta} />
-            <section className={s.verdict} data-tone={v.tone}>
-              <span className={s.status}><i />{STATUS[r.assessment.verdict.state]}</span>
-              <h2 className={s.vh}>{v.headline}</h2>
-              <p className={s.vd}>{v.detail}</p>
-            </section>
-            <FollowUp busy={busy} onAsk={(q) => run({ text: q, draft: reply!.parsed.draft })} />
-            {r.assessment.verdict.state !== "illiquid" && <Rail r={r} />}
+
+          <footer className={s.panelFoot}>
+            {r ? <Fields r={r} onEdit={edit} notes={reply!.parsed.notes} /> : <span />}
+            <form className={s.say} onSubmit={(e) => { e.preventDefault(); if (words.trim()) { say(words); setWords(""); } }}>
+              <label htmlFor="words" className="eyebrow">Or say it in words</label>
+              <div className={s.sayRow}>
+                <input id="words" value={words} onChange={(e) => setWords(e.target.value)} autoComplete="off"
+                  placeholder={r ? "what if I hold till Friday?" : "buy $20k rNVDA, 5 days, max loss $600"} />
+                <button disabled={busy || !words.trim()}>{busy ? "Checking" : "Ask"}</button>
+              </div>
+              <ReadBy meta={reply?.meta} />
+            </form>
+          </footer>
+        </section>
+
+        {r && (
+          <details className={s.full}>
+            <summary><span>See the full check</span><em>every scheduled event, the Bitget costs, the order ticket</em></summary>
             <Events r={r} />
             <Costs r={r} />
             <Ticket r={r} />
             <Sources r={r} />
-          </>
+          </details>
         )}
-      </div>
+      </section>
     </main>
   );
 }
 
-function ReadBy({ meta }: { meta?: Reply["meta"] }) {
+/** When the live read happened, in UTC so it is the same on the server and in the browser. */
+function ReadAt({ iso }: { iso?: string }) {
+  if (!iso) return null;
+  return <time className={s.readAt} dateTime={iso}>read {iso.slice(11, 16)} UTC</time>;
+}
+
+function ReadBy({ meta }: { meta?: Meta }) {
   if (!meta || meta.readBy === "edit") return null;
+  if (meta.readBy === "rules") return null;
   return (
     <p className={s.readBy}>
-      {meta.readBy === "model" ? <>Read by Claude ({meta.model}). Every number below is computed by code, not the model.</> : <>Read by Shunt&apos;s rules.</>}
+      Read by Claude ({meta.model}). Every number is computed by code, not the model.
       {meta.modelNote && <> The model was not used: {meta.modelNote}.</>}
     </p>
   );
 }
 
-function FollowUp({ busy, onAsk }: { busy: boolean; onAsk: (q: string) => void }) {
-  const [q, setQ] = useState("");
-  const tries = ["what if I hold till Friday?", "make it $10k", "what about the perp at 3x?", "use the worst case"];
-  return (
-    <form className={s.follow} onSubmit={(e) => { e.preventDefault(); if (q.trim()) { onAsk(q); setQ(""); } }}>
-      <label htmlFor="follow" className="eyebrow">Change anything</label>
-      <div className={s.followRow}>
-        <input id="follow" value={q} onChange={(e) => setQ(e.target.value)} placeholder="what if I hold till Friday?" autoComplete="off" />
-        <button disabled={busy || !q.trim()}>Ask</button>
-      </div>
-      <div className={s.tries}>{tries.map((t) => <button type="button" key={t} disabled={busy} onClick={() => onAsk(t)}>{t}</button>)}</div>
-    </form>
-  );
-}
-
-const LABEL: Record<string, string> = { ticker: "which stock", sizeUsd: "how much", horizonDays: "how long you'll hold", lossLimitUsd: "the most you're willing to lose" };
 const FIELD: Record<string, string> = { sizeUsd: "Size", horizonDays: "Hold", lossLimitUsd: "Max loss", leverage: "Leverage" };
 
-/** What Shunt understood, as one row of editable fields (the ProHub panel pattern). */
+/** What Shunt understood, as a compact row of editable fields. */
 function Fields({ r, onEdit, notes }: { r: CheckResult; onEdit: (p: Partial<Draft>) => void; notes: string[] }) {
   const t = r.trade;
   const num = (k: keyof Draft, value: number, prefix = "", suffix = "") => (
-    <label className={s.field}>
+    <label className={s.field} key={String(k) + value}>
       <span className="eyebrow">{FIELD[k as string]}</span>
       <span className={s.fieldVal}>{prefix}
         <input className="num" defaultValue={value} inputMode="decimal" size={Math.max(3, String(value).length)}
@@ -144,8 +173,8 @@ function Fields({ r, onEdit, notes }: { r: CheckResult; onEdit: (p: Partial<Draf
     </label>
   );
   return (
-    <section className={s.fields} aria-label="What Shunt understood; edit any value">
-      <div className={s.field}><span className="eyebrow">Stock</span><span className={s.fieldVal}>{r.profile.ticker}<small>{r.profile.name}</small></span></div>
+    <div className={s.fields} role="group" aria-label="What Shunt understood; edit any value">
+      <div className={s.field}><span className="eyebrow">Stock</span><span className={s.fieldVal}>{r.profile.ticker}</span></div>
       <div className={s.field}>
         <span className="eyebrow">On</span>
         <span className={s.toggle}>
@@ -172,7 +201,7 @@ function Fields({ r, onEdit, notes }: { r: CheckResult; onEdit: (p: Partial<Draf
         </span>
       </div>
       {notes.map((n) => <p key={n} className={s.note}>{n}</p>)}
-    </section>
+    </div>
   );
 }
 
@@ -233,7 +262,7 @@ function Costs({ r }: { r: CheckResult }) {
         {r.assessment.liquidationPct != null && <div><dt>Liquidated by a move of</dt><dd className="num">{pct(r.assessment.liquidationPct)}</dd></div>}
         {r.weekendTrading && <div><dt>rToken traded last weekend</dt><dd>{r.weekendTrading.traded ? "yes" : "no"}</dd></div>}
       </dl>
-      <p className={s.muted}>Walked through the live {c.venue === "perp" ? "perp" : "rToken"} order book at your size, with Bitget&apos;s live fee rate. Read {new Date(c.readAt).toLocaleTimeString()}.</p>
+      <p className={s.muted}>Walked through the live {c.venue === "perp" ? "perp" : "rToken"} order book at your size, with Bitget&apos;s live fee rate.</p>
     </section>
   );
 }
