@@ -1,19 +1,28 @@
 .srOnly { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); }
 
-/* ---------- hero: pin 39's headline over routed lines, then one black workbench panel ---------- */
-.hero { position: relative; overflow: hidden; padding: clamp(24px, 4vw, 56px) clamp(16px, 4vw, 44px) 56px; }
-.heroInner { position: relative; z-index: 1; max-width: 880px; margin: 0 auto; text-align: center; display: flex; flex-direction: column; align-items: center; }
-.heroPill { margin-bottom: 22px; }
-.title { margin: 0; font-weight: 900; letter-spacing: -0.045em; line-height: 0.96; font-size: clamp(40px, 6.6vw, 88px); max-width: 15ch; }
+/* ---------- hero: the message only. White ground, nothing else on the first screen ---------- */
+.hero { position: relative; overflow: hidden; min-height: calc(100svh - 76px); display: flex; align-items: center; justify-content: center; padding: clamp(24px, 4vw, 56px) clamp(16px, 4vw, 44px) clamp(40px, 6vw, 80px); }
+.heroInner { position: relative; z-index: 1; max-width: 900px; text-align: center; display: flex; flex-direction: column; align-items: center; }
+.heroPill { margin-bottom: 24px; }
+.title { margin: 0; font-weight: 900; letter-spacing: -0.045em; line-height: 0.98; font-size: clamp(38px, 6vw, 82px); max-width: 19ch; text-wrap: balance; }
 .hl { color: var(--accent); }
-.lede { margin: 22px 0 0; max-width: 54ch; color: var(--muted); font-size: clamp(16px, 1.5vw, 19px); }
+.lede { margin: 26px 0 0; max-width: 58ch; color: var(--muted); font-size: clamp(16px, 1.4vw, 19px); text-wrap: balance; }
+.ctaRow { margin-top: 34px; display: flex; gap: 14px; flex-wrap: wrap; justify-content: center; align-items: center; }
+.btnMain { border: 0; cursor: pointer; background: var(--ink); color: var(--bg); font-weight: 700; font-size: 16px; padding: 15px 28px; border-radius: 999px; transition: background 0.2s ease, transform 0.2s ease; }
+.btnMain:hover { background: var(--accent); color: #fff; transform: translateY(-1px); }
+.btnGhost { text-decoration: none; font-weight: 600; font-size: 16px; padding: 15px 8px; color: var(--ink); border-bottom: 2px solid transparent; }
+.btnGhost:hover { border-bottom-color: var(--ink); }
+
+/* the live check lives on its own, below the hero */
+.deskSection { padding: 0 clamp(16px, 4vw, 44px) 56px; scroll-margin-top: 8px; }
+.panelIntro { max-width: 1120px; margin: 0 auto 18px; color: var(--muted); font-size: 15px; }
 
 /* the workbench: the one box on the page. It carries its own colours so the rail drawn inside works unchanged. */
 .panel {
   --ink: var(--panel-ink); --muted: var(--panel-muted); --line: var(--panel-line); --surface: var(--panel-surface);
   --accent: var(--panel-accent); --signal: var(--panel-accent); --go: var(--panel-go); --caution: var(--panel-caution); --stop: var(--panel-stop);
   --bg: var(--panel-bg);
-  position: relative; z-index: 1; margin: clamp(30px, 4vw, 48px) auto 0; max-width: 1120px;
+  position: relative; z-index: 1; margin: 0 auto; max-width: 1120px;
   background: var(--panel-bg); color: var(--panel-ink); border-radius: 28px; border: 1px solid var(--panel-line);
   box-shadow: 0 30px 80px rgba(10, 10, 20, 0.28);
 }
@@ -30,7 +39,7 @@
 @media (max-width: 700px) {
   .tabs { flex-wrap: nowrap; overflow-x: auto; width: 100%; padding-bottom: 4px; scrollbar-width: none; }
   .tab { white-space: nowrap; }
-  .title { line-height: 1.02; }
+  .title { line-height: 1.04; }
 }
 
 .panelBody { padding: clamp(22px, 3.4vw, 40px) clamp(18px, 3vw, 32px) 8px; min-height: 340px; transition: opacity 0.25s ease; }

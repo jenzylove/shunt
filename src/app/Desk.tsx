@@ -68,14 +68,24 @@ export default function Desk({ initial }: { initial: CheckResult | null }) {
 
   return (
     <main>
-      <section className={s.hero} id="desk">
+      <section className={s.hero}>
         <TrackBg />
         <div className={s.heroInner}>
-          <p className={`pill ${s.heroPill}`}>US stocks on Bitget, as rTokens and stock perps</p>
-          <h1 className={s.title}>Will your trade survive what&apos;s <span className={s.hl}>scheduled?</span></h1>
-          <p className={s.lede}>Every earnings report, Fed decision and weekend inside your hold, measured for that exact stock. Pick a trade, or build your own.</p>
+          <p className={`pill ${s.heroPill}`}>For US stocks traded on Bitget</p>
+          <h1 className={s.title}>See what could <span className={s.hl}>break</span> your trade before you place it.</h1>
+          <p className={s.lede}>
+            Earnings reports, Fed decisions and weekends can move a stock far more than a normal day. Shunt measures each one
+            for your stock and tells you if your trade still fits the loss you can take.
+          </p>
+          <div className={s.ctaRow}>
+            <button className={s.btnMain} onClick={() => document.getElementById("desk")?.scrollIntoView({ behavior: "smooth", block: "start" })}>See a live example</button>
+            <a className={s.btnGhost} href="#how">How it works</a>
+          </div>
         </div>
+      </section>
 
+      <section className={s.deskSection} id="desk">
+        <p className={s.panelIntro}>A live check, read from Bitget and the stock&apos;s own history. Pick a trade below, or change any number.</p>
         <section className={s.panel} aria-label="Live trade check">
           <header className={s.panelTop}>
             <span className={s.live}><i />Live check<ReadAt iso={r?.costs?.readAt} /></span>
