@@ -35,3 +35,19 @@
 - Desk page, rail, API; "over the weekend" now holds through the next Monday open; perp liquidation check and
   the highest leverage that clears the biggest measured move.
 - First deploy: https://shunt-eight.vercel.app. Nasdaq calendar, Bitget and the profiles all answer from Vercel.
+
+## 3 to 4 October 2026
+
+- Language layer: rules read ordinary sentences instantly; Claude Opus 5.5 (structured output, low effort) reads the rest
+  and follow ups ("what if I hold till Wednesday?", "use the perp at 3x and the worst case"), through the same validator.
+  Prompt injection attempt resolved to a missing ticker; nothing leaked.
+- Agent Hub: `bgc --paper-trading` places Shunt-sized orders on Bitget Demo with a `shunt` client id; two round trips
+  recorded with order ids on /proof. Account is in hedge mode, so `--posSide` is required (found by a rejected order).
+  The Desk shows an order ticket to copy; the public site holds no exchange key.
+- Forward journal: 30 stocks locked before each session, graded after it; GitHub Action runs after every US close.
+- /proof and /research pages. Production deploy failed twice on build errors; fixed, and every push is now built
+  locally before it ships. A `.vercelignore` rule `data/` also matched `public/data` on git builds; anchored to the root.
+- 4 Oct release readiness audit (repo, history, clean clone, live site, hostile inputs). Fixed: empty or thin order
+  book priced as $0 (now an explicit "illiquid" verdict, no rail, no ticket); public API had no limits (rate limit,
+  body cap, timeouts, security headers); phone hero overflowed (no-break space); no visible keyboard focus; proof page
+  said "ten years" for rows that use three; dataset builder crashed on a fresh clone. Proved each fix locally and live.
