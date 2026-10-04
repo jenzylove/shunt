@@ -1,7 +1,7 @@
 "use client";
 import { useEffect, useRef, useState } from "react";
 import type { CheckResult } from "@/lib/check";
-import { day, explain, pct, usd } from "@/lib/explain";
+import { day, explain, pct, questionText, usd } from "@/lib/explain";
 import type { Draft, Parsed } from "@/lib/parse";
 import Rail from "./Rail";
 import TrackBg from "./TrackBg";
@@ -15,11 +15,10 @@ const EXAMPLES = [
   { label: "$5k rAAPL, overnight", text: "$5k rAAPL overnight, stop at -$150" },
 ];
 
-type Meta = { readBy: "rules" | "model" | "edit"; model: string | null; modelNote?: string };
+type Meta = { readBy: "rules" | "model" | "edit"; intent?: "new" | "change" | "edit"; asked?: string; model: string | null; modelNote?: string };
 type Reply = { parsed: Parsed; result?: CheckResult; error?: string; meta?: Meta };
 
 const STATUS: Record<string, string> = { fits: "Fits", "fits-if": "Fits with a change", "does-not-fit": "Doesn't fit", illiquid: "Can't fill" };
-const LABEL: Record<string, string> = { ticker: "which stock", sizeUsd: "how much", horizonDays: "how long you'll hold", lossLimitUsd: "the most you're willing to lose" };
 
 const fromResult = (r: CheckResult): Reply => ({
   parsed: { trade: r.trade, draft: { ...r.trade }, missing: [], notes: [] },
@@ -32,7 +31,20 @@ export default function Desk({ initial }: { initial: CheckResult | null }) {
   const [active, setActive] = useState<number | null>(0);
   const [busy, setBusy] = useState(false);
   const [words, setWords] = useState("");
+  const bgRef = useRef<HTMLDivElement>(null);
+
+  // the hero lines drift slower than the page: a quiet sense of depth while you scroll
+  useEffect(() => {
+    let raf = 0;
+    const onScroll = () => {
+      cancelAnimationFrame(raf);
+      raf = requestAnimationFrame(() => { if (bgRef.current) bgRef.current.style.transform = `translate3d(0, ${Math.min(window.scrollY, 900) * 0.18}px, 0)`; });
+    };
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => { window.removeEventListener("scroll", onScroll); cancelAnimationFrame(raf); };
+  }, []);
   const cache = useRef<Record<number, Reply>>(initial ? { 0: fromResult(initial) } : {});
+  const [lastGood, setLastGood] = useState<Reply | null>(initial ? fromResult(initial) : null);
 
   async function run(body: { text?: string; draft?: Draft }, tab: number | null = null) {
     setBusy(true);
@@ -40,6 +52,7 @@ export default function Desk({ initial }: { initial: CheckResult | null }) {
       const r = await fetch("/api/check", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify(body) });
       const j: Reply = await r.json();
       setReply(j);
+      if (j.result) setLastGood(j);
       if (tab != null && j.result) cache.current[tab] = j;
     } catch {
       setReply({ parsed: { trade: null, draft: {}, missing: [], notes: [] }, error: "Could not reach Shunt. Try again." });
@@ -69,7 +82,7 @@ export default function Desk({ initial }: { initial: CheckResult | null }) {
   return (
     <main>
       <section className={s.hero}>
-        <TrackBg />
+        <div ref={bgRef} className={s.bgWrap}><TrackBg /></div>
         <div className={s.heroInner}>
           <p className={`pill ${s.heroPill}`}>For US stocks traded on Bitget</p>
           <h1 className={s.title}>See what could <span className={s.hl}>break</span> your trade before you place it.</h1>
@@ -85,8 +98,7 @@ export default function Desk({ initial }: { initial: CheckResult | null }) {
       </section>
 
       <section className={s.deskSection} id="desk">
-        <p className={s.panelIntro}>A live check, read from Bitget and the stock&apos;s own history. Pick a trade below, or change any number.</p>
-        <section className={s.panel} aria-label="Live trade check">
+        <section className={`${s.panel} reveal`} aria-label="Live trade check">
           <header className={s.panelTop}>
             <span className={s.live}><i />Live check<ReadAt iso={r?.costs?.readAt} /></span>
             <div className={s.tabs} role="tablist" aria-label="Example trades">
@@ -99,13 +111,23 @@ export default function Desk({ initial }: { initial: CheckResult | null }) {
           <div className={s.panelBody} aria-live="polite" data-busy={busy || undefined}>
             {!reply && <p className={s.working}>Reading the calendar, the stock&apos;s history and Bitget&apos;s order book…</p>}
             {reply && !r && (
-              <p className={s.need}>
-                {reply.error ?? <>To check it, Shunt still needs: {reply.parsed.missing.map((m) => LABEL[m]).join(", ")}. Try <em>buy $20k rNVDA, holding 5 days, max loss $600</em>.</>}
-              </p>
+              <Clarify key={JSON.stringify(reply.parsed.draft) + (reply.error ?? "")} reply={reply}
+                onSubmit={(d) => { setActive(null); run({ draft: d }); }}
+                onBack={lastGood ? () => setReply(lastGood) : undefined} />
             )}
             {r && v && (
               <>
-                <div className={s.answer} data-tone={v.tone}>
+                <div className={s.question} key={"q" + r.trade.ticker + r.trade.sizeUsd + r.trade.horizonDays + r.trade.lossLimitUsd + r.trade.venue}>
+                  <span className="eyebrow">Your question</span>
+                  <h2 className={s.q}>{questionText(r.trade)}</h2>
+                  {reply?.meta?.asked && (
+                    <p className={s.asked}>
+                      You typed &ldquo;{reply.meta.asked}&rdquo;{reply.meta.readBy === "model" ? ", read by Claude. Every number below is computed by code." : "."}
+                      {reply.meta.modelNote && <> The model was not used: {reply.meta.modelNote}.</>}
+                    </p>
+                  )}
+                </div>
+                <div className={s.answer} data-tone={v.tone} key={"a" + r.trade.ticker + r.trade.sizeUsd + r.trade.horizonDays + r.trade.lossLimitUsd + r.trade.venue + r.costs?.readAt}>
                   <div className={s.answerText}>
                     <span className={s.status}><i />{STATUS[r.assessment.verdict.state]}</span>
                     <h2 className={s.vh}>{v.headline}</h2>
@@ -117,7 +139,9 @@ export default function Desk({ initial }: { initial: CheckResult | null }) {
                     <div><dt>Cost to get out</dt><dd className="num">{r.costs ? fillText(r.costs.exit, r.trade.sizeUsd, r.costs.exitCostUsd) : "n/a"}</dd></div>
                   </dl>
                 </div>
-                {r.assessment.verdict.state !== "illiquid" && <Rail r={r} />}
+                {r.assessment.verdict.state !== "illiquid" && (
+                  <Rail key={`${r.trade.ticker}-${r.trade.sizeUsd}-${r.trade.horizonDays}-${r.trade.lossLimitUsd}-${r.trade.venue}-${r.costs?.readAt}`} r={r} />
+                )}
               </>
             )}
           </div>
@@ -131,7 +155,6 @@ export default function Desk({ initial }: { initial: CheckResult | null }) {
                   placeholder={r ? "what if I hold till Friday?" : "buy $20k rNVDA, 5 days, max loss $600"} />
                 <button disabled={busy || !words.trim()}>{busy ? "Checking" : "Ask"}</button>
               </div>
-              <ReadBy meta={reply?.meta} />
             </form>
           </footer>
         </section>
@@ -156,14 +179,74 @@ function ReadAt({ iso }: { iso?: string }) {
   return <time className={s.readAt} dateTime={iso}>read {iso.slice(11, 16)} UTC</time>;
 }
 
-function ReadBy({ meta }: { meta?: Meta }) {
-  if (!meta || meta.readBy === "edit") return null;
-  if (meta.readBy === "rules") return null;
+const SIZES = [2500, 5000, 10000, 20000];
+const HOLDS = [1, 3, 5, 10];
+
+/** When something is missing, ask for it in plain words instead of showing a dead end. */
+function Clarify({ reply, onSubmit, onBack }: { reply: Reply; onSubmit: (d: Draft) => void; onBack?: () => void }) {
+  const d = reply.parsed.draft;
+  const missing = reply.parsed.missing;
+  const [ticker, setTicker] = useState(d.ticker ?? "");
+  const [size, setSize] = useState(d.sizeUsd ? String(d.sizeUsd) : "");
+  const [hold, setHold] = useState(d.horizonDays ? String(d.horizonDays) : "");
+  const [limit, setLimit] = useState(d.lossLimitUsd ? String(d.lossLimitUsd) : "");
+  const num = (x: string) => Number(x.replace(/[$,\s]/g, "")) || 0;
+  const asked = reply.meta?.asked;
+  const have = [d.ticker, d.horizonDays ? `${d.horizonDays} trading day${d.horizonDays === 1 ? "" : "s"}` : "", d.sizeUsd ? usd(d.sizeUsd) : "", d.lossLimitUsd ? `max loss ${usd(d.lossLimitUsd)}` : ""].filter(Boolean);
+
+  if (reply.error) {
+    return (
+      <div className={s.clarify}>
+        <span className="eyebrow">I couldn&apos;t check that</span>
+        <h2 className={s.q}>{reply.error}</h2>
+        {onBack && <button className={s.backBtn} onClick={onBack}>Back to the last answer</button>}
+      </div>
+    );
+  }
+  const limitChips = num(size) > 0
+    ? [1, 2, 3, 5].map((p) => ({ label: `${p}% of ${usd(num(size))}`, v: Math.round((num(size) * p) / 100) }))
+    : [250, 500, 1000].map((v) => ({ label: usd(v), v }));
+  const ready = missing.every((m) => (m === "ticker" ? ticker.trim() : m === "sizeUsd" ? num(size) > 0 : m === "horizonDays" ? num(hold) > 0 : num(limit) > 0));
+  const submit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!ready) return;
+    onSubmit({ ...d, ticker: (ticker || d.ticker || "").toUpperCase().trim(), sizeUsd: num(size) || d.sizeUsd, horizonDays: num(hold) || d.horizonDays, lossLimitUsd: num(limit) || d.lossLimitUsd });
+  };
   return (
-    <p className={s.readBy}>
-      Read by Claude ({meta.model}). Every number is computed by code, not the model.
-      {meta.modelNote && <> The model was not used: {meta.modelNote}.</>}
-    </p>
+    <form className={s.clarify} onSubmit={submit}>
+      <span className="eyebrow">{missing.length === 1 ? "One quick question" : "A few quick questions"}</span>
+      <h2 className={s.q}>
+        {asked ? <>You asked &ldquo;{asked}&rdquo;. </> : null}
+        {have.length ? <>So far I have <b>{have.join(", ")}</b>. </> : null}
+        I need {missing.length === 1 ? "one more thing" : `${missing.length} more things`} to check it.
+      </h2>
+      <div className={s.cfields}>
+        {missing.includes("ticker") && (
+          <div className={s.cfield}><label htmlFor="c-ticker">Which stock?</label>
+            <input id="c-ticker" value={ticker} onChange={(e) => setTicker(e.target.value)} placeholder="NVDA" autoComplete="off" /></div>
+        )}
+        {missing.includes("sizeUsd") && (
+          <div className={s.cfield}><label htmlFor="c-size">How much do you want to put in?</label>
+            <input id="c-size" value={size} onChange={(e) => setSize(e.target.value)} placeholder="$10,000" inputMode="decimal" autoComplete="off" />
+            <div className={s.cchips}>{SIZES.map((v) => <button type="button" key={v} onClick={() => setSize(String(v))}>{usd(v)}</button>)}</div></div>
+        )}
+        {missing.includes("horizonDays") && (
+          <div className={s.cfield}><label htmlFor="c-hold">How many trading days will you hold it?</label>
+            <input id="c-hold" value={hold} onChange={(e) => setHold(e.target.value)} placeholder="5" inputMode="numeric" autoComplete="off" />
+            <div className={s.cchips}>{HOLDS.map((v) => <button type="button" key={v} onClick={() => setHold(String(v))}>{v} day{v === 1 ? "" : "s"}</button>)}</div></div>
+        )}
+        {missing.includes("lossLimitUsd") && (
+          <div className={s.cfield}><label htmlFor="c-limit">What&apos;s the most you can afford to lose?</label>
+            <input id="c-limit" value={limit} onChange={(e) => setLimit(e.target.value)} placeholder="$600" inputMode="decimal" autoComplete="off" />
+            <div className={s.cchips}>{limitChips.map((c) => <button type="button" key={c.label} onClick={() => setLimit(String(c.v))}>{c.label}</button>)}</div></div>
+        )}
+      </div>
+      <p className={s.cassume}>Unless you say otherwise I will treat it as a long position in the rToken. You can change that after.</p>
+      <div className={s.cgo}>
+        <button className={s.cgoMain} disabled={!ready}>Check it</button>
+        {onBack && <button type="button" className={s.backBtn} onClick={onBack}>Back to the last answer</button>}
+      </div>
+    </form>
   );
 }
 

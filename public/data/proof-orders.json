@@ -1,6 +1,57 @@
 {
  "venue": "Bitget Demo (paper trading) via Agent Hub bgc",
- "orders": [
+ "generatedAt": "2026-10-04T22:18:40.109Z",
+ "summary": {
+  "tradesTried": 68,
+  "roundTrips": 25,
+  "ordersPlaced": 54,
+  "symbols": 4,
+  "filled": 25,
+  "notTradableOnDemo": [
+   "MSFT",
+   "ORCL",
+   "PLTR",
+   "AMD",
+   "AVGO",
+   "MU",
+   "TSM",
+   "NFLX",
+   "LLY",
+   "CRM",
+   "UBER",
+   "SHOP",
+   "SNOW",
+   "CRWD",
+   "PANW",
+   "SMCI",
+   "ARM",
+   "INTC",
+   "QCOM",
+   "JPM",
+   "XOM",
+   "WMT",
+   "COST",
+   "NKE",
+   "BA",
+   "GS",
+   "UNH",
+   "V",
+   "PYPL",
+   "SOFI",
+   "ABNB"
+  ],
+  "skipped": 0,
+  "errors": 43,
+  "verdicts": {
+   "does-not-fit": 24,
+   "fits-if": 1
+  },
+  "medianPredictedBps": 16.86610924363912,
+  "medianRealizedBps": 17.719056410257142,
+  "realizedAtOrBelowPredicted": 14,
+  "totalNotionalUsd": 129824
+ },
+ "earlier": [
   {
    "at": "2026-10-03T19:48:30.189Z",
    "trade": {
@@ -67,6 +118,1108 @@
     "orderId": "1490366226595467264",
     "status": "filled",
     "avgPrice": "183.25"
+   }
+  }
+ ],
+ "orders": [
+  {
+   "id": "HOOD-0",
+   "at": "2026-10-04T21:52:10.684Z",
+   "trade": {
+    "ticker": "HOOD",
+    "venue": "perp",
+    "side": "short",
+    "sizeUsd": 15000,
+    "horizonDays": 10,
+    "lossLimitUsd": 230,
+    "confidence": 0.8
+   },
+   "verdict": "does-not-fit",
+   "sizedAtUsd": 4185,
+   "predicted": {
+    "entryUsd": 4.123061550369964,
+    "exitUsd": 5.19984006376472,
+    "totalUsd": 9.322901614134683,
+    "bps": 22.276945314539265
+   },
+   "symbol": "HOODUSDT",
+   "qty": "36.72",
+   "open": {
+    "command": "bgc --paper-trading order --action place --category USDT-FUTURES --symbol HOODUSDT --side sell --posSide short --orderType market --qty 36.72 --clientOid shunt-muucwczf-HOOD-0-open",
+    "orderId": "1490759740621737984",
+    "status": "filled",
+    "avgPrice": 113.1,
+    "midBefore": 113.965,
+    "fee": 2.4918192
+   },
+   "close": {
+    "orderId": "1490759755134029824",
+    "status": "filled",
+    "avgPrice": 113.17,
+    "midBefore": 113.965,
+    "fee": 2.49336144
+   },
+   "realized": {
+    "slippageUsd": 2.5704000000002694,
+    "feesUsd": 4.98518064,
+    "totalUsd": 7.55558064000027,
+    "bps": 18.0539561290329
+   }
+  },
+  {
+   "id": "HOOD-1",
+   "at": "2026-10-04T21:52:24.876Z",
+   "trade": {
+    "ticker": "HOOD",
+    "venue": "perp",
+    "side": "long",
+    "sizeUsd": 5000,
+    "horizonDays": 5,
+    "lossLimitUsd": 130,
+    "confidence": 0.8
+   },
+   "verdict": "does-not-fit",
+   "sizedAtUsd": 2384,
+   "predicted": {
+    "entryUsd": 2.6621399306752522,
+    "exitUsd": 2.331509026906773,
+    "totalUsd": 4.993648957582025,
+    "bps": 20.946514083817217
+   },
+   "symbol": "HOODUSDT",
+   "qty": "20.91",
+   "open": {
+    "command": "bgc --paper-trading order --action place --category USDT-FUTURES --symbol HOODUSDT --side buy --posSide long --orderType market --qty 20.91 --clientOid shunt-muucwczf-HOOD-1-open",
+    "orderId": "1490759787795075072",
+    "status": "filled",
+    "avgPrice": 113.17,
+    "midBefore": 113.965,
+    "fee": 1.41983082
+   },
+   "close": {
+    "orderId": "1490759801804050432",
+    "status": "filled",
+    "avgPrice": 113.1,
+    "midBefore": 113.965,
+    "fee": 1.4189526
+   },
+   "realized": {
+    "slippageUsd": 1.463700000000152,
+    "feesUsd": 2.83878342,
+    "totalUsd": 4.3024834200001525,
+    "bps": 18.047329781879835
+   }
+  },
+  {
+   "id": "COIN-0",
+   "at": "2026-10-04T21:52:36.640Z",
+   "trade": {
+    "ticker": "COIN",
+    "venue": "perp",
+    "side": "long",
+    "sizeUsd": 5000,
+    "horizonDays": 5,
+    "lossLimitUsd": 80,
+    "confidence": 0.8
+   },
+   "verdict": "does-not-fit",
+   "sizedAtUsd": 1351,
+   "predicted": {
+    "entryUsd": 0.9918790167190386,
+    "exitUsd": 0.9918790167190386,
+    "totalUsd": 1.983758033438077,
+    "bps": 14.683627190511304
+   },
+   "symbol": "COINUSDT",
+   "qty": "7.25",
+   "open": {
+    "command": "bgc --paper-trading order --action place --category USDT-FUTURES --symbol COINUSDT --side buy --posSide long --orderType market --qty 7.25 --clientOid shunt-muucwczf-COIN-0-open",
+    "orderId": "1490759841062735872",
+    "status": "filled",
+    "avgPrice": 183.62,
+    "midBefore": 186.3,
+    "fee": 0.798747
+   },
+   "close": {
+    "orderId": "1490759853716951040",
+    "status": "filled",
+    "avgPrice": 183.51,
+    "midBefore": 186.3,
+    "fee": 0.7982685
+   },
+   "realized": {
+    "slippageUsd": 0.7975000000000989,
+    "feesUsd": 1.5970155,
+    "totalUsd": 2.3945155000000993,
+    "bps": 17.724022945966688
+   }
+  },
+  {
+   "id": "COIN-1",
+   "at": "2026-10-04T21:52:47.913Z",
+   "trade": {
+    "ticker": "COIN",
+    "venue": "perp",
+    "side": "long",
+    "sizeUsd": 2500,
+    "horizonDays": 5,
+    "lossLimitUsd": 60,
+    "confidence": 0.8
+   },
+   "verdict": "does-not-fit",
+   "sizedAtUsd": 1014,
+   "predicted": {
+    "entryUsd": 0.744459898558923,
+    "exitUsd": 0.744459898558923,
+    "totalUsd": 1.488919797117846,
+    "bps": 14.683627190511302
+   },
+   "symbol": "COINUSDT",
+   "qty": "5.44",
+   "open": {
+    "command": "bgc --paper-trading order --action place --category USDT-FUTURES --symbol COINUSDT --side buy --posSide long --orderType market --qty 5.44 --clientOid shunt-muucwczf-COIN-1-open",
+    "orderId": "1490759900357611520",
+    "status": "filled",
+    "avgPrice": 183.62,
+    "midBefore": 186.3,
+    "fee": 0.59933568
+   },
+   "close": {
+    "orderId": "1490759931030556672",
+    "status": "filled",
+    "avgPrice": 183.51,
+    "midBefore": 186.3,
+    "fee": 0.59897664
+   },
+   "realized": {
+    "slippageUsd": 0.5984000000000744,
+    "feesUsd": 1.1983123199999999,
+    "totalUsd": 1.7967123200000743,
+    "bps": 17.719056410257142
+   }
+  },
+  {
+   "id": "MSTR-0",
+   "at": "2026-10-04T21:53:06.940Z",
+   "trade": {
+    "ticker": "MSTR",
+    "venue": "perp",
+    "side": "short",
+    "sizeUsd": 5000,
+    "horizonDays": 5,
+    "lossLimitUsd": 80,
+    "confidence": 0.8
+   },
+   "verdict": "does-not-fit",
+   "sizedAtUsd": 1169,
+   "predicted": {
+    "entryUsd": 0.8646766428815749,
+    "exitUsd": 0.8628859251954106,
+    "totalUsd": 1.7275625680769855,
+    "bps": 14.778122909127335
+   },
+   "symbol": "MSTRUSDT",
+   "qty": "7.12",
+   "open": {
+    "command": "bgc --paper-trading order --action place --category USDT-FUTURES --symbol MSTRUSDT --side sell --posSide short --orderType market --qty 7.12 --clientOid shunt-muucwczf-MSTR-0-open",
+    "orderId": "1490759965092499457",
+    "status": "filled",
+    "avgPrice": 160.62,
+    "midBefore": 164.055,
+    "fee": 0.68616864
+   },
+   "close": {
+    "orderId": "1490759978791096320",
+    "status": "filled",
+    "avgPrice": 160.68,
+    "midBefore": 164.055,
+    "fee": 0.68642496
+   },
+   "realized": {
+    "slippageUsd": 0.4272000000000169,
+    "feesUsd": 1.3725936,
+    "totalUsd": 1.799793600000017,
+    "bps": 15.396010265184062
+   }
+  },
+  {
+   "id": "MSTR-1",
+   "at": "2026-10-04T21:53:17.828Z",
+   "trade": {
+    "ticker": "MSTR",
+    "venue": "perp",
+    "side": "long",
+    "sizeUsd": 5000,
+    "horizonDays": 5,
+    "lossLimitUsd": 130,
+    "confidence": 0.8
+   },
+   "verdict": "does-not-fit",
+   "sizedAtUsd": 1899,
+   "predicted": {
+    "entryUsd": 1.4269207152276284,
+    "exitUsd": 1.5678932252476518,
+    "totalUsd": 2.9948139404752805,
+    "bps": 15.770478886125753
+   },
+   "symbol": "MSTRUSDT",
+   "qty": "11.57",
+   "open": {
+    "command": "bgc --paper-trading order --action place --category USDT-FUTURES --symbol MSTRUSDT --side buy --posSide long --orderType market --qty 11.57 --clientOid shunt-muucwczf-MSTR-1-open",
+    "orderId": "1490760014824361984",
+    "status": "filled",
+    "avgPrice": 160.68,
+    "midBefore": 164.055,
+    "fee": 1.11544056
+   },
+   "close": {
+    "orderId": "1490760028007059456",
+    "status": "filled",
+    "avgPrice": 160.62,
+    "midBefore": 164.055,
+    "fee": 1.11502404
+   },
+   "realized": {
+    "slippageUsd": 0.6942000000000306,
+    "feesUsd": 2.2304646,
+    "totalUsd": 2.9246646000000305,
+    "bps": 15.401077409162877
+   }
+  },
+  {
+   "id": "GOOGL-0",
+   "at": "2026-10-04T21:53:29.554Z",
+   "trade": {
+    "ticker": "GOOGL",
+    "venue": "perp",
+    "side": "long",
+    "sizeUsd": 15000,
+    "horizonDays": 3,
+    "lossLimitUsd": 380,
+    "confidence": 0.8
+   },
+   "verdict": "fits-if",
+   "sizedAtUsd": 7824,
+   "predicted": {
+    "entryUsd": 6.668930405136827,
+    "exitUsd": 6.52711346708642,
+    "totalUsd": 13.196043872223246,
+    "bps": 16.86610924363912
+   },
+   "symbol": "GOOGLUSDT",
+   "qty": "22.69",
+   "open": {
+    "command": "bgc --paper-trading order --action place --category USDT-FUTURES --symbol GOOGLUSDT --side buy --posSide long --orderType market --qty 22.69 --clientOid shunt-muucwczf-GOOGL-0-open",
+    "orderId": "1490760056440246273",
+    "status": "filled",
+    "avgPrice": 342.39,
+    "midBefore": 344.755,
+    "fee": 4.66129746
+   },
+   "close": {
+    "orderId": "1490760070000431104",
+    "status": "filled",
+    "avgPrice": 342.3,
+    "midBefore": 344.755,
+    "fee": 4.6600722
+   },
+   "realized": {
+    "slippageUsd": 2.0420999999994365,
+    "feesUsd": 9.32136966,
+    "totalUsd": 11.363469659999437,
+    "bps": 14.523862039876581
+   }
+  },
+  {
+   "id": "GOOGL-1",
+   "at": "2026-10-04T21:53:39.855Z",
+   "trade": {
+    "ticker": "GOOGL",
+    "venue": "perp",
+    "side": "long",
+    "sizeUsd": 2500,
+    "horizonDays": 1,
+    "lossLimitUsd": 60,
+    "confidence": 0.8
+   },
+   "verdict": "does-not-fit",
+   "sizedAtUsd": 2417,
+   "predicted": {
+    "entryUsd": 1.886831490616704,
+    "exitUsd": 1.9410681436586164,
+    "totalUsd": 3.8278996342753207,
+    "bps": 15.83740022455656
+   },
+   "symbol": "GOOGLUSDT",
+   "qty": "7.01",
+   "open": {
+    "command": "bgc --paper-trading order --action place --category USDT-FUTURES --symbol GOOGLUSDT --side buy --posSide long --orderType market --qty 7.01 --clientOid shunt-muucwczf-GOOGL-1-open",
+    "orderId": "1490760100232974336",
+    "status": "filled",
+    "avgPrice": 342.39,
+    "midBefore": 344.755,
+    "fee": 1.44009234
+   },
+   "close": {
+    "orderId": "1490760115441520640",
+    "status": "filled",
+    "avgPrice": 342.3,
+    "midBefore": 344.755,
+    "fee": 1.4397138
+   },
+   "realized": {
+    "slippageUsd": 0.6308999999998228,
+    "feesUsd": 2.8798061400000003,
+    "totalUsd": 3.510706139999823,
+    "bps": 14.525056433594635
+   }
+  },
+  {
+   "id": "HOOD-2",
+   "at": "2026-10-04T21:54:59.094Z",
+   "trade": {
+    "ticker": "HOOD",
+    "venue": "perp",
+    "side": "short",
+    "sizeUsd": 15000,
+    "horizonDays": 10,
+    "lossLimitUsd": 230,
+    "confidence": 0.8
+   },
+   "verdict": "does-not-fit",
+   "sizedAtUsd": 4183,
+   "predicted": {
+    "entryUsd": 4.224803550794212,
+    "exitUsd": 4.424759087819169,
+    "totalUsd": 8.64956263861338,
+    "bps": 20.677892992142915
+   },
+   "symbol": "HOODUSDT",
+   "qty": "36.71",
+   "open": {
+    "command": "bgc --paper-trading order --action place --category USDT-FUTURES --symbol HOODUSDT --side sell --posSide short --orderType market --qty 36.71 --clientOid shunt-muuczyxi-HOOD-2-open",
+    "orderId": "1490760436158976000",
+    "status": "filled",
+    "avgPrice": 113.1,
+    "midBefore": 113.94,
+    "fee": 2.4911406
+   },
+   "close": {
+    "orderId": "1490760450146979840",
+    "status": "filled",
+    "avgPrice": 113.17,
+    "midBefore": 113.94,
+    "fee": 2.49268242
+   },
+   "realized": {
+    "slippageUsd": 2.569700000000271,
+    "feesUsd": 4.98382302,
+    "totalUsd": 7.55352302000027,
+    "bps": 18.057669184796246
+   }
+  },
+  {
+   "id": "COIN-2",
+   "at": "2026-10-04T21:55:10.321Z",
+   "trade": {
+    "ticker": "COIN",
+    "venue": "perp",
+    "side": "long",
+    "sizeUsd": 5000,
+    "horizonDays": 5,
+    "lossLimitUsd": 130,
+    "confidence": 0.8
+   },
+   "verdict": "does-not-fit",
+   "sizedAtUsd": 2197,
+   "predicted": {
+    "entryUsd": 1.71858032404913,
+    "exitUsd": 1.6132181281053442,
+    "totalUsd": 3.331798452154474,
+    "bps": 15.165218261968475
+   },
+   "symbol": "COINUSDT",
+   "qty": "11.80",
+   "open": {
+    "command": "bgc --paper-trading order --action place --category USDT-FUTURES --symbol COINUSDT --side buy --posSide long --orderType market --qty 11.80 --clientOid shunt-muuczyxi-COIN-2-open",
+    "orderId": "1490760480664735744",
+    "status": "filled",
+    "avgPrice": 183.62,
+    "midBefore": 186.175,
+    "fee": 1.3000296
+   },
+   "close": {
+    "orderId": "1490760501577535488",
+    "status": "filled",
+    "avgPrice": 183.51,
+    "midBefore": 186.175,
+    "fee": 1.2992508
+   },
+   "realized": {
+    "slippageUsd": 1.2980000000001617,
+    "feesUsd": 2.5992804,
+    "totalUsd": 3.897280400000162,
+    "bps": 17.739100591716717
+   }
+  },
+  {
+   "id": "MSTR-2",
+   "at": "2026-10-04T21:55:25.130Z",
+   "trade": {
+    "ticker": "MSTR",
+    "venue": "perp",
+    "side": "long",
+    "sizeUsd": 5000,
+    "horizonDays": 5,
+    "lossLimitUsd": 80,
+    "confidence": 0.8
+   },
+   "verdict": "does-not-fit",
+   "sizedAtUsd": 1168,
+   "predicted": {
+    "entryUsd": 0.7364282219442679,
+    "exitUsd": 0.7364282219442679,
+    "totalUsd": 1.4728564438885359,
+    "bps": 12.610072293566231
+   },
+   "symbol": "MSTRUSDT",
+   "qty": "7.12",
+   "open": {
+    "command": "bgc --paper-trading order --action place --category USDT-FUTURES --symbol MSTRUSDT --side buy --posSide long --orderType market --qty 7.12 --clientOid shunt-muuczyxi-MSTR-2-open",
+    "orderId": "1490760546825687040",
+    "status": "filled",
+    "avgPrice": 160.68,
+    "midBefore": 163.915,
+    "fee": 0.68642496
+   },
+   "close": {
+    "orderId": "1490760560830468096",
+    "status": "filled",
+    "avgPrice": 160.62,
+    "midBefore": 163.935,
+    "fee": 0.68616864
+   },
+   "realized": {
+    "slippageUsd": 0.56960000000009,
+    "feesUsd": 1.3725936,
+    "totalUsd": 1.9421936000000901,
+    "bps": 16.62836986301447
+   }
+  },
+  {
+   "id": "GOOGL-2",
+   "at": "2026-10-04T21:55:36.764Z",
+   "trade": {
+    "ticker": "GOOGL",
+    "venue": "perp",
+    "side": "long",
+    "sizeUsd": 2500,
+    "horizonDays": 5,
+    "lossLimitUsd": 60,
+    "confidence": 0.8
+   },
+   "verdict": "does-not-fit",
+   "sizedAtUsd": 2420,
+   "predicted": {
+    "entryUsd": 1.7666138050204037,
+    "exitUsd": 1.7687829349453539,
+    "totalUsd": 3.5353967399657575,
+    "bps": 14.609077437875031
+   },
+   "symbol": "GOOGLUSDT",
+   "qty": "7.02",
+   "open": {
+    "command": "bgc --paper-trading order --action place --category USDT-FUTURES --symbol GOOGLUSDT --side buy --posSide long --orderType market --qty 7.02 --clientOid shunt-muuczyxi-GOOGL-2-open",
+    "orderId": "1490760602052087809",
+    "status": "filled",
+    "avgPrice": 342.39,
+    "midBefore": 344.605,
+    "fee": 1.44214668
+   },
+   "close": {
+    "orderId": "1490760622130221056",
+    "status": "filled",
+    "avgPrice": 342.3,
+    "midBefore": 344.605,
+    "fee": 1.4417676
+   },
+   "realized": {
+    "slippageUsd": 0.6317999999998243,
+    "feesUsd": 2.88391428,
+    "totalUsd": 3.515714279999824,
+    "bps": 14.527744958676958
+   }
+  },
+  {
+   "id": "HOOD-3",
+   "at": "2026-10-04T22:02:16.606Z",
+   "trade": {
+    "ticker": "HOOD",
+    "venue": "perp",
+    "side": "short",
+    "sizeUsd": 15000,
+    "horizonDays": 10,
+    "lossLimitUsd": 230,
+    "confidence": 0.8
+   },
+   "verdict": "does-not-fit",
+   "sizedAtUsd": 4223,
+   "predicted": {
+    "entryUsd": 4.51320242826576,
+    "exitUsd": 3.7728689433708427,
+    "totalUsd": 8.286071371636602,
+    "bps": 19.62129143177031
+   },
+   "symbol": "HOODUSDT",
+   "qty": "37.00",
+   "open": {
+    "command": "bgc --paper-trading order --action place --category USDT-FUTURES --symbol HOODUSDT --side sell --posSide short --orderType market --qty 37.00 --clientOid shunt-muud9cim-HOOD-3-open",
+    "orderId": "1490762282411905024",
+    "status": "filled",
+    "avgPrice": 113.11,
+    "midBefore": 114.125,
+    "fee": 2.511042
+   },
+   "close": {
+    "orderId": "1490762307103772673",
+    "status": "filled",
+    "avgPrice": 113.17,
+    "midBefore": 114.14,
+    "fee": 2.512374
+   },
+   "realized": {
+    "slippageUsd": 1.665000000000063,
+    "feesUsd": 5.023416,
+    "totalUsd": 6.688416000000062,
+    "bps": 15.838067724366711
+   }
+  },
+  {
+   "id": "HOOD-4",
+   "at": "2026-10-04T22:02:36.273Z",
+   "trade": {
+    "ticker": "HOOD",
+    "venue": "perp",
+    "side": "long",
+    "sizeUsd": 5000,
+    "horizonDays": 5,
+    "lossLimitUsd": 130,
+    "confidence": 0.8
+   },
+   "verdict": "does-not-fit",
+   "sizedAtUsd": 2384,
+   "predicted": {
+    "entryUsd": 1.8970578578815034,
+    "exitUsd": 2.206931274100912,
+    "totalUsd": 4.1039891319824156,
+    "bps": 17.21471951334906
+   },
+   "symbol": "HOODUSDT",
+   "qty": "20.88",
+   "open": {
+    "command": "bgc --paper-trading order --action place --category USDT-FUTURES --symbol HOODUSDT --side buy --posSide long --orderType market --qty 20.88 --clientOid shunt-muud9cim-HOOD-4-open",
+    "orderId": "1490762394378850304",
+    "status": "filled",
+    "avgPrice": 113.17,
+    "midBefore": 114.16499999999999,
+    "fee": 1.41779376
+   },
+   "close": {
+    "orderId": "1490762432932892672",
+    "status": "filled",
+    "avgPrice": 113.11,
+    "midBefore": 114.125,
+    "fee": 1.41704208
+   },
+   "realized": {
+    "slippageUsd": 0.41760000000021336,
+    "feesUsd": 2.83483584,
+    "totalUsd": 3.2524358400002136,
+    "bps": 13.642767785235796
+   }
+  },
+  {
+   "id": "HOOD-5",
+   "at": "2026-10-04T22:03:04.807Z",
+   "trade": {
+    "ticker": "HOOD",
+    "venue": "perp",
+    "side": "long",
+    "sizeUsd": 5000,
+    "horizonDays": 5,
+    "lossLimitUsd": 80,
+    "confidence": 0.8
+   },
+   "verdict": "does-not-fit",
+   "sizedAtUsd": 1465,
+   "predicted": {
+    "entryUsd": 1.287514026662092,
+    "exitUsd": 1.2379149940981402,
+    "totalUsd": 2.525429020760232,
+    "bps": 17.238423349899193
+   },
+   "symbol": "HOODUSDT",
+   "qty": "12.84",
+   "open": {
+    "command": "bgc --paper-trading order --action place --category USDT-FUTURES --symbol HOODUSDT --side buy --posSide long --orderType market --qty 12.84 --clientOid shunt-muud9cim-HOOD-5-open",
+    "orderId": "1490762518115012608",
+    "status": "filled",
+    "avgPrice": 113.17,
+    "midBefore": 114.05000000000001,
+    "fee": 0.87186168
+   },
+   "close": {
+    "orderId": "1490762550901886976",
+    "status": "filled",
+    "avgPrice": 113.11,
+    "midBefore": 114.07499999999999,
+    "fee": 0.87139944
+   },
+   "realized": {
+    "slippageUsd": 1.0913999999997372,
+    "feesUsd": 1.74326112,
+    "totalUsd": 2.834661119999737,
+    "bps": 19.349222662114247
+   }
+  },
+  {
+   "id": "HOOD-6",
+   "at": "2026-10-04T22:03:32.181Z",
+   "trade": {
+    "ticker": "HOOD",
+    "venue": "perp",
+    "side": "long",
+    "sizeUsd": 2500,
+    "horizonDays": 5,
+    "lossLimitUsd": 60,
+    "confidence": 0.8
+   },
+   "verdict": "does-not-fit",
+   "sizedAtUsd": 1102,
+   "predicted": {
+    "entryUsd": 0.8061936406298024,
+    "exitUsd": 0.8965404912372187,
+    "totalUsd": 1.702734131867021,
+    "bps": 15.451307911678958
+   },
+   "symbol": "HOODUSDT",
+   "qty": "9.66",
+   "open": {
+    "command": "bgc --paper-trading order --action place --category USDT-FUTURES --symbol HOODUSDT --side buy --posSide long --orderType market --qty 9.66 --clientOid shunt-muud9cim-HOOD-6-open",
+    "orderId": "1490762605306204160",
+    "status": "filled",
+    "avgPrice": 113.17,
+    "midBefore": 114.015,
+    "fee": 0.65593332
+   },
+   "close": {
+    "orderId": "1490762634037186560",
+    "status": "filled",
+    "avgPrice": 113.11,
+    "midBefore": 114.07499999999999,
+    "fee": 0.65558556
+   },
+   "realized": {
+    "slippageUsd": 1.1591999999999079,
+    "feesUsd": 1.31151888,
+    "totalUsd": 2.470718879999908,
+    "bps": 22.42031651542566
+   }
+  },
+  {
+   "id": "HOOD-7",
+   "at": "2026-10-04T22:03:52.207Z",
+   "trade": {
+    "ticker": "HOOD",
+    "venue": "perp",
+    "side": "short",
+    "sizeUsd": 5000,
+    "horizonDays": 5,
+    "lossLimitUsd": 80,
+    "confidence": 0.8
+   },
+   "verdict": "does-not-fit",
+   "sizedAtUsd": 1456,
+   "predicted": {
+    "entryUsd": 1.065086563500073,
+    "exitUsd": 1.0689276642824088,
+    "totalUsd": 2.134014227782482,
+    "bps": 14.656691124879684
+   },
+   "symbol": "HOODUSDT",
+   "qty": "12.76",
+   "open": {
+    "command": "bgc --paper-trading order --action place --category USDT-FUTURES --symbol HOODUSDT --side sell --posSide short --orderType market --qty 12.76 --clientOid shunt-muud9cim-HOOD-7-open",
+    "orderId": "1490762725837918208",
+    "status": "filled",
+    "avgPrice": 113.11,
+    "midBefore": 114.07499999999999,
+    "fee": 0.86597016
+   },
+   "close": {
+    "orderId": "1490762794913910784",
+    "status": "filled",
+    "avgPrice": 113.17,
+    "midBefore": 113.975,
+    "fee": 0.86642952
+   },
+   "realized": {
+    "slippageUsd": 2.0415999999999563,
+    "feesUsd": 1.7323996799999999,
+    "totalUsd": 3.7739996799999562,
+    "bps": 25.920327472527173
+   }
+  },
+  {
+   "id": "HOOD-8",
+   "at": "2026-10-04T22:04:33.195Z",
+   "trade": {
+    "ticker": "HOOD",
+    "venue": "perp",
+    "side": "long",
+    "sizeUsd": 5000,
+    "horizonDays": 5,
+    "lossLimitUsd": 130,
+    "confidence": 0.8
+   },
+   "verdict": "does-not-fit",
+   "sizedAtUsd": 2385,
+   "predicted": {
+    "entryUsd": 2.339546102833948,
+    "exitUsd": 1.8718110539528292,
+    "totalUsd": 4.211357156786777,
+    "bps": 17.657681999105982
+   },
+   "symbol": "HOODUSDT",
+   "qty": "20.90",
+   "open": {
+    "command": "bgc --paper-trading order --action place --category USDT-FUTURES --symbol HOODUSDT --side buy --posSide long --orderType market --qty 20.90 --clientOid shunt-muud9cim-HOOD-8-open",
+    "orderId": "1490762882717470720",
+    "status": "filled",
+    "avgPrice": 113.17,
+    "midBefore": 114.095,
+    "fee": 1.4191518
+   },
+   "close": {
+    "orderId": "1490762919388270592",
+    "status": "filled",
+    "avgPrice": 113.11,
+    "midBefore": 114.12,
+    "fee": 1.4183994
+   },
+   "realized": {
+    "slippageUsd": 1.7765000000001656,
+    "feesUsd": 2.8375512,
+    "totalUsd": 4.614051200000166,
+    "bps": 19.34612662473864
+   }
+  },
+  {
+   "id": "HOOD-9",
+   "at": "2026-10-04T22:05:00.296Z",
+   "trade": {
+    "ticker": "HOOD",
+    "venue": "perp",
+    "side": "long",
+    "sizeUsd": 15000,
+    "horizonDays": 3,
+    "lossLimitUsd": 380,
+    "confidence": 0.8
+   },
+   "verdict": "does-not-fit",
+   "sizedAtUsd": 6929,
+   "predicted": {
+    "entryUsd": 8.621012963914183,
+    "exitUsd": 9.062165336165553,
+    "totalUsd": 17.683178300079735,
+    "bps": 25.52053442066638
+   },
+   "symbol": "HOODUSDT",
+   "qty": "60.72",
+   "open": {
+    "command": "bgc --paper-trading order --action place --category USDT-FUTURES --symbol HOODUSDT --side buy --posSide long --orderType market --qty 60.72 --clientOid shunt-muud9cim-HOOD-9-open",
+    "orderId": "1490762997452656640",
+    "status": "filled",
+    "avgPrice": 113.17,
+    "midBefore": 114.10499999999999,
+    "fee": 4.12300944
+   },
+   "close": {
+    "orderId": "1490763015064539137",
+    "status": "filled",
+    "avgPrice": 113.11,
+    "midBefore": 114.1,
+    "fee": 4.12082352
+   },
+   "realized": {
+    "slippageUsd": 3.3396000000004165,
+    "feesUsd": 8.243832959999999,
+    "totalUsd": 11.583432960000415,
+    "bps": 16.717322788281738
+   }
+  },
+  {
+   "id": "HOOD-10",
+   "at": "2026-10-04T22:05:21.763Z",
+   "trade": {
+    "ticker": "HOOD",
+    "venue": "perp",
+    "side": "long",
+    "sizeUsd": 2500,
+    "horizonDays": 1,
+    "lossLimitUsd": 60,
+    "confidence": 0.8
+   },
+   "verdict": "does-not-fit",
+   "sizedAtUsd": 1099,
+   "predicted": {
+    "entryUsd": 0.8521562922037677,
+    "exitUsd": 0.9691392629036057,
+    "totalUsd": 1.8212955551073735,
+    "bps": 16.57229804465308
+   },
+   "symbol": "HOODUSDT",
+   "qty": "9.63",
+   "open": {
+    "command": "bgc --paper-trading order --action place --category USDT-FUTURES --symbol HOODUSDT --side buy --posSide long --orderType market --qty 9.63 --clientOid shunt-muud9cim-HOOD-10-open",
+    "orderId": "1490763050586099712",
+    "status": "filled",
+    "avgPrice": 113.17,
+    "midBefore": 114.03,
+    "fee": 0.65389626
+   },
+   "close": {
+    "orderId": "1490763067606585344",
+    "status": "filled",
+    "avgPrice": 113.11,
+    "midBefore": 114.03,
+    "fee": 0.65354958
+   },
+   "realized": {
+    "slippageUsd": 0.5778000000000212,
+    "feesUsd": 1.30744584,
+    "totalUsd": 1.8852458400000212,
+    "bps": 17.154193266606196
+   }
+  },
+  {
+   "id": "HOOD-11",
+   "at": "2026-10-04T22:05:34.624Z",
+   "trade": {
+    "ticker": "HOOD",
+    "venue": "perp",
+    "side": "long",
+    "sizeUsd": 5000,
+    "horizonDays": 1,
+    "lossLimitUsd": 130,
+    "confidence": 0.8
+   },
+   "verdict": "does-not-fit",
+   "sizedAtUsd": 2386,
+   "predicted": {
+    "entryUsd": 2.1841809220031796,
+    "exitUsd": 2.1916980700604083,
+    "totalUsd": 4.375878992063588,
+    "bps": 18.33981136656994
+   },
+   "symbol": "HOODUSDT",
+   "qty": "20.91",
+   "open": {
+    "command": "bgc --paper-trading order --action place --category USDT-FUTURES --symbol HOODUSDT --side buy --posSide long --orderType market --qty 20.91 --clientOid shunt-muud9cim-HOOD-11-open",
+    "orderId": "1490763098334056448",
+    "status": "filled",
+    "avgPrice": 113.17,
+    "midBefore": 114.095,
+    "fee": 1.41983082
+   },
+   "close": {
+    "orderId": "1490763112615661568",
+    "status": "filled",
+    "avgPrice": 113.11,
+    "midBefore": 114.10499999999999,
+    "fee": 1.41907806
+   },
+   "realized": {
+    "slippageUsd": 1.4636999999998572,
+    "feesUsd": 2.83890888,
+    "totalUsd": 4.302608879999857,
+    "bps": 18.032727912824214
+   }
+  },
+  {
+   "id": "HOOD-13",
+   "at": "2026-10-04T22:05:55.391Z",
+   "trade": {
+    "ticker": "HOOD",
+    "venue": "perp",
+    "side": "long",
+    "sizeUsd": 5000,
+    "horizonDays": 5,
+    "lossLimitUsd": 130,
+    "confidence": 0.8
+   },
+   "verdict": "does-not-fit",
+   "sizedAtUsd": 2379,
+   "predicted": {
+    "entryUsd": 1.9186927642528167,
+    "exitUsd": 2.31722236334732,
+    "totalUsd": 4.235915127600137,
+    "bps": 17.805444000000577
+   },
+   "symbol": "HOODUSDT",
+   "qty": "20.85",
+   "open": {
+    "command": "bgc --paper-trading order --action place --category USDT-FUTURES --symbol HOODUSDT --side buy --posSide long --orderType market --qty 20.85 --clientOid shunt-muud9cim-HOOD-13-open",
+    "orderId": "1490763192622010368",
+    "status": "filled",
+    "avgPrice": 113.17,
+    "midBefore": 114.095,
+    "fee": 1.4157567
+   },
+   "close": {
+    "orderId": "1490763206454824960",
+    "status": "filled",
+    "avgPrice": 113.11,
+    "midBefore": 114.095,
+    "fee": 1.4150061
+   },
+   "realized": {
+    "slippageUsd": 1.2510000000000474,
+    "feesUsd": 2.8307628,
+    "totalUsd": 4.081762800000048,
+    "bps": 17.15747288776817
+   }
+  },
+  {
+   "id": "COIN-3",
+   "at": "2026-10-04T22:06:07.419Z",
+   "trade": {
+    "ticker": "COIN",
+    "venue": "perp",
+    "side": "short",
+    "sizeUsd": 5000,
+    "horizonDays": 1,
+    "lossLimitUsd": 130,
+    "confidence": 0.8
+   },
+   "verdict": "does-not-fit",
+   "sizedAtUsd": 2189,
+   "predicted": {
+    "entryUsd": 1.7565810486080324,
+    "exitUsd": 1.8804502686928575,
+    "totalUsd": 3.63703131730089,
+    "bps": 16.615035711744586
+   },
+   "symbol": "COINUSDT",
+   "qty": "11.73",
+   "open": {
+    "command": "bgc --paper-trading order --action place --category USDT-FUTURES --symbol COINUSDT --side sell --posSide short --orderType market --qty 11.73 --clientOid shunt-muud9cim-COIN-3-open",
+    "orderId": "1490763280966635520",
+    "status": "filled",
+    "avgPrice": 183.51,
+    "midBefore": 186.475,
+    "fee": 1.29154338
+   },
+   "close": {
+    "orderId": "1490763333902946304",
+    "status": "filled",
+    "avgPrice": 183.62,
+    "midBefore": 186.565,
+    "fee": 1.29231756
+   },
+   "realized": {
+    "slippageUsd": 0.23460000000012116,
+    "feesUsd": 2.58386094,
+    "totalUsd": 2.8184609400001213,
+    "bps": 12.875563910461953
+   }
+  },
+  {
+   "id": "COIN-5",
+   "at": "2026-10-04T22:06:54.794Z",
+   "trade": {
+    "ticker": "COIN",
+    "venue": "perp",
+    "side": "short",
+    "sizeUsd": 5000,
+    "horizonDays": 10,
+    "lossLimitUsd": 200,
+    "confidence": 0.8
+   },
+   "verdict": "does-not-fit",
+   "sizedAtUsd": 3358,
+   "predicted": {
+    "entryUsd": 3.2492432942832274,
+    "exitUsd": 3.3236207109009728,
+    "totalUsd": 6.572864005184201,
+    "bps": 19.573746292984513
+   },
+   "symbol": "COINUSDT",
+   "qty": "18.01",
+   "open": {
+    "command": "bgc --paper-trading order --action place --category USDT-FUTURES --symbol COINUSDT --side sell --posSide short --orderType market --qty 18.01 --clientOid shunt-muud9cim-COIN-5-open",
+    "orderId": "1490763503554154496",
+    "status": "filled",
+    "avgPrice": 183.51,
+    "midBefore": 186.445,
+    "fee": 1.98300906
+   },
+   "close": {
+    "orderId": "1490763541902675968",
+    "status": "filled",
+    "avgPrice": 183.62,
+    "midBefore": 186.41500000000002,
+    "fee": 1.98419772
+   },
+   "realized": {
+    "slippageUsd": 2.5213999999997583,
+    "feesUsd": 3.96720678,
+    "totalUsd": 6.488606779999759,
+    "bps": 19.322831387730073
+   }
+  },
+  {
+   "id": "COIN-6",
+   "at": "2026-10-04T22:07:30.236Z",
+   "trade": {
+    "ticker": "COIN",
+    "venue": "perp",
+    "side": "long",
+    "sizeUsd": 5000,
+    "horizonDays": 5,
+    "lossLimitUsd": 80,
+    "confidence": 0.8
+   },
+   "verdict": "does-not-fit",
+   "sizedAtUsd": 1346,
+   "predicted": {
+    "entryUsd": 1.2169481811969411,
+    "exitUsd": 1.1284967489236226,
+    "totalUsd": 2.3454449301205638,
+    "bps": 17.425296657656492
+   },
+   "symbol": "COINUSDT",
+   "qty": "7.22",
+   "open": {
+    "command": "bgc --paper-trading order --action place --category USDT-FUTURES --symbol COINUSDT --side buy --posSide long --orderType market --qty 7.22 --clientOid shunt-muud9cim-COIN-6-open",
+    "orderId": "1490763635817336832",
+    "status": "filled",
+    "avgPrice": 183.62,
+    "midBefore": 186.405,
+    "fee": 0.79544184
+   },
+   "close": {
+    "orderId": "1490763671993208832",
+    "status": "filled",
+    "avgPrice": 183.51,
+    "midBefore": 186.41,
+    "fee": 0.79496532
+   },
+   "realized": {
+    "slippageUsd": 0.8303000000000651,
+    "feesUsd": 1.5904071599999998,
+    "totalUsd": 2.420707160000065,
+    "bps": 17.984451411590378
    }
   }
  ]

@@ -9,6 +9,8 @@ import { assess } from "@/lib/engine/switchpoint";
 import type { CheckResult } from "@/lib/check";
 import type { Calibration, Profile, Trade } from "@/lib/engine/types";
 import { explain, pct, usd } from "@/lib/explain";
+import FocusLink from "./FocusLink";
+import HowItWorks from "./HowItWorks";
 import Icon, { type IconName } from "./Icon";
 import s from "./sections.module.css";
 
@@ -29,28 +31,18 @@ const rate = (k: string) => cal.types[k]?.volScaled?.rate ?? null;
 export default function Sections() {
   return (
     <>
-      <section id="how" className={`${s.sec} reveal`}>
-        <p className="pill">How it works</p>
-        <h2 className={s.h2}>A trade check in <span className={s.hl}>three steps</span></h2>
-        <div className={s.steps}>
-          <article className={s.step}>
-            <span className={`${s.n} num`}>/01</span>
-            <h3>Say your trade</h3>
-            <p>Type it the way you would say it: the stock, how much, how long, and the most you can lose. Shunt shows what it understood, and you can fix any value before it measures anything.</p>
-            <div className={s.mini} aria-label="Example of what Shunt understood">
-              <p className={`${s.miniInput} num`}>buy $10k rNVDA, holding 5 days, max loss $600</p>
-              <div className={s.miniChips}>
-                <span><b>Stock</b>NVDA</span><span><b>Size</b>$10,000</span><span><b>Hold</b>5 days</span><span><b>Max loss</b>$600</span>
-              </div>
-            </div>
-          </article>
-
-          <article className={s.step}>
-            <span className={`${s.n} num`}>/02</span>
-            <h3>Shunt reads the calendar</h3>
-            <p>It finds every earnings report, Fed decision and weekend inside your hold, then measures how big each one has been for that exact stock.</p>
-            <div className={s.mini} aria-label="Measured events for NVDA">
-              {[["earnings", "NVDA earnings", earnings], ["weekend", "Weekend closure", weekend], ["fed", "Fed decision", fed]].map(([ic, label, b]) => {
+      <section id="how" className={s.dark}>
+        <div className={`${s.darkIn} reveal`}>
+          <p className={s.kicker}>How it works</p>
+          <h2 className={s.h2d}>Three steps, <span>about ten seconds</span></h2>
+          <HowItWorks steps={[
+            { title: "Say your trade", text: "Type it the way you would say it: the stock, how much, how long, and the most you can lose. Shunt shows what it understood, and asks if something is missing.",
+              demo: (<>
+                <p className={`${s.miniInput} num`}>buy $10k rNVDA, holding 5 days, max loss $600</p>
+                <div className={s.miniChips}><span><b>Stock</b>NVDA</span><span><b>Size</b>$10,000</span><span><b>Hold</b>5 days</span><span><b>Max loss</b>$600</span></div>
+              </>) },
+            { title: "Shunt reads the calendar", text: "It finds every earnings report, Fed decision and weekend inside your hold, then measures how big each one has been for that exact stock.",
+              demo: (<>{[["earnings", "NVDA earnings", earnings], ["weekend", "Weekend closure", weekend], ["fed", "Fed decision", fed]].map(([ic, label, b]) => {
                 const band = b as typeof earnings;
                 return (
                   <div key={label as string} className={s.miniRow}>
@@ -58,22 +50,15 @@ export default function Sections() {
                     <span>{label as string}</span>
                     <span className={`${s.miniVal} num`}>up to {pct(band.pct)}</span>
                     <span className={`${s.miniSub} num`}>{band.n} past</span>
-                  </div>
-                );
-              })}
-            </div>
-          </article>
-
-          <article className={s.step}>
-            <span className={`${s.n} num`}>/03</span>
-            <h3>See where it stops fitting</h3>
-            <p>One sentence tells you if the trade fits your limit, and the rail shows which event breaks it. Live Bitget costs sit right next to it.</p>
-            <div className={s.mini} aria-label="Example verdict">
-              <span className={s.miniStatus} data-tone={verdict.tone}><i />{assessment.verdict.state === "fits" ? "Fits" : assessment.verdict.state === "does-not-fit" ? "Doesn't fit" : "Fits with a change"}</span>
-              <p className={s.miniHead}>{verdict.headline}</p>
-              <p className={s.miniFoot}>Worked example: {usd(trade.sizeUsd)} for {trade.horizonDays} days with a {usd(trade.lossLimitUsd)} limit, if NVDA reported during the hold. Sizes come from NVDA&apos;s own history, without live costs.</p>
-            </div>
-          </article>
+                  </div>);
+              })}</>) },
+            { title: "See where it stops fitting", text: "One sentence says whether the trade fits your limit, and the chart shows which event breaks it. Live Bitget costs sit next to it.",
+              demo: (<>
+                <span className={s.miniStatus} data-tone={verdict.tone}><i />{assessment.verdict.state === "fits" ? "Fits" : assessment.verdict.state === "does-not-fit" ? "Doesn't fit" : "Fits with a change"}</span>
+                <p className={s.miniHead}>{verdict.headline}</p>
+                <p className={s.miniFoot}>Worked example: {usd(trade.sizeUsd)} for {trade.horizonDays} days with a {usd(trade.lossLimitUsd)} limit, if NVDA reported during the hold.</p>
+              </>) },
+          ]} />
         </div>
       </section>
 
@@ -82,7 +67,7 @@ export default function Sections() {
         <h2 className={s.h2}>Four things, each <span className={s.hl}>measured</span>, none guessed</h2>
         <div className={s.items}>
           <article className={s.item}>
-            <span className={s.tile}><Icon name="earnings" /></span>
+            <span className={`${s.tile} num`}>01</span>
             <div>
               <h3>Earnings days</h3>
               <p>A stock&apos;s own report day moves about 4.7 times an ordinary day, and the size holds steady stock by stock.</p>
@@ -90,7 +75,7 @@ export default function Sections() {
             </div>
           </article>
           <article className={s.item}>
-            <span className={s.tile}><Icon name="bellwether" /></span>
+            <span className={`${s.tile} num`}>02</span>
             <div>
               <h3>Other companies&apos; reports</h3>
               <p>Some stocks move with a bigger company&apos;s report. Shunt flags a link only when it passes a corrected test, and 45 of 2,218 stocks do.</p>
@@ -98,7 +83,7 @@ export default function Sections() {
             </div>
           </article>
           <article className={s.item}>
-            <span className={s.tile}><Icon name="weekend" /></span>
+            <span className={`${s.tile} num`}>03</span>
             <div>
               <h3>Fed days and weekends</h3>
               <p>Fed decision days and Wall Street&apos;s weekend close, each measured for that stock. Weekends are the weakest part: the range catches {pct(rate("weekend"), 0)} of them.</p>
@@ -106,7 +91,7 @@ export default function Sections() {
             </div>
           </article>
           <article className={s.item}>
-            <span className={s.tile}><Icon name="liquidity" /></span>
+            <span className={`${s.tile} num`}>04</span>
             <div>
               <h3>Your costs on Bitget</h3>
               <p>Your size is walked through the live order book, with fees, funding and the move that would liquidate a perp. If the book cannot fill your size, Shunt says so instead of guessing.</p>
@@ -152,7 +137,7 @@ export default function Sections() {
             <ul>
               <li>Every event move and range, from each stock&apos;s own history</li>
               <li>The order book cost at your size</li>
-              <li>The verdict and the switchpoint</li>
+              <li>The verdict, and the day the trade stops fitting</li>
             </ul>
           </div>
         </div>
@@ -162,7 +147,7 @@ export default function Sections() {
         <h2>Ready to check your next trade?</h2>
         <p>Type it in plain words. It takes a few seconds.</p>
         <div className={s.ctaRow}>
-          <Link href="/#desk" className={s.ctaMain}>Check a trade</Link>
+          <FocusLink className={s.ctaMain}>Check a trade</FocusLink>
           <Link href="/proof" className={s.ctaAlt}>See the proof</Link>
         </div>
       </section>

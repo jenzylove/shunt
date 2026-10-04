@@ -52,3 +52,15 @@
 .more summary::before { content: "+"; display: inline-block; width: 22px; color: var(--accent); font-family: var(--font-num); }
 .more[open] summary::before { content: "2"; }
 .more summary::-webkit-details-marker { display: none; }
+
+/* the calibration claim as a picture: range lane drawn the evening before, a dot for each day's move */
+.strips { display: grid; gap: 28px; margin-top: 24px; }
+.stripFig { margin: 0; }
+.stripFig figcaption { display: flex; gap: 14px; align-items: baseline; font-size: 15px; margin-bottom: 4px; }
+.stripFig svg { width: 100%; height: auto; display: block; }
+.stripBand { fill: color-mix(in srgb, var(--accent) 14%, transparent); stroke: none; }
+.stripZero { stroke: var(--line); stroke-width: 1; }
+.stripIn { fill: var(--ink); opacity: 0.55; }
+.stripOut { fill: var(--stop); }
+.stripTick { fill: var(--muted); font: 500 11px var(--font-num); }
+.stripNote { margin: 4px 0 0; color: var(--muted); font-size: 13px; }

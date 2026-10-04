@@ -19,7 +19,11 @@ const COMPANY: Record<string, string> = {
   constellation: "CEG", oklo: "OKLO", nuscale: "SMR",
 };
 
-/** Deterministic parser for common phrasing: "buy $20k rNVDA, hold 5 days, max loss $600". */
+// everyday words that are also tickers: never read these as a stock unless written in capitals
+const STOP = new Set(("all can now one for big low new key cash well true good best real safe open line play move post plus any are was you the and buy sell long short hold " +
+  "days day week weeks loss max risk lose over take stop size bet weekend month year till with from into that this what when will down high less more most much many " +
+  "just like want need have has had not out off per its our your their them they then than also only very each both such same other another about after before while").split(" "));
+
 /** Trading days from now through the first open after the next weekend. */
 export function daysThroughWeekend(now: Date): number {
   const days = tradingDaysAfter(now, 10);
@@ -32,11 +36,18 @@ export function ruleParse(text: string, known: (t: string) => boolean, now = new
   const d: Draft = {};
 
   // venue and ticker: rNVDA / NVDA perp / NVDAUSDT / plain ticker / company name
-  const rtok = text.match(/\br([A-Z]{1,5})\b/);
-  const usdt = text.match(/\b([A-Z]{1,5})USDT\b/);
-  const bare = [...text.matchAll(/\b\$?([A-Z]{1,5})\b/g)].map((m) => m[1]).find((t) => known(t));
-  if (rtok && known(rtok[1])) { d.ticker = rtok[1]; d.venue = "rtoken"; }
-  else if (usdt && known(usdt[1])) { d.ticker = usdt[1]; d.venue = "perp"; }
+  const words = text.match(/[A-Za-z][A-Za-z.]*/g) ?? [];
+  // "rNVDA" or "rnvda": the leading r marks the rToken
+  const rtok = words.map((w) => (/^r[a-z]{2,5}$/i.test(w) ? w.slice(1).toUpperCase() : "")).find((t) => t && known(t));
+  const usdt = text.match(/\b([A-Za-z]{1,5})USDT\b/i)?.[1]?.toUpperCase();
+  // a plain ticker: capitals always count; lowercase only for 3+ letters that are not an everyday word
+  const bare = words.find((w) => {
+    const up = w.toUpperCase();
+    if (!known(up)) return false;
+    return w === up || (w.length >= 3 && !STOP.has(w.toLowerCase()));
+  })?.toUpperCase();
+  if (rtok && known(rtok)) { d.ticker = rtok; d.venue = "rtoken"; }
+  else if (usdt && known(usdt)) { d.ticker = usdt; d.venue = "perp"; }
   else if (bare) d.ticker = bare;
   else {
     const hit = Object.keys(COMPANY).sort((a, b) => b.length - a.length).find((k) => s.includes(" " + k));
@@ -54,12 +65,22 @@ export function ruleParse(text: string, known: (t: string) => boolean, now = new
   // loss limit: "max loss $600", "can lose 600", "risk $500", "stop at -$400"
   const lim = s.match(new RegExp(String.raw`(?:max(?:imum)?\s*loss|lose(?:\s*up\s*to)?|losing|risk(?:ing)?|stomach|tolerate|stop(?:\s*at)?|limit(?:\s*of)?)\s*(?:of\s*)?-?\s*\$?\s*${NUM}`));
   if (lim) d.lossLimitUsd = money(lim[1], lim[2]);
+  if (!lim) {
+    const lim2 = s.match(new RegExp(String.raw`\$?\s*${NUM}\s*(?:dollars?|usd|usdt)?\s*(?:limit|max(?:imum)?\s*loss|stop(?:\s*loss)?)\b`));
+    if (lim2) d.lossLimitUsd = money(lim2[1], lim2[2]);
+  }
   const pctLim = s.match(/(?:max(?:imum)?\s*loss|lose|risk|limit)\s*(?:of\s*)?(\d+(?:\.\d+)?)\s*%/);
 
   // size: first money amount that is not the loss limit: "$20k", "20,000 dollars", "20k usdt"
   for (const m of s.matchAll(new RegExp(String.raw`\$\s*${NUM}|${NUM}\s*(?:usd|usdt|dollars|bucks)\b`, "g"))) {
     const v = m[1] ? money(m[1], m[2]) : money(m[3], m[4]);
     if (v !== d.lossLimitUsd) { d.sizeUsd = v; break; }
+  }
+  if (d.sizeUsd == null) {
+    for (const m of s.matchAll(/\b(\d+(?:\.\d+)?)\s*(k|m)\b/g)) {
+      const v = money(m[1], m[2]);
+      if (v !== d.lossLimitUsd) { d.sizeUsd = v; break; }
+    }
   }
   if (pctLim && d.sizeUsd) d.lossLimitUsd = (Number(pctLim[1]) / 100) * d.sizeUsd;
 
