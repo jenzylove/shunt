@@ -2,7 +2,9 @@
 const API = "https://api.bitget.com/api/v2";
 
 async function get<T>(path: string, revalidate = 30): Promise<T> {
-  const r = await fetch(API + path, { next: { revalidate }, signal: AbortSignal.timeout(8000) } as RequestInit);
+  // order books are read fresh every time (revalidate 0): a cached book can be served stale after the site sits idle
+  const cache = revalidate === 0 ? { cache: "no-store" as const } : { next: { revalidate } };
+  const r = await fetch(API + path, { ...cache, signal: AbortSignal.timeout(8000) } as RequestInit);
   if (!r.ok) throw new Error(`Bitget ${path} HTTP ${r.status}`);
   const j = await r.json();
   if (j.code !== "00000") throw new Error(`Bitget ${path}: ${j.msg}`);
@@ -16,13 +18,13 @@ type Level = [string, string];
 export type Book = { bids: Level[]; asks: Level[]; ts: number };
 
 export async function spotBook(t: string): Promise<Book> {
-  const d = await get<{ bids: Level[]; asks: Level[]; ts: string }>(`/spot/market/orderbook?symbol=${rtokenSymbol(t)}&limit=150`, 5);
+  const d = await get<{ bids: Level[]; asks: Level[]; ts: string }>(`/spot/market/orderbook?symbol=${rtokenSymbol(t)}&limit=150`, 0);
   return { bids: d.bids, asks: d.asks, ts: Number(d.ts) || Date.now() };
 }
 
 export async function perpBook(t: string): Promise<Book> {
   const d = await get<{ bids: Level[]; asks: Level[]; ts: string }>(
-    `/mix/market/merge-depth?symbol=${perpSymbol(t)}&productType=USDT-FUTURES&limit=max`, 5);
+    `/mix/market/merge-depth?symbol=${perpSymbol(t)}&productType=USDT-FUTURES&limit=max`, 0);
   return { bids: d.bids, asks: d.asks, ts: Number(d.ts) || Date.now() };
 }
 
