@@ -1,6 +1,6 @@
 # Submission checklist (ticked only from the live app, https://shunt-eight.vercel.app)
 
-Last checked: 4 October 2026
+Last checked: 5 October 2026
 
 ## Handbook, Track 3 (AI Trading Desk)
 - [x] Accessible demo, public URL, no sign up. Observed live: the Desk opens with four runnable example trades.

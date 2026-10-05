@@ -51,3 +51,23 @@
   book priced as $0 (now an explicit "illiquid" verdict, no rail, no ticket); public API had no limits (rate limit,
   body cap, timeouts, security headers); phone hero overflowed (no-break space); no visible keyboard focus; proof page
   said "ten years" for rows that use three; dataset builder crashed on a fresh clone. Proved each fix locally and live.
+
+## 4 to 5 October 2026
+
+- Redesign (merged to master 5 Oct): plain headline, black workbench panel below the hero, ultramarine accent, Satoshi and
+  JetBrains Mono, scroll motion, accordion "How it works" that advances itself. Checked headless at 1518x730 at 125 percent,
+  1280, 1366, 1920, 2560, tablet and phone.
+- Desk fixes found by hand testing: a typed new stock no longer inherits the old trade's numbers (intent logic in
+  /api/check); missing size, hold or limit now triggers a short question form instead of a dead end; the form reads
+  "2.5k", "2 weeks" and "3%". The panel opens with the question in plain words, and the chart was rebuilt (responsive,
+  limit line, switchpoint, hover).
+- Agent Hub proof: 57 round trips (118 orders) on Bitget Demo across 8 stocks, predicted cost against realized fill
+  versus the pre-order mid: median 15.7 bps predicted, 16.8 charged, 54 of 57 within 5 bps. Demo lists only 4 of the stock
+  perps Shunt checks plus RESIDUAL's five, so 31 could not be ordered. Failures: AAPL quantity cap, TSLA no cost
+  comparison, one lookup error. Account left flat.
+- Answer key: 24 sentences, field by field. First run: rules alone 14 of 24, rules plus Claude 22 of 24. Misses (bare
+  numbers, number words, "cap loss at", percent before "limit", "can take X loss", "until Friday") fixed in the parser;
+  now 24 of 24 both ways, published as not unbiased. Two spots in the key were corrected for session counting.
+- Proof page: year strips for NVDA, TSLA, AAPL (77, 76, 82 percent inside), captions for every percentage, order table.
+- 5 Oct audit on the live site: security headers present, 413 on oversize body, 400 on bad JSON, prompt injection
+  resolved to missing fields, no keys in the client bundle or git history, all 31 commits authored by jenzylove.
