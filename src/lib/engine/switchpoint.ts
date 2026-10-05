@@ -100,7 +100,7 @@ export function assess(
     // never price an exit that cannot be filled: say so instead of showing a cost of zero
     verdict = { state: "illiquid", absorbableUsd: Math.max(0, Math.floor(liquidity.absorbableUsd)) };
   } else if (dayR.breaches && day.pct != null) {
-    verdict = { state: "does-not-fit", maxSizeUsd: maxSize(t, day.pct, cost) };
+    verdict = { state: "does-not-fit", maxSizeUsd: maxSize(t, biggest, cost) };
   } else if (all.some((r) => r.breaches) && worst?.band.pct != null) {
     // exiting before the first breaching scheduled event works only if the rest of the hold fits
     const breaching = measured.filter((r) => r.breaches && r.band.date).sort((a, b) => (a.band.date! < b.band.date! ? -1 : 1));

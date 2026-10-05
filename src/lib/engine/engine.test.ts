@@ -72,6 +72,21 @@ describe("switchpoint", () => {
     const a = assess({ ...trade, lossLimitUsd: 300 }, day, horizon, []);
     expect(a.verdict.state).toBe("does-not-fit");
   });
+  it("sizes a rejected trade for the whole hold and every measured event", () => {
+    const t = { ...trade, lossLimitUsd: 300 };
+    const earnings = eventBand(profile, "earnings", 0.8, null, { label: "earnings" });
+    const cost = (size: number) => size * 0.001 + size * size * 1e-8;
+    for (const events of [[], [earnings]]) {
+      const a = assess(t, day, horizon, events, cost);
+      expect(a.verdict.state).toBe("does-not-fit");
+      if (a.verdict.state !== "does-not-fit") throw new Error("Expected rejected trade");
+      const resized = assess({ ...t, sizeUsd: a.verdict.maxSizeUsd }, day, horizon, events, cost);
+      expect(resized.verdict.state).toBe("fits");
+      expect(resized.day.breaches).toBe(false);
+      expect(resized.horizon.breaches).toBe(false);
+      expect(resized.events.every((event) => !event.breaches)).toBe(true);
+    }
+  });
   it("includes the cost of getting out in the loss", () => {
     expect(maxSize({ ...trade, lossLimitUsd: 1_000 }, 0.04, 20)).toBe(Math.floor(1_000 / (0.04 + 0.001)));
   });
