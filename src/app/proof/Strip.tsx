@@ -30,7 +30,10 @@ function One({ t, v }: { t: string; v: Strip["stocks"][string] }) {
         <text x={L} y={H - 4} className={s.stripTick}>{v.days[0].d}</text>
         <text x={W - R} y={H - 4} textAnchor="end" className={s.stripTick}>{v.days[n - 1].d}</text>
       </svg>
-      <p className={s.stripNote}>{out} red dots broke out. This picture includes earnings days, which the ordinary day range deliberately leaves out, so it reads a little under 80%.</p>
+      <p className={s.stripNote}>
+        {out} red dots broke out. This picture includes earnings days, which the ordinary day range deliberately leaves out
+        {v.inside / v.checked < 0.8 ? ", so it reads a little under 80%." : "; even so it stays above 80% for this stock."}
+      </p>
     </figure>
   );
 }

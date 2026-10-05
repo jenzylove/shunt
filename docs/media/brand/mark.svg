@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 360 96" role="img" aria-label="Shunt">
+  <rect width="96" height="96" rx="22" fill="#0a0a0b"/>
+  <g transform="translate(14 22) scale(1.72)" fill="none" stroke-linecap="round" stroke-width="3.4">
+    <path d="M2 18 H16 C22 18 24 6 30 6 H38" stroke="#8d9bff"/>
+    <path d="M16 18 H38" stroke="#f5f5f6" opacity=".55"/>
+  </g>
+  <text x="120" y="66" font-family="Satoshi, 'Helvetica Neue', Arial, sans-serif" font-size="56" font-weight="700" letter-spacing="-2" fill="#1f35d9">shunt</text>
+</svg>
