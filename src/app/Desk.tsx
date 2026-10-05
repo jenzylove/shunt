@@ -190,7 +190,25 @@ function Clarify({ reply, onSubmit, onBack }: { reply: Reply; onSubmit: (d: Draf
   const [size, setSize] = useState(d.sizeUsd ? String(d.sizeUsd) : "");
   const [hold, setHold] = useState(d.horizonDays ? String(d.horizonDays) : "");
   const [limit, setLimit] = useState(d.lossLimitUsd ? String(d.lossLimitUsd) : "");
-  const num = (x: string) => Number(x.replace(/[$,\s]/g, "")) || 0;
+  // people type "2.5k", "$1,500", "2 weeks", "a week", "3%": read all of it instead of only plain digits
+  const num = (x: string) => {
+    const m = x.toLowerCase().replace(/[$,\s]/g, "").match(/^(\d+(?:\.\d+)?)(k|m)?(usd|usdt|dollars?)?$/);
+    return m ? Number(m[1]) * (m[2] === "k" ? 1e3 : m[2] === "m" ? 1e6 : 1) : 0;
+  };
+  const days = (x: string) => {
+    const t = x.toLowerCase().trim();
+    const W: Record<string, number> = { a: 1, an: 1, one: 1, two: 2, three: 3, four: 4, five: 5, six: 6, seven: 7, eight: 8, nine: 9, ten: 10 };
+    const m = t.match(/^(\d+(?:\.\d+)?|a|an|one|two|three|four|five|six|seven|eight|nine|ten)\s*(day|days|d|week|weeks|w|wk|wks|month|months)?$/);
+    if (!m) return 0;
+    const n = W[m[1]] ?? Number(m[1]);
+    const unit = m[2] ?? "day";
+    return Math.round(n * (unit.startsWith("w") ? 5 : unit.startsWith("m") ? 20 : 1));
+  };
+  const lossOf = (x: string) => {
+    const t = x.trim();
+    const pc = t.match(/^(\d+(?:\.\d+)?)\s*%$/);
+    return pc ? Math.round((Number(pc[1]) / 100) * num(size)) : num(t);
+  };
   const asked = reply.meta?.asked;
   const have = [d.ticker, d.horizonDays ? `${d.horizonDays} trading day${d.horizonDays === 1 ? "" : "s"}` : "", d.sizeUsd ? usd(d.sizeUsd) : "", d.lossLimitUsd ? `max loss ${usd(d.lossLimitUsd)}` : ""].filter(Boolean);
 
@@ -206,11 +224,11 @@ function Clarify({ reply, onSubmit, onBack }: { reply: Reply; onSubmit: (d: Draf
   const limitChips = num(size) > 0
     ? [1, 2, 3, 5].map((p) => ({ label: `${p}% of ${usd(num(size))}`, v: Math.round((num(size) * p) / 100) }))
     : [250, 500, 1000].map((v) => ({ label: usd(v), v }));
-  const ready = missing.every((m) => (m === "ticker" ? ticker.trim() : m === "sizeUsd" ? num(size) > 0 : m === "horizonDays" ? num(hold) > 0 : num(limit) > 0));
+  const ready = missing.every((m) => (m === "ticker" ? ticker.trim() : m === "sizeUsd" ? num(size) > 0 : m === "horizonDays" ? days(hold) > 0 : lossOf(limit) > 0));
   const submit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!ready) return;
-    onSubmit({ ...d, ticker: (ticker || d.ticker || "").toUpperCase().trim(), sizeUsd: num(size) || d.sizeUsd, horizonDays: num(hold) || d.horizonDays, lossLimitUsd: num(limit) || d.lossLimitUsd });
+    onSubmit({ ...d, ticker: (ticker || d.ticker || "").toUpperCase().trim(), sizeUsd: num(size) || d.sizeUsd, horizonDays: days(hold) || d.horizonDays, lossLimitUsd: lossOf(limit) || d.lossLimitUsd });
   };
   return (
     <form className={s.clarify} onSubmit={submit}>
@@ -227,23 +245,24 @@ function Clarify({ reply, onSubmit, onBack }: { reply: Reply; onSubmit: (d: Draf
         )}
         {missing.includes("sizeUsd") && (
           <div className={s.cfield}><label htmlFor="c-size">How much do you want to put in?</label>
-            <input id="c-size" value={size} onChange={(e) => setSize(e.target.value)} placeholder="$10,000" inputMode="decimal" autoComplete="off" />
+            <input id="c-size" value={size} onChange={(e) => setSize(e.target.value)} placeholder="$10,000 or 10k" inputMode="text" autoComplete="off" />
             <div className={s.cchips}>{SIZES.map((v) => <button type="button" key={v} onClick={() => setSize(String(v))}>{usd(v)}</button>)}</div></div>
         )}
         {missing.includes("horizonDays") && (
           <div className={s.cfield}><label htmlFor="c-hold">How many trading days will you hold it?</label>
-            <input id="c-hold" value={hold} onChange={(e) => setHold(e.target.value)} placeholder="5" inputMode="numeric" autoComplete="off" />
+            <input id="c-hold" value={hold} onChange={(e) => setHold(e.target.value)} placeholder="5, or 2 weeks" inputMode="text" autoComplete="off" />
             <div className={s.cchips}>{HOLDS.map((v) => <button type="button" key={v} onClick={() => setHold(String(v))}>{v} day{v === 1 ? "" : "s"}</button>)}</div></div>
         )}
         {missing.includes("lossLimitUsd") && (
           <div className={s.cfield}><label htmlFor="c-limit">What&apos;s the most you can afford to lose?</label>
-            <input id="c-limit" value={limit} onChange={(e) => setLimit(e.target.value)} placeholder="$600" inputMode="decimal" autoComplete="off" />
+            <input id="c-limit" value={limit} onChange={(e) => setLimit(e.target.value)} placeholder="$600, or 3%" inputMode="text" autoComplete="off" />
             <div className={s.cchips}>{limitChips.map((c) => <button type="button" key={c.label} onClick={() => setLimit(String(c.v))}>{c.label}</button>)}</div></div>
         )}
       </div>
       <p className={s.cassume}>Unless you say otherwise I will treat it as a long position in the rToken. You can change that after.</p>
       <div className={s.cgo}>
         <button className={s.cgoMain} disabled={!ready}>Check it</button>
+        {!ready && <span className={s.cassume}>Still needed: {missing.filter((m) => (m === "ticker" ? !ticker.trim() : m === "sizeUsd" ? !num(size) : m === "horizonDays" ? !days(hold) : !lossOf(limit))).map((m) => ({ ticker: "the stock", sizeUsd: "the amount (like 5000 or 5k)", horizonDays: "the days (like 5 or 2 weeks)", lossLimitUsd: "the loss limit (like 500 or 3%)" } as Record<string, string>)[m]).join(", ")}</span>}
         {onBack && <button type="button" className={s.backBtn} onClick={onBack}>Back to the last answer</button>}
       </div>
     </form>
