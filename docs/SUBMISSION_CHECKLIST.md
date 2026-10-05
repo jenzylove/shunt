@@ -10,7 +10,7 @@ Last checked: 5 October 2026
 - [ ] Optional screen recording (to make).
 - [ ] Project description in the form's six parts (to write).
 - [ ] LLM role field. Accurate text: Claude reads the user's sentence and follow ups into the trade; all numbers, bands and verdicts are computed by code.
-- [ ] Materials link: repository must be made PUBLIC first (currently private).
+- [x] Materials link: repository is public: https://github.com/jenzylove/shunt
 - [ ] Track and sub theme selected on the form: Track 3, Personalized Research Workbench (also covers Decision Stress Testing).
 - [ ] X post with #BitgetHackathon and @Bitget_AI quoting https://x.com/Bitget_AI/status/2100519318824055159 (to write).
 - [ ] Qwen: not used (credits never arrived). Say so; the K3 subsidy field is optional.
