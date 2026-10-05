@@ -11,7 +11,7 @@ export default function HowItWorks({ steps }: { steps: Step[] }) {
   const [auto, setAuto] = useState(true);
 
   useEffect(() => {
-    if (!auto) return;
+    if (!auto || window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
     const t = setTimeout(() => setOpen((o) => (o + 1) % steps.length), SECONDS * 1000);
     return () => clearTimeout(t);
   }, [auto, open, steps.length]);

@@ -20,15 +20,15 @@ export function explain(r: CheckResult): Verdict {
   const v = a.verdict;
   const worst = a.worst;
   const odds = t.confidence === 0.8 ? "4 of 5" : "19 of 20";
-  const what = (b: { kind: string; label: string }) =>
-    ({ horizon: `past ${t.horizonDays} day stretches`, day: "ordinary days", earnings: `past ${p.ticker} earnings days`,
+  const what = (b: { kind: string; label: string; combined?: boolean }) =>
+    b.combined ? "past days when events like these overlap" : ({ horizon: `past ${t.horizonDays} day stretches`, day: "ordinary days", earnings: `past ${p.ticker} earnings days`,
        bellwether: `past ${b.label.split(" ")[0]} report days`, fed: "past Fed decision days", weekend: "past weekends" } as Record<string, string>)[b.kind];
   const worstLine = worst
-    ? `In ${odds} ${what(worst.band)}, ${p.ticker} moved less than ${pct(worst.band.pct)}. At ${usd(t.sizeUsd)} that is about ${usd(worst.lossUsd)}, including the cost to get out.`
+    ? `In ${odds} ${what(worst.band)}, ${p.ticker} moved less than ${pct(worst.band.pct)}. At ${usd(t.sizeUsd)} that is about ${usd(worst.lossUsd)}, including fees and slippage in and out${r.costs?.fundingUsd ? " and funding" : ""}.`
     : "";
   const liq = [a.day, a.horizon, ...a.events].find((r) => r.liquidates);
   const liqLine = liq && a.liquidationPct != null
-    ? ` At ${t.leverage}x you are liquidated by a ${pct(a.liquidationPct)} move, inside what ${p.ticker} has measured; ${a.safeLeverage}x or less clears it.`
+    ? ` At ${t.leverage}x you would be liquidated by roughly a ${pct(a.liquidationPct)} move (an estimate for isolated margin), inside what ${p.ticker} has measured${a.safeLeverage != null ? `; about ${a.safeLeverage}x or less would clear it` : ""}.`
     : "";
   const unmeasured = a.unmeasured.length
     ? ` Cannot measure: ${a.unmeasured.map((b) => `${b.label} (${b.n} past)`).join("; ")}.`
@@ -75,7 +75,7 @@ export function questionText(t: Trade): string {
   const days = `${t.horizonDays} trading day${t.horizonDays === 1 ? "" : "s"}`;
   const amt = usd(t.sizeUsd);
   const what = t.venue === "perp"
-    ? `hold a ${amt} ${t.side} ${t.ticker} perp${t.leverage && t.leverage > 1 ? ` at ${t.leverage}x` : ""}`
+    ? `hold a ${amt} ${t.side} ${t.ticker} perp${t.leverage && t.leverage > 1 ? ` at ${t.leverage}x (about ${usd(t.sizeUsd / t.leverage)} of my own money)` : ""}`
     : t.side === "short" ? `short ${amt} of ${t.ticker}` : `hold ${amt} of ${t.ticker}`;
   return `What happens if I ${what} for ${days} and can lose at most ${usd(t.lossLimitUsd)}?`;
 }

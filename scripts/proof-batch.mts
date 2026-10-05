@@ -105,7 +105,11 @@ const summary = {
   tradesTried: rows.length, roundTrips: ok.length, ordersPlaced: ok.length * 2 + earlier.length * 2,
   symbols: new Set(ok.map((r) => r.symbol)).size,
   filled: ok.filter((r) => r.open.status === "filled" && r.close.status === "filled").length,
-  notTradableOnDemo: notOnDemo, skipped: rows.filter((r) => r.skipped).length, errors: rows.filter((r) => r.error).length,
+  notTradableOnDemo: notOnDemo,
+  failureReasons: Object.entries(rows.filter((r) => r.error && !r.notOnDemo).reduce((m: Record<string, number>, r) => {
+    const why = /maximum quantity|maximum for this level/.test(r.error) ? "Bitget Demo order size cap" : /no costs to compare/.test(r.error) ? "Shunt priced no cost for it (book or data unavailable)" : /order-info|Failed to call/.test(r.error) ? "order lookup failed" : /No measured history/.test(r.error) ? "no measured history for the stock" : "other";
+    m[why] = (m[why] ?? 0) + 1; return m; }, {})).map(([reason, count]) => ({ reason, count })),
+  notOnDemoAttempts: rows.filter((r) => r.notOnDemo).length, skipped: rows.filter((r) => r.skipped).length, errors: rows.filter((r) => r.error).length,
   verdicts: ok.reduce((m: Record<string, number>, r) => ({ ...m, [r.verdict]: (m[r.verdict] ?? 0) + 1 }), {}),
   medianPredictedBps: med(ok.map((r) => r.predicted.bps)), medianRealizedBps: med(ok.map((r) => r.realized.bps)),
   realizedAtOrBelowPredicted: ok.filter((r) => r.realized.totalUsd <= r.predicted.totalUsd).length,

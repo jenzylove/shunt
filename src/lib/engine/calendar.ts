@@ -40,16 +40,42 @@ export function tradingDaysAfter(start: Date, n: number): string[] {
   return out;
 }
 
-/** Trading days whose open follows a closure of two or more calendar days (weekends and long weekends). */
+const prevTradingDay = (date: string): string => {
+  let d = new Date(date + "T00:00:00Z");
+  do d = addDays(d, -1); while (!isTradingDay(d));
+  return iso(d);
+};
+
+/**
+ * Trading days whose open follows a closure of two or more calendar days (weekends and long weekends) that
+ * has not already ended when `start` happens. Dates are New York dates, so the answer does not depend on the
+ * server's time zone or on whether `start` falls on a weekend.
+ */
 export function gapDays(days: string[], start: Date): string[] {
+  const ny = newYork(start);
   const out: string[] = [];
-  let prev = iso(start);
   for (const d of days) {
-    const gap = (Date.parse(d) - Date.parse(prev)) / 86_400_000;
-    if (gap >= 3) out.push(d);
-    prev = d;
+    const gap = (Date.parse(d) - Date.parse(prevTradingDay(d))) / 86_400_000;
+    const notYetOpen = d > ny.date || (d === ny.date && ny.minutes < 9 * 60 + 30);
+    if (gap >= 3 && notYetOpen) out.push(d);
   }
   return out;
+}
+
+/** The instant (UTC) that a New York date and minute after midnight fall on, daylight saving included. */
+export function nyInstant(date: string, minutes: number): Date {
+  for (const offsetHours of [4, 5]) {
+    const t = new Date(Date.parse(date + "T00:00:00Z") + (minutes + offsetHours * 60) * 60_000);
+    const ny = newYork(t);
+    if (ny.date === date && ny.minutes === minutes) return t;
+  }
+  return new Date(Date.parse(date + "T00:00:00Z") + (minutes + 5 * 60) * 60_000);
+}
+
+/** Funding settlements crossed between two instants, for a venue that settles every `intervalHours` from 00:00 UTC. */
+export function fundingRunsBetween(from: Date, to: Date, intervalHours: number): number {
+  const step = intervalHours * 3_600_000;
+  return Math.max(0, Math.floor(to.getTime() / step) - Math.floor(from.getTime() / step));
 }
 
 /** An earnings release maps to the first trading day whose close reflects it. */

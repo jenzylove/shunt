@@ -33,9 +33,9 @@
 .tabs { display: flex; gap: 8px; flex-wrap: wrap; }
 .tab { border: 1px solid var(--line); background: none; border-radius: 999px; padding: 8px 15px; font-size: 14px; font-weight: 500; cursor: pointer; color: var(--muted); transition: color 0.2s ease, border-color 0.2s ease, background 0.2s ease; }
 .tab:hover:not(:disabled) { color: var(--ink); border-color: var(--ink); }
-.tab[aria-selected="true"], .tab[aria-selected="true"]:hover:not(:disabled) { background: var(--ink); color: var(--panel-bg); border-color: var(--ink); font-weight: 700; }
+.tab[aria-pressed="true"], .tab[aria-pressed="true"]:hover:not(:disabled) { background: var(--ink); color: var(--panel-bg); border-color: var(--ink); font-weight: 700; }
 .tab:disabled { cursor: default; }
-.tab:disabled:not([aria-selected="true"]) { opacity: 0.55; }
+.tab:disabled:not([aria-pressed="true"]) { opacity: 0.55; }
 @media (max-width: 700px) {
   .tabs { flex-wrap: nowrap; overflow-x: auto; width: 100%; padding-bottom: 4px; scrollbar-width: none; }
   .tab { white-space: nowrap; }
@@ -168,3 +168,12 @@
 @media (prefers-reduced-motion: reduce) {
   .heroInner > *, .question, .answer, .keys div { animation: none; }
 }
+
+.sayNote { margin: 8px 0 0; font-size: 12.5px; color: var(--panel-muted); max-width: 70ch; }
+.sayNote a { color: var(--panel-accent); }
+.sayNote label { color: var(--panel-ink); cursor: pointer; }
+@media (pointer: coarse), (max-width: 760px) {
+  .tab, .toggle button, .cchips button, .btnMain, .btnGhost, .cgoMain, .sayRow button { min-height: 44px; }
+  .cchips button { padding-inline: 14px; }
+}
+@media (prefers-reduced-motion: reduce) { .bgWrap { transform: none !important; } }

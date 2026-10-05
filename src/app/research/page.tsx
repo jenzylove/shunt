@@ -40,6 +40,10 @@ const SPIKES: { pass: boolean; title: string; body: string[] }[] = [
 ];
 
 const LIMITS = [
+  "The Fed dates are FOMC statement days. One of the 25 (22 August 2025) was a notation vote on the longer run goals statement, not a rate meeting; it is kept in the measured sample and counted as a statement day.",
+  "Entry and exit fees and slippage, and perp funding when it costs you, are counted inside your loss limit. A funding credit is never counted. Funding uses the recent average rate, which can change.",
+  "When two events land on the same day their ranges are added, a cautious upper bound that has not been measured together.",
+  "The liquidation distance is an estimate for isolated margin before fees; Bitget's own figure depends on your account.",
   "Shunt measures the size of moves, not their direction, and never tells you to buy or sell.",
   "Ranges cover 4 in 5 (or 19 in 20) past cases. The rest is, by definition, outside.",
   "Weekend ranges are too narrow (71% caught against 80%).",

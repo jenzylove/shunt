@@ -71,3 +71,25 @@
 - Proof page: year strips for NVDA, TSLA, AAPL (77, 76, 82 percent inside), captions for every percentage, order table.
 - 5 Oct audit on the live site: security headers present, 413 on oversize body, 400 on bad JSON, prompt injection
   resolved to missing fields, no keys in the client bundle or git history, all 31 commits authored by jenzylove.
+
+## 5 October 2026, audit fixes (second pass, from the owner's audit)
+
+- Calendar: "over the weekend" resolved from New York dates (Friday before and after the close, Saturday, Sunday, Monday, holidays);
+  a weekend that has already ended is no longer listed as an event; the resolved hold is printed under the question.
+- Costs: the loss limit now counts the whole round trip: entry and exit slippage and fees, plus perp funding counted from the
+  settlements actually crossed to the close of the last day (a funding credit is never counted). Max size is found by
+  re-walking the order book at each candidate size.
+- Liquidation: side specific estimate, labelled as an estimate; when Bitget's margin tiers cannot be read, no liquidation
+  distance or safe leverage is shown.
+- Shorts: an rToken is spot, so a short is checked as the perp (and the Short button switches to it); no order ticket is
+  generated for an rToken short.
+- Overlapping events on one day are added into one cautious range and flagged.
+- Leverage: the size is stated as position value with the user's own money beside it; "with $2k margin" is read as margin.
+- API: every failure has the success shape, the page shows it and stays usable (400, 413, 429, 5xx, timeout, offline);
+  strict schema on drafts (finite, bounded, known fields only); trusted client address; shared limiter and daily model
+  budget when a store is configured; rules only switch; privacy and terms page.
+- Evidence: Proof shows all 113 attempts, failure reasons, and how often the charge exceeded the prediction; FOMC dates relabelled
+  with the notation vote called out; data manifest with hashes (docs/DATA_MANIFEST.json); CI on every push.
+- Accessibility and hygiene: toggle buttons instead of half built tabs, parallax and auto advance off under reduced motion,
+  44 px touch targets, aria-busy, full CSP, no X-Powered-By, robots, sitemap, security.txt.
+- 22 regression tests added from the audit (60 total).

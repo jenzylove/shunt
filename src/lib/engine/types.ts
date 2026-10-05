@@ -66,4 +66,5 @@ export type Band = {
   pct: number | null;        // move size at the chosen confidence, as a fraction of price
   method: "volScaled" | "history" | "none";
   corrected?: number;        // correction factor applied, if any
+  combined?: boolean;        // several events land on this day; the ranges are added, not measured together
 };

@@ -1,0 +1,38 @@
+{
+  "generatedAt": "2026-10-05T13:18:13+00:00",
+  "codeCommit": "f4959e050b022e1181d057a4523753e0a2b25b05",
+  "sources": [
+    {
+      "what": "daily prices, 10 years, adjusted close",
+      "from": "https://query1.finance.yahoo.com/v8/finance/chart/{TICKER}?range=10y&interval=1d",
+      "cached": "data/cache/daily/{TICKER}.json"
+    },
+    {
+      "what": "earnings release times (8-K Item 2.02 acceptance times) and SIC codes",
+      "from": "https://data.sec.gov/submissions/CIK{cik}.json",
+      "cached": "data/cache/subs/{cik}.json"
+    },
+    {
+      "what": "company to CIK map",
+      "from": "https://www.sec.gov/files/company_tickers.json"
+    },
+    {
+      "what": "which stocks Bitget lists as rTokens and as stock perps",
+      "from": "https://api.bitget.com/api/v2/spot/public/symbols and /api/v2/mix/market/contracts?productType=USDT-FUTURES"
+    },
+    {
+      "what": "FOMC statement dates",
+      "from": "https://www.federalreserve.gov/monetarypolicy/fomccalendars.htm",
+      "file": "scripts/fomc_dates.json",
+      "note": "includes one notation vote, 2025-08-22"
+    }
+  ],
+  "rules": "stocks with fewer than 750 daily prices are excluded; see scripts/build_dataset.py for the exclusion and event definitions",
+  "outputs": {
+    "stockProfiles": 2218,
+    "stockProfilesSha256": "b34775056cf3a7f4258771657307f12e928bd3c65be2db05f87f4d02ce8453bf",
+    "calibrationSha256": "565481fb4ad1db9116a293a38ba0318b5a9f75620c458fb29c6090b2288bd034",
+    "journalSha256": "40ad5bb9bd3243c1e5bfc6337ab7013145a1eb3a1aca98e5a468391481494ac4"
+  },
+  "limits": "Raw responses are not committed, so a rebuild fetches today's data and will differ slightly; the hashes above fingerprint what this release shipped."
+}

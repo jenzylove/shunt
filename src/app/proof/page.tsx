@@ -19,14 +19,14 @@ type Row = { id: string; at: string; trade: { ticker: string; side: string; size
   predicted: { totalUsd: number; bps: number }; realized: { totalUsd: number; slippageUsd: number; feesUsd: number; bps: number };
   open: Leg & { command: string }; close: Leg };
 type Orders = { venue: string; summary?: { roundTrips: number; ordersPlaced: number; symbols: number; filled: number; medianPredictedBps: number | null; medianRealizedBps: number | null;
-  realizedAtOrBelowPredicted: number; totalNotionalUsd: number; notTradableOnDemo?: string[] }; earlier?: unknown[]; orders: Row[] };
+  realizedAtOrBelowPredicted: number; totalNotionalUsd: number; notTradableOnDemo?: string[]; tradesTried?: number; errors?: number; notOnDemoAttempts?: number; failureReasons?: { reason: string; count: number }[]; verdicts?: Record<string, number> }; earlier?: unknown[]; orders: Row[] };
 
 const NAMES: Record<string, [string, string]> = {
   day: ["Ordinary days", "close to close, last 3 years, outside the stock's own earnings"],
   overnight: ["Overnight gaps", "close to the next open, last 3 years"],
   earnings: ["Own earnings days", "the session that reacts to the report, since 2016"],
   bellwether: ["Bellwether report days", "since 2017, for the 45 stocks with a tested link"],
-  fed: ["Fed decision days", "statement days, last 3 years"],
+  fed: ["FOMC statement days", "scheduled statements, last 3 years, one a notation vote"],
   weekend: ["Weekends", "Friday close to Monday open, last 3 years"],
 };
 const pc = (x: number | null | undefined, d = 1) => (x == null ? "n/a" : (x * 100).toFixed(d) + "%");
@@ -90,7 +90,7 @@ export default function Proof() {
       {journal && (
         <section className={s.section}>
           <h2>Live, written before the outcome</h2>
-          <p>After every US close, Shunt locks in tomorrow&apos;s 4 in 5 range for 30 stocks (the earnings range if one reports). After that session closes, each one is graded. Entries are never edited once written.</p>
+          <p>After every US close, Shunt locks in tomorrow&apos;s 4 in 5 range for 30 stocks (the earnings range if one reports). After that session closes, each one is graded. Entries are never edited once written. This only counts as evidence once enough sessions have been graded; until then it shows the method, not a result.</p>
           <dl className={s.stats}>
             <div><dt>Graded</dt><dd>{journal.summary.graded}</dd></div>
             <div><dt>Inside the range</dt><dd>{journal.summary.graded ? pc(journal.summary.rate) : "not yet"}</dd></div>
@@ -177,7 +177,16 @@ export default function Proof() {
             <div><dt>Median cost predicted</dt><dd>{sm?.medianPredictedBps?.toFixed(1)} bps</dd></div>
             <div><dt>Median cost charged</dt><dd>{sm?.medianRealizedBps?.toFixed(1)} bps</dd></div>
             <div><dt>Within 5 bps of the call</dt><dd>{within} of {rows.length}</dd></div>
+            <div><dt>Charged no more than predicted</dt><dd>{sm?.realizedAtOrBelowPredicted} of {rows.length}</dd></div>
           </dl>
+          {sm?.tradesTried != null && (
+            <p className={s.muted}>
+              <b>Every attempt, not just the good ones.</b> {sm.tradesTried} trades were tried and {rows.length} completed a round trip. The rest: {sm.notOnDemoAttempts ?? 0} on stocks
+              Bitget Demo does not list{sm.failureReasons?.length ? ", " + sm.failureReasons.map((f) => `${f.count} ${f.reason}`).join(", ") : ""}. The trades were drawn from a fixed random
+              seed, and most came out as &ldquo;doesn&apos;t fit&rdquo; at the size asked ({sm.verdicts?.["does-not-fit"] ?? 0} of {rows.length}), so most were placed at a smaller, fitted size. The
+              charged cost was higher than the predicted cost in {rows.length - (sm.realizedAtOrBelowPredicted ?? 0)} round trips.
+            </p>
+          )}
           <p className={s.muted}>One bps is one hundredth of one percent of the trade. 18 bps on a $5,000 trade is $9. Demo fills are simulated matching on Bitget&apos;s paper account, not live liquidity, so this tests the fee and book arithmetic, not the real market.</p>
           <details className={s.more}>
             <summary>Show all {rows.length} round trips ({rows.length * 2} order ids)</summary>

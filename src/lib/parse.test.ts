@@ -53,7 +53,7 @@ describe("rule parser", () => {
     const r = p("long $10k TSLA perp 150x for 30 days max loss $500");
     expect(r.trade?.horizonDays).toBe(20);
     expect(r.trade?.leverage).toBe(100);
-    expect(r.notes.length).toBe(2);
+    expect(r.notes.length).toBe(3); // horizon cap, leverage cap, and the position value reading
   });
   it("reads the sentences the first answer key missed", () => {
     const now = new Date("2026-10-05T16:00:00Z");

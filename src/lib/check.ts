@@ -2,7 +2,7 @@
 import { promises as fs } from "fs";
 import path from "path";
 import { dayBand, eventBand, horizonBand } from "./engine/bands";
-import { gapDays, newYork, reactionDay, tradingDaysAfter, weekday } from "./engine/calendar";
+import { fundingRunsBetween, gapDays, newYork, nyInstant, reactionDay, tradingDaysAfter, weekday } from "./engine/calendar";
 import { assess, type Assessment } from "./engine/switchpoint";
 import type { Band, Calibration, Profile, ScheduledEvent, Trade } from "./engine/types";
 import * as bg from "./live/bitget";
@@ -31,9 +31,13 @@ export type Costs = {
   venue: Trade["venue"];
   entry: bg.Fill & { feeUsd: number };
   exit: bg.Fill & { feeUsd: number };
-  exitCostUsd: number;           // impact plus fee to get out at this size, right now
-  fundingUsd: number | null;     // perp only, over the holding period at the recent average rate
-  fundingRuns: number | null;
+  entryCostUsd: number;              // slippage plus fee to get in at this size, right now
+  exitCostUsd: number;               // slippage plus fee to get out at this size, right now
+  fundingUsd: number | null;         // perp only: funding counted against you over the hold (a credit is never counted)
+  fundingExpectedUsd: number | null; // perp only: the signed expectation at the recent average rate; positive means you pay
+  fundingRuns: number | null;        // funding settlements between now and the close of the last day of the hold
+  totalUsd: number;                  // entry + exit + funding counted against you
+  bookAt: string;                    // when Bitget stamped the order book
   readAt: string;
 };
 
@@ -47,41 +51,90 @@ export type CheckResult = {
   costs: Costs | null;
   weekendTrading: { traded: boolean; bars: number; weekendOf: string } | null;
   calibration: Calibration | null;
-  problems: string[];            // sources that failed; nothing is filled in for them
+  problems: string[];                // sources that failed; nothing is filled in for them
+  notes: string[];                   // plain explanations of anything Shunt changed or assumed
 };
 
-async function costs(t: Trade, problems: string[]): Promise<Costs | null> {
+const STALE_BOOK_MS = 60_000;
+
+type Priced = { costs: Costs; costAt: (sizeUsd: number) => number };
+
+/** Everything it costs to be in the trade at a size: slippage and fees in and out, and perp funding. Infinity when the book cannot fill it. */
+async function costs(t: Trade, holdDays: string[], now: Date, problems: string[]): Promise<Priced | null> {
   try {
     const book = t.venue === "perp" ? await bg.perpBook(t.ticker) : await bg.spotBook(t.ticker);
+    const age = Date.now() - book.ts;
+    if (age > STALE_BOOK_MS) {
+      problems.push(`Bitget's order book is ${Math.round(age / 1000)} seconds old, too stale to price a trade, so costs are not shown.`);
+      return null;
+    }
     const fees = t.venue === "perp" ? await bg.perpInfo(t.ticker) : await bg.spotFees(t.ticker);
     const inSide = t.side === "long" ? "buy" : "sell";
     const outSide = t.side === "long" ? "sell" : "buy";
-    const entry = bg.walk(book, t.sizeUsd, inSide);
-    const exit = bg.walk(book, t.sizeUsd, outSide);
     const fee = (f: bg.Fill) => f.filledUsd * fees.taker;
-    const exitCostUsd = exit.impactPct != null ? t.sizeUsd * exit.impactPct + fee(exit) : NaN;
-    let fundingUsd: number | null = null, fundingRuns: number | null = null;
+    const leg = (size: number, s: "buy" | "sell") => {
+      const f = bg.walk(book, size, s);
+      return { f, cost: f.complete && f.impactPct != null ? size * f.impactPct + fee(f) : Infinity };
+    };
+    let rate = 0, runs: number | null = null;
     if (t.venue === "perp") {
       const info = fees as bg.PerpInfo;
-      const f = await bg.recentFunding(t.ticker);
-      fundingRuns = Math.ceil((t.horizonDays * 24 * 7) / 5 / info.fundIntervalHours);
-      // positive funding: longs pay; a short receives it
-      fundingUsd = t.sizeUsd * f.avgRate * fundingRuns * (t.side === "long" ? 1 : -1);
+      rate = (await bg.recentFunding(t.ticker)).avgRate * (t.side === "long" ? 1 : -1); // positive: you pay
+      // settlements actually crossed between now and the close of the last day of the hold
+      runs = fundingRunsBetween(now, nyInstant(holdDays[holdDays.length - 1], 16 * 60), info.fundIntervalHours);
     }
-    if (!exit.complete || !entry.complete) problems.push(`The ${t.venue === "perp" ? "perp" : "rToken"} book cannot absorb $${Math.round(t.sizeUsd).toLocaleString()} right now.`);
+    // funding policy: the future rate is unknown, so the recent average is used, and only when it costs you. A credit is never counted.
+    const fundingAt = (size: number) => (runs == null ? 0 : Math.max(0, size * rate * runs));
+    const costAt = (size: number) => leg(size, inSide).cost + leg(size, outSide).cost + fundingAt(size);
+    const e = leg(t.sizeUsd, inSide), x = leg(t.sizeUsd, outSide);
+    if (!x.f.complete || !e.f.complete) problems.push(`The ${t.venue === "perp" ? "perp" : "rToken"} book cannot absorb $${Math.round(t.sizeUsd).toLocaleString("en-US")} right now.`);
+    const finite = (n: number) => (Number.isFinite(n) ? n : 0);
     return {
-      venue: t.venue, entry: { ...entry, feeUsd: fee(entry) }, exit: { ...exit, feeUsd: fee(exit) },
-      exitCostUsd: Number.isFinite(exitCostUsd) ? exitCostUsd : 0, fundingUsd, fundingRuns, readAt: new Date().toISOString(),
+      costAt,
+      costs: {
+        venue: t.venue, entry: { ...e.f, feeUsd: fee(e.f) }, exit: { ...x.f, feeUsd: fee(x.f) },
+        entryCostUsd: finite(e.cost), exitCostUsd: finite(x.cost),
+        fundingUsd: runs == null ? null : fundingAt(t.sizeUsd), fundingExpectedUsd: runs == null ? null : t.sizeUsd * rate * runs, fundingRuns: runs,
+        totalUsd: finite(costAt(t.sizeUsd)), bookAt: new Date(book.ts).toISOString(), readAt: new Date().toISOString(),
+      },
     };
   } catch (e) {
-    problems.push(`Bitget ${t.venue} data unavailable: ${(e as Error).message}`);
+    problems.push(`Bitget ${t.venue} data unavailable (${(e as Error).message}). Fees and slippage are left out, so this verdict is market moves only.`);
     return null;
   }
 }
 
-export async function checkTrade(trade: Trade, now = new Date()): Promise<CheckResult | { error: string }> {
-  const p = await loadProfile(trade.ticker);
-  if (!p) return { error: `No measured history for ${trade.ticker}. Shunt covers US stocks listed on Bitget as rTokens.` };
+/** Events that land on the same day hit the same close, so they are combined, not judged one by one. */
+export function combineSameDay(bands: Band[]): Band[] {
+  const byDate = new Map<string, Band[]>();
+  const rest: Band[] = [];
+  for (const b of bands) {
+    if (!b.measurable || !b.date || b.pct == null) { rest.push(b); continue; }
+    byDate.set(b.date, [...(byDate.get(b.date) ?? []), b]);
+  }
+  const out: Band[] = [...rest];
+  for (const [date, g] of byDate) {
+    if (g.length === 1) { out.push(g[0]); continue; }
+    out.push({
+      kind: g[0].kind, date, measurable: true, n: Math.min(...g.map((b) => b.n)), method: g[0].method, combined: true,
+      pct: g.reduce((a, b) => a + (b.pct ?? 0), 0),
+      label: g.map((b) => b.label).join(" and ") + ", same day",
+    });
+  }
+  return out.sort((a, b) => ((a.date ?? "") < (b.date ?? "") ? -1 : 1));
+}
+
+export async function checkTrade(input: Trade, now = new Date()): Promise<CheckResult | { error: string }> {
+  const p = await loadProfile(input.ticker);
+  if (!p) return { error: `No measured history for ${input.ticker}. Shunt covers US stocks listed on Bitget as rTokens.` };
+  const notes: string[] = [];
+  let trade = input;
+  if (trade.venue === "rtoken" && trade.side === "short") {
+    // an rToken is a spot token: selling it only sells what you own. A short needs the perp.
+    if (!p.perp) return { error: `${trade.ticker} can't be shorted here: an rToken is a spot token, and ${trade.ticker} has no stock perp on Bitget.` };
+    trade = { ...trade, venue: "perp", leverage: trade.leverage ?? 1 };
+    notes.push(`A short needs the perp, because an rToken is a spot token and selling one only sells what you own. This is checked as a ${trade.ticker} perp at ${trade.leverage}x.`);
+  }
   if (trade.venue === "perp" && !p.perp) return { error: `${trade.ticker} has no stock perp on Bitget; try the rToken.` };
   const cal = await loadCalibration();
   const problems: string[] = [];
@@ -108,22 +161,28 @@ export async function checkTrade(trade: Trade, now = new Date()): Promise<CheckR
   for (const d of gapDays(holdDays, now)) events.push({ kind: "weekend", date: d, label: `Wall Street closed until ${weekday(d)} open` });
   events.sort((a, b) => (a.date < b.date ? -1 : 1));
 
-  const eventBands = events.map((e) => eventBand(p, e.kind, conf, cal, { label: e.label, date: e.date, hub: e.hub }));
+  const rawBands = events.map((e) => eventBand(p, e.kind, conf, cal, { label: e.label, date: e.date, hub: e.hub }));
+  const eventBands = combineSameDay(rawBands);
+  if (eventBands.some((b) => b.combined)) notes.push("Two or more events land on the same day. Their ranges are added, which is a cautious upper bound: they have not been measured together.");
   const day = dayBand(p, conf, cal);
   const horizon = horizonBand(p, trade.horizonDays, conf);
-  const [c, weekend, mmr] = await Promise.all([
-    costs(trade, problems),
+  const [priced, weekend, mmr] = await Promise.all([
+    costs(trade, holdDays, now, problems),
     trade.venue === "rtoken" ? bg.tradedLastWeekend(trade.ticker, now).catch(() => null) : Promise.resolve(null),
-    trade.venue === "perp" ? bg.maintenanceRate(trade.ticker, trade.sizeUsd).catch(() => 0.005) : Promise.resolve(0.005),
+    trade.venue === "perp" ? bg.maintenanceRate(trade.ticker, trade.sizeUsd).catch(() => null) : Promise.resolve(0.005),
   ]);
+  if (trade.venue === "perp" && mmr == null && (trade.leverage ?? 1) > 1) {
+    problems.push("Bitget's margin tiers could not be read, so the liquidation distance and the safe leverage are not shown rather than guessed.");
+  }
+  const c = priced?.costs ?? null;
   const liquidity = c
     ? { absorbableUsd: Math.min(c.entry.filledUsd, c.exit.filledUsd), complete: c.entry.complete && c.exit.complete }
     : undefined;
-  const assessment = assess(trade, day, horizon, eventBands, c?.exitCostUsd ?? 0, mmr, liquidity);
+  const assessment = assess(trade, day, horizon, eventBands, priced?.costAt ?? 0, mmr, liquidity);
   return {
     trade,
     profile: { ticker: p.ticker, name: p.name, sector: p.sector, asOf: p.asOf, lastClose: p.lastClose, volNow: p.volNow, perp: p.perp },
     holdDays, events, bands: { day, horizon, events: eventBands }, assessment, costs: c, weekendTrading: weekend,
-    calibration: cal, problems,
+    calibration: cal, problems, notes,
   };
 }

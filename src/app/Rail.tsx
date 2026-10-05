@@ -48,7 +48,7 @@ export default function Rail({ r }: { r: CheckResult }) {
     return () => io.disconnect();
   }, []);
 
-  const exit = a.exitCostUsd;
+  const exit = a.costUsd;
   const hz = a.horizon.lossUsd != null ? Math.max(a.horizon.lossUsd - exit, 0) : null;
   const loss = (u: number) => exit + (hz ?? 0) * Math.sqrt(u);            // u: 0 at the buy, 1 at the end of the hold
   const limit = t.lossLimitUsd;

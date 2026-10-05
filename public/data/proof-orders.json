@@ -1,6 +1,6 @@
 {
  "venue": "Bitget Demo (paper trading) via Agent Hub bgc",
- "generatedAt": "2026-10-04T22:57:57.548Z",
+ "generatedAt": "2026-10-05T13:17:13.466Z",
  "summary": {
   "tradesTried": 113,
   "roundTrips": 57,
@@ -40,6 +40,25 @@
    "SOFI",
    "ABNB"
   ],
+  "failureReasons": [
+   {
+    "reason": "no measured history for the stock",
+    "count": 4
+   },
+   {
+    "reason": "Bitget Demo order size cap",
+    "count": 9
+   },
+   {
+    "reason": "Shunt priced no cost for it (book or data unavailable)",
+    "count": 11
+   },
+   {
+    "reason": "order lookup failed",
+    "count": 1
+   }
+  ],
+  "notOnDemoAttempts": 31,
   "skipped": 0,
   "errors": 56,
   "verdicts": {

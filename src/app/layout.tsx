@@ -56,6 +56,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
                 <li><Link href="/proof">Proof</Link></li>
                 <li><Link href="/research">Research</Link></li>
                 <li><Link href="/research#limits">Scope and limits</Link></li>
+                <li><Link href="/privacy">Privacy and terms</Link></li>
               </ul>
             </div>
             <div className="foot-col">

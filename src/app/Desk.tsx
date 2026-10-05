@@ -18,6 +18,12 @@ const EXAMPLES = [
 type Meta = { readBy: "rules" | "model" | "edit"; intent?: "new" | "change" | "edit"; asked?: string; model: string | null; modelNote?: string };
 type Reply = { parsed: Parsed; result?: CheckResult; error?: string; meta?: Meta };
 
+const failureText = (status: number) =>
+  status === 429 ? "Too many checks from one place in a short time. Wait a few minutes and try again."
+  : status === 413 ? "That request is too large."
+  : status >= 500 ? "Shunt hit a problem on its side. Try again in a moment."
+  : "Shunt could not use that. Check the values and try again.";
+
 const STATUS: Record<string, string> = { fits: "Fits", "fits-if": "Fits with a change", "does-not-fit": "Doesn't fit", illiquid: "Can't fill" };
 
 const fromResult = (r: CheckResult): Reply => ({
@@ -31,10 +37,12 @@ export default function Desk({ initial }: { initial: CheckResult | null }) {
   const [active, setActive] = useState<number | null>(0);
   const [busy, setBusy] = useState(false);
   const [words, setWords] = useState("");
+  const [rulesOnly, setRulesOnly] = useState(false);
   const bgRef = useRef<HTMLDivElement>(null);
 
   // the hero lines drift slower than the page: a quiet sense of depth while you scroll
   useEffect(() => {
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
     let raf = 0;
     const onScroll = () => {
       cancelAnimationFrame(raf);
@@ -49,13 +57,23 @@ export default function Desk({ initial }: { initial: CheckResult | null }) {
   async function run(body: { text?: string; draft?: Draft }, tab: number | null = null) {
     setBusy(true);
     try {
-      const r = await fetch("/api/check", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify(body) });
-      const j: Reply = await r.json();
-      setReply(j);
-      if (j.result) setLastGood(j);
-      if (tab != null && j.result) cache.current[tab] = j;
-    } catch {
-      setReply({ parsed: { trade: null, draft: {}, missing: [], notes: [] }, error: "Could not reach Shunt. Try again." });
+      const r = await fetch("/api/check", {
+        method: "POST", headers: { "content-type": "application/json" },
+        body: JSON.stringify({ ...body, rulesOnly: rulesOnly || undefined }), signal: AbortSignal.timeout(30_000),
+      });
+      let j: Partial<Reply> = {};
+      try { j = await r.json(); } catch { /* not JSON: handled below */ }
+      const j2: Reply = {
+        parsed: j.parsed ?? { trade: null, draft: reply?.parsed.draft ?? {}, missing: [], notes: [] },
+        result: j.result, meta: j.meta,
+        error: j.error ?? (r.ok ? undefined : failureText(r.status)),
+      };
+      setReply(j2);
+      if (j2.result) setLastGood(j2);
+      if (tab != null && j2.result) cache.current[tab] = j2;
+    } catch (e) {
+      const timedOut = (e as Error)?.name === "TimeoutError";
+      setReply({ parsed: { trade: null, draft: reply?.parsed.draft ?? {}, missing: [], notes: [] }, error: timedOut ? "That took too long. Try again." : "Could not reach Shunt. Check your connection and try again." });
     } finally {
       setBusy(false);
     }
@@ -101,14 +119,14 @@ export default function Desk({ initial }: { initial: CheckResult | null }) {
         <section className={`${s.panel} reveal`} aria-label="Live trade check">
           <header className={s.panelTop}>
             <span className={s.live}><i />Live check<ReadAt iso={r?.costs?.readAt} /></span>
-            <div className={s.tabs} role="tablist" aria-label="Example trades">
+            <div className={s.tabs} role="group" aria-label="Example trades">
               {EXAMPLES.map((ex, i) => (
-                <button key={ex.text} role="tab" aria-selected={active === i} className={s.tab} disabled={busy} title={ex.text} onClick={() => pick(i)}>{ex.label}</button>
+                <button key={ex.text} aria-pressed={active === i} className={s.tab} disabled={busy} title={ex.text} onClick={() => pick(i)}>{ex.label}</button>
               ))}
             </div>
           </header>
 
-          <div className={s.panelBody} aria-live="polite" data-busy={busy || undefined}>
+          <div className={s.panelBody} aria-live="polite" aria-busy={busy} data-busy={busy || undefined}>
             {!reply && <p className={s.working}>Reading the calendar, the stock&apos;s history and Bitget&apos;s order book…</p>}
             {reply && !r && (
               <Clarify key={JSON.stringify(reply.parsed.draft) + (reply.error ?? "")} reply={reply}
@@ -120,6 +138,10 @@ export default function Desk({ initial }: { initial: CheckResult | null }) {
                 <div className={s.question} key={"q" + r.trade.ticker + r.trade.sizeUsd + r.trade.horizonDays + r.trade.lossLimitUsd + r.trade.venue}>
                   <span className="eyebrow">Your question</span>
                   <h2 className={s.q}>{questionText(r.trade)}</h2>
+                  <p className={s.asked}>
+                    Hold covers {r.holdDays.length} trading session{r.holdDays.length === 1 ? "" : "s"}, {day(r.holdDays[0])} to the close on {day(r.holdDays[r.holdDays.length - 1])}.
+                  </p>
+                  {r.notes.map((n) => <p key={n} className={s.asked}>{n}</p>)}
                   {reply?.meta?.asked && (
                     <p className={s.asked}>
                       You typed &ldquo;{reply.meta.asked}&rdquo;{reply.meta.readBy === "model" ? ", read by Claude. Every number below is computed by code." : "."}
@@ -136,7 +158,7 @@ export default function Desk({ initial }: { initial: CheckResult | null }) {
                   <dl className={s.keys}>
                     <div><dt>Your limit</dt><dd className="num">{usd(r.trade.lossLimitUsd)}</dd></div>
                     <div><dt>Worst measured</dt><dd className="num">{usd(r.assessment.worst?.lossUsd)}</dd></div>
-                    <div><dt>Cost to get out</dt><dd className="num">{r.costs ? fillText(r.costs.exit, r.trade.sizeUsd, r.costs.exitCostUsd) : "n/a"}</dd></div>
+                    <div><dt>{r.trade.venue === "perp" ? "Fees, slippage, funding" : "Fees and slippage"}</dt><dd className="num">{r.costs ? (r.costs.entry.complete && r.costs.exit.complete ? usd(r.costs.totalUsd) : "book too thin") : "n/a"}</dd></div>
                   </dl>
                 </div>
                 {r.assessment.verdict.state !== "illiquid" && (
@@ -155,6 +177,10 @@ export default function Desk({ initial }: { initial: CheckResult | null }) {
                   placeholder={r ? "what if I hold till Friday?" : "buy $20k rNVDA, 5 days, max loss $600"} />
                 <button disabled={busy || !words.trim()}>{busy ? "Checking" : "Ask"}</button>
               </div>
+              <p className={s.sayNote}>
+                <label><input type="checkbox" checked={rulesOnly} onChange={(e) => setRulesOnly(e.target.checked)} /> Rules only</label>
+                {" "}Ordinary sentences are read on Shunt. If they cannot be, your sentence and current trade go to Anthropic&apos;s Claude. Rules only never sends them. <a href="/privacy">Privacy</a>
+              </p>
             </form>
           </footer>
         </section>
@@ -274,12 +300,18 @@ const FIELD: Record<string, string> = { sizeUsd: "Size", horizonDays: "Hold", lo
 /** What Shunt understood, as a compact row of editable fields. */
 function Fields({ r, onEdit, notes }: { r: CheckResult; onEdit: (p: Partial<Draft>) => void; notes: string[] }) {
   const t = r.trade;
+  const [bad, setBad] = useState("");
   const num = (k: keyof Draft, value: number, prefix = "", suffix = "") => (
     <label className={s.field} key={String(k) + value}>
       <span className="eyebrow">{FIELD[k as string]}</span>
       <span className={s.fieldVal}>{prefix}
         <input className="num" defaultValue={value} inputMode="decimal" size={Math.max(3, String(value).length)}
-          onBlur={(e) => { const n = Number(e.target.value.replace(/[$,]/g, "")); if (n > 0 && n !== value) onEdit({ [k]: n }); }}
+          onBlur={(e) => {
+            const n = Number(e.target.value.replace(/[$,\s]/g, ""));
+            if (!(n > 0) || !Number.isFinite(n)) { e.target.value = String(value); setBad(`${FIELD[k as string]} needs a number above 0, so it stays at ${prefix}${value}${suffix}.`); return; }
+            setBad("");
+            if (n !== value) onEdit({ [k]: n });
+          }}
           onKeyDown={(e) => { if (e.key === "Enter") (e.target as HTMLInputElement).blur(); }} />{suffix}
       </span>
     </label>
@@ -290,7 +322,7 @@ function Fields({ r, onEdit, notes }: { r: CheckResult; onEdit: (p: Partial<Draf
       <div className={s.field}>
         <span className="eyebrow">On</span>
         <span className={s.toggle}>
-          <button aria-pressed={t.venue === "rtoken"} onClick={() => onEdit({ venue: "rtoken" })}>rToken</button>
+          <button aria-pressed={t.venue === "rtoken"} onClick={() => onEdit({ venue: "rtoken", side: "long" })} title="rTokens are spot: they can only be bought long">rToken</button>
           <button aria-pressed={t.venue === "perp"} disabled={!r.profile.perp} onClick={() => onEdit({ venue: "perp" })}>Perp</button>
         </span>
       </div>
@@ -298,7 +330,7 @@ function Fields({ r, onEdit, notes }: { r: CheckResult; onEdit: (p: Partial<Draf
         <span className="eyebrow">Side</span>
         <span className={s.toggle}>
           <button aria-pressed={t.side === "long"} onClick={() => onEdit({ side: "long" })}>Long</button>
-          <button aria-pressed={t.side === "short"} onClick={() => onEdit({ side: "short" })}>Short</button>
+          <button aria-pressed={t.side === "short"} onClick={() => onEdit({ side: "short", venue: "perp" })} title="A short needs the perp">Short</button>
         </span>
       </div>
       {num("sizeUsd", t.sizeUsd, "$")}
@@ -312,6 +344,7 @@ function Fields({ r, onEdit, notes }: { r: CheckResult; onEdit: (p: Partial<Draf
           <button aria-pressed={t.confidence === 0.95} onClick={() => onEdit({ confidence: 0.95 })}>19 in 20</button>
         </span>
       </div>
+      {bad && <p className={s.note} role="alert">{bad}</p>}
       {notes.map((n) => <p key={n} className={s.note}>{n}</p>)}
     </div>
   );
@@ -368,13 +401,18 @@ function Costs({ r }: { r: CheckResult }) {
     <section className={s.block}>
       <h3 className={s.h3}>On Bitget right now</h3>
       <dl className={s.stats}>
-        <div><dt>Cost to get in</dt><dd className="num">{fillText(c.entry, r.trade.sizeUsd, (c.entry.impactPct ?? 0) * r.trade.sizeUsd + c.entry.feeUsd)}</dd></div>
+        <div><dt>Cost to get in</dt><dd className="num">{fillText(c.entry, r.trade.sizeUsd, c.entryCostUsd)}</dd></div>
         <div><dt>Cost to get out</dt><dd className="num">{fillText(c.exit, r.trade.sizeUsd, c.exitCostUsd)}</dd></div>
-        {c.fundingUsd != null && <div><dt>Funding over the hold</dt><dd className="num">{usd(c.fundingUsd)}</dd></div>}
-        {r.assessment.liquidationPct != null && <div><dt>Liquidated by a move of</dt><dd className="num">{pct(r.assessment.liquidationPct)}</dd></div>}
+        {c.fundingUsd != null && <div><dt>Funding counted over the hold</dt><dd className="num">{usd(c.fundingUsd)}</dd></div>}
+        {r.assessment.liquidationPct != null && <div><dt>Liquidated by about a move of</dt><dd className="num">{pct(r.assessment.liquidationPct)}</dd></div>}
         {r.weekendTrading && <div><dt>rToken traded last weekend</dt><dd>{r.weekendTrading.traded ? "yes" : "no"}</dd></div>}
       </dl>
-      <p className={s.muted}>Walked through the live {c.venue === "perp" ? "perp" : "rToken"} order book at your size, with Bitget&apos;s live fee rate.</p>
+      <p className={s.muted}>
+        Walked through the live {c.venue === "perp" ? "perp" : "rToken"} order book at your size, with Bitget&apos;s live fee rate. Bitget stamped the book at {c.bookAt.slice(11, 19)} UTC.
+        Your loss limit is counted as everything the round trip can cost you: the market move plus fees and slippage in and out{c.fundingUsd != null ? ", plus funding" : ""}.
+        {c.fundingUsd != null && <> Funding uses the recent average rate over the {c.fundingRuns} settlement{c.fundingRuns === 1 ? "" : "s"} between now and the close of your last day, and only when it costs you; a credit is never counted. At that rate it would be {usd(c.fundingExpectedUsd)}.</>}
+        {r.assessment.liquidationPct != null && <> The liquidation distance is an estimate for isolated margin before fees: Bitget&apos;s own figure depends on your account.</>}
+      </p>
     </section>
   );
 }
@@ -384,6 +422,8 @@ function Ticket({ r }: { r: CheckResult }) {
   const t = r.trade, v = r.assessment.verdict;
   const price = r.costs?.entry.mid ?? r.profile.lastClose;
   if (!price || v.state === "illiquid") return null;
+  // a ticket is only shown for a trade the command can really open: an rToken is spot, so only a long
+  if (t.venue === "rtoken" && t.side === "short") return null;
   const size = v.state === "fits" ? t.sizeUsd : v.maxSizeUsd;
   const perp = t.venue === "perp";
   const qty = perp ? (Math.floor((size / price) * 100) / 100).toFixed(2) : (Math.floor((size / price) * 1e4) / 1e4).toFixed(4);

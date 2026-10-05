@@ -1,7 +1,8 @@
 // Plain words to a trade. The rule parser handles ordinary sentences with no model; a language model
 // handles the rest and its output passes through the same validator, so nothing unchecked reaches the engine.
+import { z } from "zod";
 import type { Trade } from "./engine/types";
-import { gapDays, tradingDaysAfter } from "./engine/calendar";
+import { gapDays, newYork, tradingDaysAfter } from "./engine/calendar";
 
 export type Draft = Partial<Trade> & { thesis?: string };
 export type Parsed = { trade: Trade | null; draft: Draft; missing: (keyof Trade)[]; notes: string[] };
@@ -27,7 +28,8 @@ const STOP = new Set(("all can now one for big low new key cash well true good b
 /** Trading days from now through the first open after the next weekend. */
 export function daysThroughWeekend(now: Date): number {
   const days = tradingDaysAfter(now, 10);
-  const first = gapDays(days, now)[0];
+  // the coming weekend: a Monday morning means next weekend, because this one is ending, not ahead of you
+  const first = gapDays(days, now).find((d) => d > newYork(now).date);
   return first ? days.indexOf(first) + 1 : 5;
 }
 
@@ -110,6 +112,7 @@ export function ruleParse(text: string, known: (t: string) => boolean, now = new
       if (v !== d.lossLimitUsd) { d.sizeUsd = v; break; }
     }
   }
+  if (d.sizeUsd != null && d.leverage && /\bmargin\b|\bcollateral\b|\bof my own\b/.test(s)) d.sizeUsd = d.sizeUsd * d.leverage;
   if (pctLim && d.sizeUsd) d.lossLimitUsd = (Number(pctLim[1]) / 100) * d.sizeUsd;
 
   // horizon in trading days: "5 days", "2 weeks", "a week", "till friday", "overnight", "over the weekend"
@@ -131,6 +134,27 @@ export function ruleParse(text: string, known: (t: string) => boolean, now = new
   return d;
 }
 
+const DraftSchema = z.object({
+  ticker: z.string().regex(/^[A-Za-z.]{1,8}$/).optional(),
+  venue: z.enum(["rtoken", "perp"]).optional(),
+  side: z.enum(["long", "short"]).optional(),
+  sizeUsd: z.number().finite().positive().max(1e9).optional(),
+  horizonDays: z.number().finite().positive().max(1000).optional(),
+  lossLimitUsd: z.number().finite().positive().max(1e9).optional(),
+  leverage: z.number().finite().min(1).max(1000).optional(),
+  confidence: z.union([z.literal(0.8), z.literal(0.95)]).optional(),
+  thesis: z.string().max(500).optional(),
+}).strip();
+
+/** A draft that arrives from outside (the browser, or a model): only known fields, only sane numbers. Null if anything is off. */
+export function cleanDraft(raw: unknown): Draft | null {
+  if (raw == null) return {};
+  if (typeof raw !== "object" || Array.isArray(raw)) return null;
+  const nulled = Object.fromEntries(Object.entries(raw as Record<string, unknown>).filter(([, v]) => v !== null && v !== undefined));
+  const r = DraftSchema.safeParse(nulled);
+  return r.success ? (r.data as Draft) : null;
+}
+
 /** Everything that reaches the engine goes through here, including model output. */
 export function validate(d: Draft): Parsed {
   const notes: string[] = [];
@@ -141,10 +165,12 @@ export function validate(d: Draft): Parsed {
   if (!(Number(d.lossLimitUsd) > 0)) missing.push("lossLimitUsd");
   let horizon = Math.round(Number(d.horizonDays));
   if (horizon > 20) { notes.push("Shunt measures holds up to 20 trading days; using 20."); horizon = 20; }
-  let lev = d.venue === "perp" ? Number(d.leverage) || 1 : undefined;
+  let lev = d.venue === "perp" ? Math.max(1, Number(d.leverage) || 1) : undefined;
   if (lev && lev > 100) { notes.push("Bitget stock perps allow at most 100x; using 100x."); lev = 100; }
   if (d.lossLimitUsd && d.sizeUsd && d.lossLimitUsd > d.sizeUsd && d.venue !== "perp")
     notes.push("Your loss limit is larger than the position, so it can never be breached without leverage.");
+  if (lev && lev > 1 && Number(d.sizeUsd) > 0)
+    notes.push(`I read ${"$" + Math.round(Number(d.sizeUsd)).toLocaleString("en-US")} as the position value. At ${lev}x that is about ${"$" + Math.round(Number(d.sizeUsd) / lev).toLocaleString("en-US")} of your own money. If you meant that as your money, say "with $${Math.round(Number(d.sizeUsd) / lev).toLocaleString("en-US")} margin".`);
   const trade: Trade | null = missing.length ? null : {
     ticker: String(d.ticker).toUpperCase(), venue: d.venue === "perp" ? "perp" : "rtoken", side: d.side === "short" ? "short" : "long",
     sizeUsd: Number(d.sizeUsd), horizonDays: horizon, lossLimitUsd: Number(d.lossLimitUsd), leverage: lev,
