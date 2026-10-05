@@ -1,0 +1,8 @@
+{"ranAt":"2026-10-04T22:47:17Z","sentences":24,"rulesOnlyAllRight":14,"rulesPlusModelAllRight":22,
+ "misses":[
+  {"text":"rAMZN 7500 two days limit 300","what":"size and days not read","fix":"plain numbers of four digits count as a size; number words count as days"},
+  {"text":"hold googl perp 25k 3 days, cap loss at $900","what":"read 900 as the size","fix":"\"cap loss at\" recognised as a loss limit"},
+  {"text":"$10k long Apple for a week, 2% limit","what":"percent limit not read","fix":"a percent before the word limit counts"},
+  {"text":"what if I put 50k in nvidia for 2 days and can take 1,500 loss","what":"loss limit not read","fix":"\"can take ... loss\" recognised"},
+  {"text":"short 8k AMD until Friday, stop me at 400","what":"days and stop not read by rules; Claude counted differently from my key","fix":"\"until Friday\" and \"until the 9th\" counted in trading sessions including today"}
+ ]}

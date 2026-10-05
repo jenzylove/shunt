@@ -24,6 +24,23 @@ describe("rule parser", () => {
       expect(r.trade).toMatchObject(want);
     });
   }
+  const lower: [string, Record<string, unknown>][] = [
+    ["buy aapl for 5 days", { ticker: "AAPL", horizonDays: 5 }],
+    ["hold 20k nvda for 5 days with a 600 limit", { ticker: "NVDA", sizeUsd: 20000, horizonDays: 5, lossLimitUsd: 600 }],
+    ["what happens if i hold $20k tsla for 3 days, max loss $500", { ticker: "TSLA", sizeUsd: 20000, horizonDays: 3, lossLimitUsd: 500 }],
+    ["how about apple for a week", { ticker: "AAPL", horizonDays: 5 }],
+    ["long rnvda 10k two weeks stop 400", { ticker: "NVDA", venue: "rtoken", sizeUsd: 10000, horizonDays: 10, lossLimitUsd: 400 }],
+  ];
+  for (const [text, want] of lower) {
+    it("reads lowercase and loose phrasing: " + text, () => {
+      expect(ruleParse(text, known, TUE)).toMatchObject(want);
+    });
+  }
+  it("does not read everyday words as stocks", () => {
+    const k = (t: string) => ["ALL", "NOW", "CAN", "ONE", "FOR", "NVDA"].includes(t);
+    expect(ruleParse("can i buy one for now, all in on nvda", k, TUE).ticker).toBe("NVDA");
+    expect(ruleParse("can i hold it for now", k, TUE).ticker).toBeUndefined();
+  });
   it("reports what is missing instead of guessing", () => {
     const r = p("buy some nvidia");
     expect(r.trade).toBeNull();
@@ -37,5 +54,15 @@ describe("rule parser", () => {
     expect(r.trade?.horizonDays).toBe(20);
     expect(r.trade?.leverage).toBe(100);
     expect(r.notes.length).toBe(2);
+  });
+  it("reads the sentences the first answer key missed", () => {
+    const now = new Date("2026-10-05T16:00:00Z");
+    const q = (t: string) => ruleParse(t, known, now);
+    expect(q("rNVDA 7500 two days limit 300")).toMatchObject({ sizeUsd: 7500, horizonDays: 2, lossLimitUsd: 300 });
+    expect(q("hold NVDA perp 25k 3 days, cap loss at $900")).toMatchObject({ sizeUsd: 25000, lossLimitUsd: 900 });
+    expect(q("$10k long NVDA for a week, 2% limit").lossLimitUsd).toBe(200);
+    expect(q("put 50k in NVDA for 2 days and can take 1,500 loss")).toMatchObject({ sizeUsd: 50000, lossLimitUsd: 1500 });
+    expect(q("short 8k NVDA until Friday, stop me at 400")).toMatchObject({ horizonDays: 5, lossLimitUsd: 400 });
+    expect(q("5k NVDA until the 9th, max loss $200").horizonDays).toBe(5);
   });
 });

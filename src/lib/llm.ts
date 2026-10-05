@@ -9,6 +9,7 @@ import type { Draft } from "./parse";
 export const MODEL = "claude-opus-5-5";
 
 const TradeSchema = z.object({
+  intent: z.enum(["change", "new"]).describe("change: the message adjusts the current trade (same stock). new: it names a different stock or describes a whole new trade. With no current trade, always new."),
   ticker: z.string().nullable().describe("US stock ticker in capitals, e.g. NVDA. Map company names to tickers. Null if no stock is named."),
   venue: z.enum(["rtoken", "perp"]).nullable().describe("rtoken for spot/tokenised stock (rNVDA), perp for perpetual futures or any leverage"),
   side: z.enum(["long", "short"]).nullable(),
@@ -24,14 +25,17 @@ const TradeSchema = z.object({
 
 const SYSTEM = `You turn a trader's message into a structured trade for a risk checking tool.
 Only extract what the user said. Never invent a size, holding period or loss limit: leave a field null if it is not stated or clearly implied.
-If a current trade is given, the message is a change to it: return the full trade with only the changed fields updated.
+If a current trade is given and the message adjusts it ("what if I hold till Friday", "make it 10k", "use the perp at 3x"), set intent to change and return the full trade with only the changed fields updated.
+If the message names a DIFFERENT stock or describes a whole new trade, set intent to new, and fill ONLY what the message states. Never copy size, loss limit, holding period, leverage or venue from the current trade into a new one: leave them null.
 "Over the weekend" means hold through the next Monday open. "Till Friday" or "until the 9th" means holdUntil that date.
 Today in New York is {today} ({weekday}).`;
 
 let client: Anthropic | null = null;
 export const hasModel = () => Boolean(process.env.ANTHROPIC_API_KEY);
 
-export async function modelParse(text: string, current: Draft | null, now = new Date()): Promise<{ draft: Draft | null; error?: string }> {
+export type ModelRead = { draft: Draft | null; intent?: "change" | "new"; error?: string };
+
+export async function modelParse(text: string, current: Draft | null, now = new Date()): Promise<ModelRead> {
   if (!hasModel()) return { draft: null, error: "no model key" };
   client ??= new Anthropic();
   const today = now.toLocaleDateString("en-CA", { timeZone: "America/New_York" });
@@ -63,7 +67,7 @@ export async function modelParse(text: string, current: Draft | null, now = new 
       const i = days.findIndex((x) => x >= o.holdUntil!);
       if (i >= 0) d.horizonDays = i + 1;
     }
-    return { draft: d };
+    return { draft: d, intent: current ? o.intent : "new" };
   } catch (e) {
     if (e instanceof Anthropic.RateLimitError) return { draft: null, error: "busy, try again" };
     if (e instanceof Anthropic.AuthenticationError) return { draft: null, error: "model key rejected" };

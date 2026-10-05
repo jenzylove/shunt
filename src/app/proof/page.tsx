@@ -3,6 +3,9 @@ import calData from "../../../public/data/calibration.json";
 import journalData from "../../../public/data/journal.json";
 import ordersData from "../../../public/data/proof-orders.json";
 import s from "../doc.module.css";
+import Strip from "./Strip";
+import keyData from "../../../public/data/answer-key.json";
+import firstData from "../../../public/data/answer-key-first.json";
 
 export const metadata: Metadata = { title: "Shunt · Proof", description: "Shunt's ranges checked against what actually happened, in history and live." };
 // bundled at build time; the daily journal commit triggers a rebuild
@@ -10,9 +13,13 @@ export const metadata: Metadata = { title: "Shunt · Proof", description: "Shunt
 type Cal = { asOf: string; types: Record<string, { volScaled?: { rate: number; checked: number }; corrected?: { factor: number; apply: boolean; rateAfter: number; uncorrectedRateAfter: number } }> };
 type Journal = { summary: { graded: number; inside: number; rate: number | null; pending: number; updated: string };
   entries: { made: string; for: string; ticker: string; kind: string; band80: number; actual?: number; inside?: boolean }[] };
-type Orders = { venue: string; orders: { at: string; trade: { ticker: string; side: string; sizeUsd: number; lossLimitUsd: number; horizonDays: number; leverage?: number };
-  verdict: { state: string; maxSizeUsd?: number }; sizedAtUsd: number; symbol: string; qty: string;
-  open: { command: string; orderId: string; status: string; avgPrice?: string }; close: { orderId: string; status: string; avgPrice?: string } }[] };
+type Leg = { orderId: string; status: string; avgPrice: number; midBefore: number; fee: number };
+type Row = { id: string; at: string; trade: { ticker: string; side: string; sizeUsd: number; lossLimitUsd: number; horizonDays: number };
+  verdict: string; sizedAtUsd: number; symbol: string; qty: string;
+  predicted: { totalUsd: number; bps: number }; realized: { totalUsd: number; slippageUsd: number; feesUsd: number; bps: number };
+  open: Leg & { command: string }; close: Leg };
+type Orders = { venue: string; summary?: { roundTrips: number; ordersPlaced: number; symbols: number; filled: number; medianPredictedBps: number | null; medianRealizedBps: number | null;
+  realizedAtOrBelowPredicted: number; totalNotionalUsd: number; notTradableOnDemo?: string[] }; earlier?: unknown[]; orders: Row[] };
 
 const NAMES: Record<string, [string, string]> = {
   day: ["Ordinary days", "close to close, last 3 years, outside the stock's own earnings"],
@@ -31,8 +38,8 @@ export default function Proof() {
   return (
     <main className={s.main}>
       <section className={s.hero}>
-        <p className="eyebrow">Proof</p>
-        <h1 className={s.title}>Does &ldquo;4 in 5&rdquo; actually mean 4 in 5?</h1>
+        <p className="pill">Proof</p>
+        <h1 className={s.title}>Does &ldquo;4 in 5&rdquo; actually mean <span className={s.hl}>4 in 5</span>?</h1>
         <p className={s.lede}>
           Every range Shunt shows is the size a stock stayed within 4 times in 5 on past events of that kind. That only means
           something if it holds on days the range never saw. Here is the check, on history and live.
@@ -40,15 +47,23 @@ export default function Proof() {
       </section>
 
       {(!cal || !journal || !orders) && (
-        <p className={s.muted} style={{ color: "var(--stop)" }}>
+        <p className={`${s.muted} ${s.alert}`}>
           Some proof data could not be read on this server: {[!cal && "calibration", !journal && "journal", !orders && "orders"].filter(Boolean).join(", ")}.
         </p>
       )}
 
       {cal && (
         <section className={s.section}>
-          <h2>On history the range never saw</h2>
-          <p>For every stock, the range was built only from events before each day, then checked against that day. Price history reaches back ten years; each row below says which window it uses. The amber line is the 80% target.</p>
+          <h2>What &ldquo;4 in 5&rdquo; looks like on a real stock</h2>
+          <p>Each evening Shunt draws the range for the next day, using only what had happened by then. The shaded lane is that range. Each dot is the move that followed. If &ldquo;4 in 5&rdquo; is honest, about one dot in five lands outside the lane, and that is what you see.</p>
+          <Strip />
+        </section>
+      )}
+
+      {cal && (
+        <section className={s.section}>
+          <h2>The same test on every stock</h2>
+          <p>For every stock, the range was built only from events before each day, then checked against that day. Price history reaches back ten years; each row below says which window it uses. Each bar is the share of moves that stayed inside the range. The dark tick marks the 80% target, so a bar that reaches it means the range was honest.</p>
           <div className={s.bars}>
             {Object.entries(NAMES).map(([k, [name, note]]) => {
               const t = cal.types[k];
@@ -78,9 +93,11 @@ export default function Proof() {
           <p>After every US close, Shunt locks in tomorrow&apos;s 4 in 5 range for 30 stocks (the earnings range if one reports). After that session closes, each one is graded. Entries are never edited once written.</p>
           <dl className={s.stats}>
             <div><dt>Graded</dt><dd>{journal.summary.graded}</dd></div>
-            <div><dt>Inside the range</dt><dd>{journal.summary.graded ? pc(journal.summary.rate) : "first grades after the next close"}</dd></div>
+            <div><dt>Inside the range</dt><dd>{journal.summary.graded ? pc(journal.summary.rate) : "not yet"}</dd></div>
             <div><dt>Waiting for their session</dt><dd>{journal.summary.pending}</dd></div>
           </dl>
+          <details className={s.more}>
+            <summary>Show the {recent.length} locked ranges</summary>
           <div className={s.scroll}>
             <table className={s.table}>
               <thead><tr><th>Session</th><th>Stock</th><th>Kind</th><th className={s.r}>Range</th><th className={s.r}>Actual move</th><th className={s.r}>Result</th></tr></thead>
@@ -96,34 +113,100 @@ export default function Proof() {
               </tbody>
             </table>
           </div>
+          </details>
           <p className={s.muted}>Updated {new Date(journal.summary.updated).toUTCString()}. Script: scripts/journal.mts, run by a scheduled GitHub Action.</p>
         </section>
       )}
 
-      {orders && orders.orders.length > 0 && (
-        <section className={s.section}>
-          <h2>Orders through Bitget Agent Hub</h2>
-          <p>Shunt checked each trade, sized it to fit the loss limit, then the order went to Bitget Demo through Agent Hub&apos;s CLI (<code>bgc --paper-trading</code>), tagged with a <code>shunt</code> client id, and was closed straight after.</p>
+      <section className={s.section}>
+        <h2>Does it read you right?</h2>
+        <p>
+          Shunt turns your sentence into a trade before it measures anything. To test that, 24 sentences were written the way traders type,
+          each with the trade a careful person would read from it. Every field (stock, side, size, days, loss limit) is checked.
+        </p>
+        <dl className={s.stats}>
+          <div><dt>First run, rules alone</dt><dd>{firstData.rulesOnlyAllRight} of {firstData.sentences}</dd></div>
+          <div><dt>First run, with Claude</dt><dd>{firstData.rulesPlusModelAllRight} of {firstData.sentences}</dd></div>
+          <div><dt>After the fixes, rules alone</dt><dd>{keyData.summary.rulesOnlyAllRight} of {keyData.summary.sentences}</dd></div>
+          <div><dt>After the fixes, with Claude</dt><dd>{keyData.summary.rulesPlusModelAllRight} of {keyData.summary.sentences}</dd></div>
+        </dl>
+        <p className={s.muted}>
+          The fixes were made after seeing the misses, so the second row is not an unbiased score. The first run is. Claude only reads words here;
+          it never produces a number you see. Claude version {keyData.summary.model}.
+        </p>
+        <details className={s.more}>
+          <summary>Show what the first run got wrong, and the fix</summary>
           <div className={s.scroll}>
             <table className={s.table}>
-              <thead><tr><th>Trade asked</th><th>Shunt said</th><th className={s.r}>Placed at</th><th>Open order id</th><th>Close order id</th></tr></thead>
+              <thead><tr><th>Sentence</th><th>What went wrong</th><th>Fix</th></tr></thead>
               <tbody>
-                {orders.orders.map((o) => (
-                  <tr key={o.open.orderId}>
-                    <td>{o.trade.side} {usd(o.trade.sizeUsd)} {o.symbol}{o.trade.leverage ? ` ${o.trade.leverage}x` : ""}, {o.trade.horizonDays} days, max loss {usd(o.trade.lossLimitUsd)}</td>
-                    <td>{o.verdict.state === "fits" ? "fits" : `fits at ${usd(o.sizedAtUsd)}`}</td>
-                    <td className={`num ${s.r}`}>{o.qty} @ {o.open.avgPrice ?? "market"}</td>
-                    <td className="num">{o.open.orderId} <span className={s.in}>{o.open.status}</span></td>
-                    <td className="num">{o.close.orderId} <span className={s.in}>{o.close.status}</span></td>
-                  </tr>
-                ))}
+                {firstData.misses.map((m) => (<tr key={m.text}><td>{m.text}</td><td>{m.what}</td><td>{m.fix}</td></tr>))}
               </tbody>
             </table>
           </div>
-          <code className={`${s.cmd}`}>{orders.orders[0].open.command}</code>
-          <p className={s.muted}>{orders.venue}. The public site never holds an exchange key; these were placed from the builder&apos;s machine.</p>
+        </details>
+        <details className={s.more}>
+          <summary>Show all {keyData.rows.length} sentences</summary>
+          <div className={s.scroll}>
+            <table className={s.table}>
+              <thead><tr><th>Sentence</th><th>Rules alone</th><th>With Claude</th></tr></thead>
+              <tbody>
+                {keyData.rows.map((r) => (<tr key={r.text}><td>{r.text}</td><td className={r.rulesMisses.length ? s.out : s.in}>{r.rulesMisses.length ? "missed" : "right"}</td><td className={r.bothMisses.length ? s.out : s.in}>{r.bothMisses.length ? "missed" : "right"}</td></tr>))}
+              </tbody>
+            </table>
+          </div>
+        </details>
+      </section>
+
+      {orders && orders.orders.length > 0 && (() => {
+        const sm = orders.summary;
+        const rows = orders.orders;
+        const within = rows.filter((o) => Math.abs(o.realized.bps - o.predicted.bps) <= 5).length;
+        return (
+        <section className={s.section}>
+          <h2>Orders through Bitget Agent Hub</h2>
+          <p>
+            Shunt predicts what getting in and out will cost: the fee plus how far your size walks through the order book. To test that, each
+            trade below was checked, sized to its loss limit, sent to Bitget Demo through Agent Hub&apos;s CLI (<code>bgc --paper-trading</code>),
+            then closed straight away. The fill was compared with the price on the screen just before the order.
+          </p>
+          <dl className={s.stats}>
+            <div><dt>Orders placed</dt><dd>{sm?.ordersPlaced ?? rows.length * 2}</dd></div>
+            <div><dt>Round trips</dt><dd>{rows.length}</dd></div>
+            <div><dt>Stocks</dt><dd>{new Set(rows.map((o) => o.symbol)).size}</dd></div>
+            <div><dt>Median cost predicted</dt><dd>{sm?.medianPredictedBps?.toFixed(1)} bps</dd></div>
+            <div><dt>Median cost charged</dt><dd>{sm?.medianRealizedBps?.toFixed(1)} bps</dd></div>
+            <div><dt>Within 5 bps of the call</dt><dd>{within} of {rows.length}</dd></div>
+          </dl>
+          <p className={s.muted}>One bps is one hundredth of one percent of the trade. 18 bps on a $5,000 trade is $9. Demo fills are simulated matching on Bitget&apos;s paper account, not live liquidity, so this tests the fee and book arithmetic, not the real market.</p>
+          <details className={s.more}>
+            <summary>Show all {rows.length} round trips ({rows.length * 2} order ids)</summary>
+            <div className={s.scroll}>
+              <table className={s.table}>
+                <thead><tr><th>Trade asked</th><th>Shunt said</th><th className={s.r}>Placed</th><th className={s.r}>Predicted</th><th className={s.r}>Charged</th><th>Open order</th><th>Close order</th></tr></thead>
+                <tbody>
+                  {rows.map((o) => (
+                    <tr key={o.open.orderId}>
+                      <td>{o.trade.side} {usd(o.trade.sizeUsd)} {o.symbol}, {o.trade.horizonDays} days, max loss {usd(o.trade.lossLimitUsd)}</td>
+                      <td>{o.verdict === "fits" ? "fits" : `fits at ${usd(o.sizedAtUsd)}`}</td>
+                      <td className={`num ${s.r}`}>{o.qty} @ {o.open.avgPrice}</td>
+                      <td className={`num ${s.r}`}>{o.predicted.bps.toFixed(1)} bps</td>
+                      <td className={`num ${s.r}`}>{o.realized.bps.toFixed(1)} bps</td>
+                      <td className="num">{o.open.orderId} <span className={s.in}>{o.open.status}</span></td>
+                      <td className="num">{o.close.orderId} <span className={s.in}>{o.close.status}</span></td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </details>
+          <code className={`${s.cmd}`}>{rows[0].open.command}</code>
+          <p className={s.muted}>
+            {orders.venue}.{sm?.notTradableOnDemo?.length ? ` Demo does not list ${sm.notTradableOnDemo.length} other stock perps Shunt checks, so those could not be ordered.` : ""} NVDA, META, AMZN, AAPL and TSLA orders were placed on the same Demo account that another of the builder&apos;s projects also trades on; every order here carries a shunt client id so the two can be told apart. The public site never holds an exchange key; these were placed from the builder&apos;s machine.
+          </p>
         </section>
-      )}
+        );
+      })()}
     </main>
   );
 }

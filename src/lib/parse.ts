@@ -19,7 +19,11 @@ const COMPANY: Record<string, string> = {
   constellation: "CEG", oklo: "OKLO", nuscale: "SMR",
 };
 
-/** Deterministic parser for common phrasing: "buy $20k rNVDA, hold 5 days, max loss $600". */
+// everyday words that are also tickers: never read these as a stock unless written in capitals
+const STOP = new Set(("all can now one for big low new key cash well true good best real safe open line play move post plus any are was you the and buy sell long short hold " +
+  "days day week weeks loss max risk lose over take stop size bet weekend month year till with from into that this what when will down high less more most much many " +
+  "just like want need have has had not out off per its our your their them they then than also only very each both such same other another about after before while").split(" "));
+
 /** Trading days from now through the first open after the next weekend. */
 export function daysThroughWeekend(now: Date): number {
   const days = tradingDaysAfter(now, 10);
@@ -27,16 +31,44 @@ export function daysThroughWeekend(now: Date): number {
   return first ? days.indexOf(first) + 1 : 5;
 }
 
+/** "till Friday", "until the 9th": trading sessions from today through that day, counting today. */
+function untilDays(s: string, now: Date): number | null {
+  const m = s.match(/\b(?:till|until|through|thru)\s+(?:the\s+)?(?:(mon|tue|wed|thu|fri)[a-z]*|(\d{1,2})(?:st|nd|rd|th))\b/);
+  if (!m) return null;
+  const ny = new Date(now.toLocaleString("en-US", { timeZone: "America/New_York" }));
+  ny.setHours(12, 0, 0, 0);
+  let target: Date | null = null;
+  if (m[1]) {
+    const want = ["mon", "tue", "wed", "thu", "fri"].indexOf(m[1].slice(0, 3));
+    target = new Date(ny);
+    for (let i = 0; i < 8; i++) { if (target.getDay() - 1 === want && i > 0) break; target.setDate(target.getDate() + 1); }
+  } else {
+    target = new Date(ny);
+    for (let i = 0; i < 40 && target.getDate() !== Number(m[2]); i++) target.setDate(target.getDate() + 1);
+    if (target.getDate() !== Number(m[2])) return null;
+  }
+  let n = 0;
+  for (const c = new Date(ny); c <= target; c.setDate(c.getDate() + 1)) if (c.getDay() > 0 && c.getDay() < 6) n++;
+  return n > 0 && n <= 30 ? n : null;
+}
+
 export function ruleParse(text: string, known: (t: string) => boolean, now = new Date()): Draft {
   const s = " " + text.toLowerCase().replace(/[’']/g, "'") + " ";
   const d: Draft = {};
 
   // venue and ticker: rNVDA / NVDA perp / NVDAUSDT / plain ticker / company name
-  const rtok = text.match(/\br([A-Z]{1,5})\b/);
-  const usdt = text.match(/\b([A-Z]{1,5})USDT\b/);
-  const bare = [...text.matchAll(/\b\$?([A-Z]{1,5})\b/g)].map((m) => m[1]).find((t) => known(t));
-  if (rtok && known(rtok[1])) { d.ticker = rtok[1]; d.venue = "rtoken"; }
-  else if (usdt && known(usdt[1])) { d.ticker = usdt[1]; d.venue = "perp"; }
+  const words = text.match(/[A-Za-z][A-Za-z.]*/g) ?? [];
+  // "rNVDA" or "rnvda": the leading r marks the rToken
+  const rtok = words.map((w) => (/^r[a-z]{2,5}$/i.test(w) ? w.slice(1).toUpperCase() : "")).find((t) => t && known(t));
+  const usdt = text.match(/\b([A-Za-z]{1,5})USDT\b/i)?.[1]?.toUpperCase();
+  // a plain ticker: capitals always count; lowercase only for 3+ letters that are not an everyday word
+  const bare = words.find((w) => {
+    const up = w.toUpperCase();
+    if (!known(up)) return false;
+    return w === up || (w.length >= 3 && !STOP.has(w.toLowerCase()));
+  })?.toUpperCase();
+  if (rtok && known(rtok)) { d.ticker = rtok; d.venue = "rtoken"; }
+  else if (usdt && known(usdt)) { d.ticker = usdt; d.venue = "perp"; }
   else if (bare) d.ticker = bare;
   else {
     const hit = Object.keys(COMPANY).sort((a, b) => b.length - a.length).find((k) => s.includes(" " + k));
@@ -52,22 +84,42 @@ export function ruleParse(text: string, known: (t: string) => boolean, now = new
   if (lev) d.leverage = Number(lev[1]);
 
   // loss limit: "max loss $600", "can lose 600", "risk $500", "stop at -$400"
-  const lim = s.match(new RegExp(String.raw`(?:max(?:imum)?\s*loss|lose(?:\s*up\s*to)?|losing|risk(?:ing)?|stomach|tolerate|stop(?:\s*at)?|limit(?:\s*of)?)\s*(?:of\s*)?-?\s*\$?\s*${NUM}`));
+  const lim = s.match(new RegExp(String.raw`(?:max(?:imum)?\s*loss|cap(?:\s*(?:the\s*|my\s*)?loss)?(?:\s*at)?|lose(?:\s*up\s*to)?|losing|take\s*(?:a\s*)?(?:loss\s*of\s*)?|risk(?:ing)?|stomach|tolerate|stop(?:\s*me)?(?:\s*at)?|limit(?:\s*of)?)\s*(?:of\s*)?-?\s*\$?\s*${NUM}`));
   if (lim) d.lossLimitUsd = money(lim[1], lim[2]);
-  const pctLim = s.match(/(?:max(?:imum)?\s*loss|lose|risk|limit)\s*(?:of\s*)?(\d+(?:\.\d+)?)\s*%/);
+  if (!lim) {
+    const lim2 = s.match(new RegExp(String.raw`\$?\s*${NUM}\s*(?:dollars?|usd|usdt)?\s*(?:limit|loss|max(?:imum)?\s*loss|stop(?:\s*loss)?)\b`));
+    if (lim2) d.lossLimitUsd = money(lim2[1], lim2[2]);
+  }
+  const pctLim = s.match(/(?:max(?:imum)?\s*loss|lose|risk|limit)\s*(?:of\s*)?(\d+(?:\.\d+)?)\s*%/) ?? s.match(/(\d+(?:\.\d+)?)\s*%\s*(?:max(?:imum)?\s*loss|limit|stop|loss)/);
 
   // size: first money amount that is not the loss limit: "$20k", "20,000 dollars", "20k usdt"
   for (const m of s.matchAll(new RegExp(String.raw`\$\s*${NUM}|${NUM}\s*(?:usd|usdt|dollars|bucks)\b`, "g"))) {
     const v = m[1] ? money(m[1], m[2]) : money(m[3], m[4]);
     if (v !== d.lossLimitUsd) { d.sizeUsd = v; break; }
   }
+  if (d.sizeUsd == null) {
+    for (const m of s.matchAll(/\b(\d+(?:\.\d+)?)\s*(k|m)\b/g)) {
+      const v = money(m[1], m[2]);
+      if (v !== d.lossLimitUsd) { d.sizeUsd = v; break; }
+    }
+  }
+  if (d.sizeUsd == null) {
+    // a plain number of four or more digits, "6000" or "1,500", that is not the loss limit
+    for (const m of s.matchAll(/(?<![\d.$])(\d{1,3}(?:,\d{3})+|\d{4,7})(?![\d%])/g)) {
+      const v = Number(m[1].replace(/,/g, ""));
+      if (v !== d.lossLimitUsd) { d.sizeUsd = v; break; }
+    }
+  }
   if (pctLim && d.sizeUsd) d.lossLimitUsd = (Number(pctLim[1]) / 100) * d.sizeUsd;
 
   // horizon in trading days: "5 days", "2 weeks", "a week", "till friday", "overnight", "over the weekend"
-  const days = s.match(/(\d+)\s*(?:trading\s*)?days?\b/);
+  const NW: Record<string, number> = { one: 1, two: 2, three: 3, four: 4, five: 5, six: 6, seven: 7, eight: 8, nine: 9, ten: 10 };
+  const days = s.match(/(\d+|one|two|three|four|five|six|seven|eight|nine|ten)\s*(?:trading\s*)?days?\b/);
+  const until = untilDays(s, now);
   const weeks = s.match(/(\d+|a|one|two|three|four)\s*weeks?\b/);
   const W: Record<string, number> = { a: 1, one: 1, two: 2, three: 3, four: 4 };
-  if (days) d.horizonDays = Number(days[1]);
+  if (days) d.horizonDays = NW[days[1]] ?? Number(days[1]);
+  else if (until) d.horizonDays = until;
   else if (weeks) d.horizonDays = 5 * (W[weeks[1]] ?? Number(weeks[1]));
   else if (/\bovernight\b|\btomorrow\b/.test(s)) d.horizonDays = 1;
   else if (/\bweekend\b/.test(s)) d.horizonDays = daysThroughWeekend(now);

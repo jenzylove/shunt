@@ -1,6 +1,7 @@
 // The verdict in plain words, built only from computed numbers. No model writes these sentences.
 import type { CheckResult } from "./check";
 import { weekday } from "./engine/calendar";
+import type { Trade } from "./engine/types";
 
 export const usd = (x: number | null | undefined) =>
   x == null || !Number.isFinite(x) ? "n/a" : "$" + Math.round(x).toLocaleString("en-US");
@@ -67,4 +68,14 @@ export function explain(r: CheckResult): Verdict {
       : `Fits if you hold ${usd(v.maxSizeUsd)} or less.`,
     detail: `${worstLine} That is more than your ${usd(t.lossLimitUsd)}.${liqLine}${unmeasured}`,
   };
+}
+
+/** The user's trade as one plain question, so it is always clear what the answer below is answering. */
+export function questionText(t: Trade): string {
+  const days = `${t.horizonDays} trading day${t.horizonDays === 1 ? "" : "s"}`;
+  const amt = usd(t.sizeUsd);
+  const what = t.venue === "perp"
+    ? `hold a ${amt} ${t.side} ${t.ticker} perp${t.leverage && t.leverage > 1 ? ` at ${t.leverage}x` : ""}`
+    : t.side === "short" ? `short ${amt} of ${t.ticker}` : `hold ${amt} of ${t.ticker}`;
+  return `What happens if I ${what} for ${days} and can lose at most ${usd(t.lossLimitUsd)}?`;
 }
