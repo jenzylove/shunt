@@ -93,3 +93,18 @@
 - Accessibility and hygiene: toggle buttons instead of half built tabs, parallax and auto advance off under reduced motion,
   44 px touch targets, aria-busy, full CSP, no X-Powered-By, robots, sitemap, security.txt.
 - 22 regression tests added from the audit (60 total).
+
+## 5 October 2026, audit fixes (third pass)
+
+- Funding settlements now come from Bitget's own schedule (`/mix/market/funding-time`: next settlement and period), not an
+  assumed 00:00 UTC grid. Funding policy is one tested function: a long pays positive funding, a short pays negative, and a
+  credit is never counted.
+- "$10k at 5x" typed in words now asks once: position value or your own money, both read back in dollars. The example uses
+  "$10k position" so it never needs to ask.
+- Source times: the header shows when Bitget stamped the book; the full check lists the book time, the newest funding
+  settlement, the next settlement, and when Nasdaq actually answered (the calendar is cached up to six hours).
+- Chart: focusable; arrow keys, Home and End read any day, Escape clears.
+- Accessibility: axe WCAG 2 A and AA with no violations in light or dark after making the command blocks focusable; two light
+  mode colours (go, caution) darkened to pass 4.5:1, every colour pair sampled by hand.
+- Tests: funding sign, Bitget schedule counting, Good Friday long weekend, the margin question, and one test that the headline
+  loss, the chart's cost and the ticket's size all come from the same cost function (65 total). Answer key rerun: 24 of 24.

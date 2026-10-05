@@ -2,7 +2,8 @@
 import { describe, expect, it } from "vitest";
 import { combineSameDay } from "./check";
 import { fundingRunsBetween, gapDays, nyInstant, tradingDaysAfter } from "./engine/calendar";
-import { assess, highestSafeLeverage, liquidationPct, maxSize } from "./engine/switchpoint";
+import { assess, fundingCharged, highestSafeLeverage, liquidationPct, maxSize } from "./engine/switchpoint";
+import { settlementsBetween } from "./live/bitget";
 import type { Band, Trade } from "./engine/types";
 import { cleanDraft, daysThroughWeekend, ruleParse, validate } from "./parse";
 import { POST } from "../app/api/check/route";
@@ -23,6 +24,7 @@ describe("over the weekend", () => {
     expect(hold("2026-10-04T02:00:00Z")).toBe(1);
   });
   it("Monday before the open means the next weekend, not the one that is ending", () => expect(hold("2026-10-05T13:20:00Z")).toBe(6));
+  it("a long weekend after a Friday holiday: Good Friday 2027", () => expect(hold("2027-03-25T15:00:00Z")).toBe(2));
   it("a holiday weekend counts: Thanksgiving week", () => expect(hold("2026-11-25T15:00:00Z")).toBe(3));
   it("a weekend closure that already ended is not a scheduled event", () => {
     const now = new Date("2026-10-05T15:00:00Z");
@@ -35,6 +37,22 @@ describe("over the weekend", () => {
 });
 
 describe("funding", () => {
+  it("charges a long when funding is positive and a short when it is negative, and never credits either", () => {
+    expect(fundingCharged(10_000, 0.0001, "long", 21)).toEqual({ charged: 21, expected: 21 });
+    expect(fundingCharged(10_000, 0.0001, "short", 21).charged).toBe(0);
+    expect(fundingCharged(10_000, 0.0001, "short", 21).expected).toBe(-21);
+    expect(fundingCharged(10_000, -0.0001, "short", 21).charged).toBe(21);
+    expect(fundingCharged(10_000, -0.0001, "long", 21).charged).toBe(0);
+  });
+  it("counts settlements on Bitget's own schedule", () => {
+    const h = 3_600_000, next = Date.parse("2026-10-05T16:00:00Z");
+    expect(settlementsBetween(Date.parse("2026-10-05T13:20:00Z"), Date.parse("2026-10-05T20:00:00Z"), next, 8)).toBe(1);
+    expect(settlementsBetween(Date.parse("2026-10-05T13:20:00Z"), Date.parse("2026-10-12T20:00:00Z"), next, 8)).toBe(22);
+    expect(settlementsBetween(Date.parse("2026-10-05T13:20:00Z"), Date.parse("2026-10-05T15:59:00Z"), next, 8)).toBe(0);
+    expect(settlementsBetween(Date.parse("2026-10-05T13:20:00Z"), Date.parse("2026-10-05T20:00:00Z"), next, 4)).toBe(2);   // 16:00 and 20:00
+    expect(settlementsBetween(Date.parse("2026-10-05T17:00:00Z"), Date.parse("2026-10-06T01:00:00Z"), next, 8)).toBe(1);  // schedule read before the last settlement
+    void h;
+  });
   it("counts the settlements actually crossed", () => {
     expect(fundingRunsBetween(new Date("2026-10-05T07:59:00Z"), new Date("2026-10-05T16:01:00Z"), 8)).toBe(2);   // 08:00 and 16:00 UTC
     expect(fundingRunsBetween(new Date("2026-10-05T16:30:00Z"), new Date("2026-10-05T20:00:00Z"), 8)).toBe(0);
@@ -78,6 +96,22 @@ describe("loss budget", () => {
   });
 });
 
+describe("one number everywhere", () => {
+  it("the headline loss, the chart's cost and the ticket's size all come from the same cost function", () => {
+    const cost = (size: number) => size * 0.0015 + (size > 8_000 ? 40 : 0);
+    const ev = band(0.06, "2026-10-07");
+    const a = assess({ ...T, venue: "rtoken", leverage: undefined }, band(0.02), band(0.03), [ev], cost);
+    expect(a.costUsd).toBe(cost(10_000));
+    expect(a.worst!.lossUsd).toBeCloseTo(10_000 * 0.06 + cost(10_000));
+    expect(a.verdict.state).toBe("fits-if");
+    const sized = a.verdict.state === "fits-if" ? a.verdict.maxSizeUsd : 0;
+    // the size the ticket would place fits when checked again, and one dollar more does not
+    const again = assess({ ...T, venue: "rtoken", leverage: undefined, sizeUsd: sized }, band(0.02), band(0.03), [ev], cost);
+    expect(again.verdict.state).toBe("fits");
+    expect((sized + 1) * 0.06 + cost(sized + 1)).toBeGreaterThan(T.lossLimitUsd);
+  });
+});
+
 describe("overlapping events", () => {
   it("combines events on the same day into one cautious range, and leaves the rest alone", () => {
     const out = combineSameDay([band(0.05, "2026-10-12"), band(0.02, "2026-10-12", "weekend"), band(0.03, "2026-10-14", "fed")]);
@@ -116,6 +150,12 @@ describe("the api never breaks the page", () => {
       expect(typeof j.error).toBe("string");
       expect(j.parsed).toBeTruthy();
     }
+  });
+  it("asks whether a leveraged dollar amount is the position or the margin, before measuring", async () => {
+    const r = await post({ text: "long 5x NVDA perp $10k 3 days max loss 300" });
+    const j = await r.json();
+    expect(j.ask).toEqual({ kind: "sizeMeaning", sizeUsd: 10_000, leverage: 5 });
+    expect(j.result).toBeUndefined();
   });
   it("answers a 429 in the same shape", async () => {
     const mk = () => POST(new Request("http://x/api/check", { method: "POST", body: "{}", headers: { "x-real-ip": "1.2.3.4" } }));

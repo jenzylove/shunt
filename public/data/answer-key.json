@@ -2,7 +2,7 @@
  "summary": {
   "sentences": 24,
   "model": "claude-opus-5-5",
-  "ranAt": "2026-10-04T22:51:34.805Z",
+  "ranAt": "2026-10-05T13:50:39.053Z",
   "rulesOnlyAllRight": 24,
   "modelAllRight": 24,
   "rulesPlusModelAllRight": 24

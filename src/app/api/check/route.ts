@@ -28,7 +28,7 @@ export async function POST(req: Request) {
   }
   const raw = await req.text();
   if (raw.length > 20_000) return fail("That request is too large.", 413);
-  let body: { text?: unknown; draft?: unknown; rulesOnly?: unknown };
+  let body: { text?: unknown; draft?: unknown; rulesOnly?: unknown; sizeConfirmed?: unknown };
   try {
     body = JSON.parse(raw);
   } catch {
@@ -97,6 +97,13 @@ export async function POST(req: Request) {
     return NextResponse.json({ parsed, meta, error: `${parsed.trade.ticker} is not a US stock listed on Bitget as an rToken.` });
   }
   if (!parsed.trade) return NextResponse.json({ parsed, meta });
+  // "$10k at 5x" is read two ways by traders: $10k of exposure, or $10k of your own money. Ask once instead of guessing.
+  const lev = parsed.trade.leverage ?? 1;
+  const saidWhich = /\b(margin|collateral|own money|position|notional|exposure|value)\b/i.test(text);
+  const fromWords = text && (readBy === "rules" || readBy === "model") && finalDraft.sizeUsd !== cur?.sizeUsd;
+  if (parsed.trade.venue === "perp" && lev > 1 && fromWords && !saidWhich && body.sizeConfirmed !== true) {
+    return NextResponse.json({ parsed, meta, ask: { kind: "sizeMeaning", sizeUsd: parsed.trade.sizeUsd, leverage: lev } });
+  }
   const result = await checkTrade(parsed.trade);
   if ("error" in result) return NextResponse.json({ parsed, meta, error: result.error });
   return NextResponse.json({ parsed, meta, result });

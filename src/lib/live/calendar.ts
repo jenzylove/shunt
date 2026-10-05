@@ -14,7 +14,7 @@ const TIMING: Record<string, EarningsRow["timing"]> = {
 };
 
 /** All companies reporting on one date (Nasdaq public calendar). */
-export async function earningsOn(date: string): Promise<EarningsRow[]> {
+export async function earningsOn(date: string): Promise<EarningsRow[] & { readAt?: number }> {
   const r = await fetch(`https://api.nasdaq.com/api/calendar/earnings?date=${date}`, {
     headers: { "user-agent": "Mozilla/5.0 (compatible; Shunt research)", accept: "application/json" },
     next: { revalidate: 21600 },
@@ -23,13 +23,20 @@ export async function earningsOn(date: string): Promise<EarningsRow[]> {
   if (!r.ok) throw new Error(`Nasdaq calendar ${date} HTTP ${r.status}`);
   const j = await r.json();
   const rows: { symbol: string; time: string }[] = j?.data?.rows ?? [];
-  return rows.map((x) => ({ symbol: x.symbol.toUpperCase(), date, timing: TIMING[x.time] ?? "unknown" }));
+  const out = rows.map((x) => ({ symbol: x.symbol.toUpperCase(), date, timing: TIMING[x.time] ?? "unknown" })) as EarningsRow[] & { readAt?: number };
+  // the response may come from a cache of up to six hours: its own Date header says when Nasdaq actually answered
+  out.readAt = Date.parse(r.headers.get("date") ?? "") || Date.now();
+  return out;
 }
 
 /** Earnings rows for a set of dates, fetched in parallel; failures are reported, never filled in. */
-export async function earningsBetween(dates: string[]): Promise<{ rows: EarningsRow[]; failed: string[] }> {
+export async function earningsBetween(dates: string[]): Promise<{ rows: EarningsRow[]; failed: string[]; oldestReadAt: number | null }> {
   const res = await Promise.allSettled(dates.map(earningsOn));
   const rows: EarningsRow[] = [], failed: string[] = [];
-  res.forEach((r, i) => (r.status === "fulfilled" ? rows.push(...r.value) : failed.push(dates[i])));
-  return { rows, failed };
+  let oldest: number | null = null;
+  res.forEach((r, i) => {
+    if (r.status === "fulfilled") { rows.push(...r.value); if (r.value.readAt) oldest = Math.min(oldest ?? Infinity, r.value.readAt); }
+    else failed.push(dates[i]);
+  });
+  return { rows, failed, oldestReadAt: oldest };
 }

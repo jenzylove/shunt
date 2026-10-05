@@ -69,12 +69,31 @@ export async function maintenanceRate(t: string, notionalUsd: number): Promise<n
   return Number(tier.keepMarginRate);
 }
 
-/** Average funding rate per interval over the last ~30 settlements (positive: longs pay shorts). */
-export async function recentFunding(t: string): Promise<{ avgRate: number; n: number }> {
-  const d = await get<{ fundingRate: string }[]>(
+/** Average funding rate per interval over the last ~30 settlements (positive: longs pay shorts), and when the newest one settled. */
+export async function recentFunding(t: string): Promise<{ avgRate: number; n: number; lastAt: number | null }> {
+  const d = await get<{ fundingRate: string; fundingTime?: string }[]>(
     `/mix/market/history-fund-rate?symbol=${perpSymbol(t)}&productType=USDT-FUTURES&pageSize=30`, 600);
   const rates = d.map((x) => Number(x.fundingRate)).filter((x) => Number.isFinite(x));
-  return { avgRate: rates.length ? rates.reduce((a, b) => a + b, 0) / rates.length : 0, n: rates.length };
+  const times = d.map((x) => Number(x.fundingTime)).filter((x) => x > 0);
+  return { avgRate: rates.length ? rates.reduce((a, b) => a + b, 0) / rates.length : 0, n: rates.length, lastAt: times.length ? Math.max(...times) : null };
+}
+
+/** Bitget's own funding schedule for this perp: the next settlement and the hours between settlements. */
+export async function fundingSchedule(t: string): Promise<{ next: number; periodHours: number }> {
+  const [d] = await get<{ nextFundingTime: string; ratePeriod: string }[]>(
+    `/mix/market/funding-time?symbol=${perpSymbol(t)}&productType=USDT-FUTURES`, 60);
+  const next = Number(d?.nextFundingTime), periodHours = Number(d?.ratePeriod);
+  if (!(next > 0) || !(periodHours > 0)) throw new Error("no funding schedule");
+  return { next, periodHours };
+}
+
+/** Settlements that fall after `from` and no later than `to`, on a schedule of `next` plus whole periods. */
+export function settlementsBetween(from: number, to: number, next: number, periodHours: number): number {
+  const step = periodHours * 3_600_000;
+  let first = next;
+  while (first - step > from) first -= step;   // the schedule may be read a moment before `from`
+  while (first <= from) first += step;
+  return first > to ? 0 : Math.floor((to - first) / step) + 1;
 }
 
 /** Did this rToken actually trade last weekend? Counts 15 minute bars from Saturday 00:00 to Monday 00:00 UTC. */

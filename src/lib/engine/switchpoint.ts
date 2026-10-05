@@ -20,6 +20,15 @@ export type Assessment = {
   safeLeverage: number | null;     // perp only: highest leverage whose liquidation distance clears the biggest measured move
 };
 
+/**
+ * Funding counted against a perp position: the recent average rate per settlement, signed for the side (positive means you pay),
+ * times the settlements crossed. The future rate is unknown, so a credit is never counted toward fitting your limit.
+ */
+export function fundingCharged(sizeUsd: number, avgRate: number, side: "long" | "short", runs: number): { charged: number; expected: number } {
+  const expected = sizeUsd * avgRate * (side === "long" ? 1 : -1) * runs;
+  return { charged: Math.max(0, expected), expected };
+}
+
 /** Total cost of the round trip at a size. A plain number is treated as the cost at the trade's own size and scaled linearly. */
 export type CostFn = number | ((sizeUsd: number) => number);
 const costAt = (c: CostFn, t: Trade, size: number) => (typeof c === "function" ? c(size) : t.sizeUsd > 0 ? (c / t.sizeUsd) * size : 0);

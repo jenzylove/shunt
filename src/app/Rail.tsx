@@ -95,7 +95,15 @@ export default function Rail({ r }: { r: CheckResult }) {
       </div>
       <p className={s.hint}>Scroll sideways to see the whole chart</p>
       <div className={s.scroll}>
-        <svg viewBox={`0 0 ${W} ${H}`} role="img" aria-label={crosses ? `Passes your ${usd(limit)} limit around ${crossDay}` : `Stays under your ${usd(limit)} limit`}>
+        <svg viewBox={`0 0 ${W} ${H}`} role="img" tabIndex={0}
+          onKeyDown={(e) => {
+            if (e.key !== "ArrowRight" && e.key !== "ArrowLeft" && e.key !== "Home" && e.key !== "End" && e.key !== "Escape") return;
+            e.preventDefault();
+            const step = 1 / n, cur = hover ?? 0;
+            setHover(e.key === "Escape" ? null : e.key === "Home" ? step : e.key === "End" ? 1
+              : Math.min(1, Math.max(step, cur + (e.key === "ArrowRight" ? step : -step))));
+          }}
+          onBlur={() => setHover(null)} aria-label={crosses ? `Passes your ${usd(limit)} limit around ${crossDay}` : `Stays under your ${usd(limit)} limit`}>
           <defs>
             <linearGradient id={`${uid}fill`} x1="0" y1="0" x2="0" y2="1">
               <stop offset="0" stopColor="var(--ink)" stopOpacity="0.20" /><stop offset="1" stopColor="var(--ink)" stopOpacity="0.02" />

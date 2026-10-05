@@ -10,13 +10,14 @@ import s from "./page.module.css";
 // The way in is examples first: pick a trade and the answer swaps in place. Your own trade is the fields row and one line of words.
 const EXAMPLES = [
   { label: "$20k rNVDA, 5 days", text: "buy $20k rNVDA, holding 5 days, max loss $600" },
-  { label: "5x TSLA perp, weekend", text: "long 5x TSLA perp $10k over the weekend, can lose $400" },
+  { label: "5x TSLA perp, weekend", text: "long 5x TSLA perp, $10k position, over the weekend, can lose $400" },
   { label: "$8k rHOOD, 2 weeks", text: "$8k rHOOD for 2 weeks, max loss $500" },
   { label: "$5k rAAPL, overnight", text: "$5k rAAPL overnight, stop at -$150" },
 ];
 
 type Meta = { readBy: "rules" | "model" | "edit"; intent?: "new" | "change" | "edit"; asked?: string; model: string | null; modelNote?: string };
-type Reply = { parsed: Parsed; result?: CheckResult; error?: string; meta?: Meta };
+type Ask = { kind: "sizeMeaning"; sizeUsd: number; leverage: number };
+type Reply = { parsed: Parsed; result?: CheckResult; error?: string; meta?: Meta; ask?: Ask };
 
 const failureText = (status: number) =>
   status === 429 ? "Too many checks from one place in a short time. Wait a few minutes and try again."
@@ -54,7 +55,7 @@ export default function Desk({ initial }: { initial: CheckResult | null }) {
   const cache = useRef<Record<number, Reply>>(initial ? { 0: fromResult(initial) } : {});
   const [lastGood, setLastGood] = useState<Reply | null>(initial ? fromResult(initial) : null);
 
-  async function run(body: { text?: string; draft?: Draft }, tab: number | null = null) {
+  async function run(body: { text?: string; draft?: Draft; sizeConfirmed?: boolean }, tab: number | null = null) {
     setBusy(true);
     try {
       const r = await fetch("/api/check", {
@@ -65,7 +66,7 @@ export default function Desk({ initial }: { initial: CheckResult | null }) {
       try { j = await r.json(); } catch { /* not JSON: handled below */ }
       const j2: Reply = {
         parsed: j.parsed ?? { trade: null, draft: reply?.parsed.draft ?? {}, missing: [], notes: [] },
-        result: j.result, meta: j.meta,
+        result: j.result, meta: j.meta, ask: j.ask,
         error: j.error ?? (r.ok ? undefined : failureText(r.status)),
       };
       setReply(j2);
@@ -118,7 +119,7 @@ export default function Desk({ initial }: { initial: CheckResult | null }) {
       <section className={s.deskSection} id="desk">
         <section className={`${s.panel} reveal`} aria-label="Live trade check">
           <header className={s.panelTop}>
-            <span className={s.live}><i />Live check<ReadAt iso={r?.costs?.readAt} /></span>
+            <span className={s.live}><i />Live check<ReadAt iso={r?.costs?.bookAt} /></span>
             <div className={s.tabs} role="group" aria-label="Example trades">
               {EXAMPLES.map((ex, i) => (
                 <button key={ex.text} aria-pressed={active === i} className={s.tab} disabled={busy} title={ex.text} onClick={() => pick(i)}>{ex.label}</button>
@@ -128,7 +129,11 @@ export default function Desk({ initial }: { initial: CheckResult | null }) {
 
           <div className={s.panelBody} aria-live="polite" aria-busy={busy} data-busy={busy || undefined}>
             {!reply && <p className={s.working}>Reading the calendar, the stock&apos;s history and Bitget&apos;s order book…</p>}
-            {reply && !r && (
+            {reply && !r && reply.ask?.kind === "sizeMeaning" && (
+              <SizeMeaning ask={reply.ask} asked={reply.meta?.asked}
+                onPick={(size) => { setActive(null); run({ draft: { ...reply.parsed.draft, sizeUsd: size }, sizeConfirmed: true }); }} />
+            )}
+            {reply && !r && !reply.ask && (
               <Clarify key={JSON.stringify(reply.parsed.draft) + (reply.error ?? "")} reply={reply}
                 onSubmit={(d) => { setActive(null); run({ draft: d }); }}
                 onBack={lastGood ? () => setReply(lastGood) : undefined} />
@@ -199,10 +204,26 @@ export default function Desk({ initial }: { initial: CheckResult | null }) {
   );
 }
 
-/** When the live read happened, in UTC so it is the same on the server and in the browser. */
+/** When Bitget stamped the order book, in UTC so it is the same on the server and in the browser. */
 function ReadAt({ iso }: { iso?: string }) {
   if (!iso) return null;
-  return <time className={s.readAt} dateTime={iso}>read {iso.slice(11, 16)} UTC</time>;
+  return <time className={s.readAt} dateTime={iso}>book at {iso.slice(11, 19)} UTC</time>;
+}
+
+/** "$10k at 5x" means two different trades. Ask which, with both read back in dollars. */
+function SizeMeaning({ ask, asked, onPick }: { ask: Ask; asked?: string; onPick: (sizeUsd: number) => void }) {
+  const { sizeUsd: v, leverage: l } = ask;
+  return (
+    <div className={s.clarify}>
+      <span className="eyebrow">One quick question</span>
+      <h2 className={s.q}>{asked ? <>You asked &ldquo;{asked}&rdquo;. </> : null}Is {usd(v)} the size of the position, or your own money at {l}x?</h2>
+      <div className={s.cgo}>
+        <button className={s.cgoMain} onClick={() => onPick(v)}>Position of {usd(v)} (my money about {usd(v / l)})</button>
+        <button className={s.cgoMain} onClick={() => onPick(v * l)}>My money {usd(v)} (position {usd(v * l)})</button>
+      </div>
+      <p className={s.cassume}>Losses, costs and funding all scale with the position, so this changes the answer by {l} times.</p>
+    </div>
+  );
 }
 
 const SIZES = [2500, 5000, 10000, 20000];
@@ -440,8 +461,8 @@ function Ticket({ r }: { r: CheckResult }) {
         Run it from your own machine with Bitget&apos;s Agent Hub CLI (<span className="num">npm i -g @bitget-ai/bitget-agent-cli</span>) and your own API key.
         Shunt never holds a key and never places an order.
       </p>
-      <div className={s.cmd}><code className="num">{demo}</code><button onClick={() => copy(demo, "demo")}>{copied === "demo" ? "Copied" : "Copy, Demo first"}</button></div>
-      <div className={s.cmd}><code className="num">{cmd}</code><button onClick={() => copy(cmd, "live")}>{copied === "live" ? "Copied" : "Copy"}</button></div>
+      <div className={s.cmd}><code className="num" tabIndex={0}>{demo}</code><button onClick={() => copy(demo, "demo")}>{copied === "demo" ? "Copied" : "Copy, Demo first"}</button></div>
+      <div className={s.cmd}><code className="num" tabIndex={0}>{cmd}</code><button onClick={() => copy(cmd, "live")}>{copied === "live" ? "Copied" : "Copy"}</button></div>
       <p className={s.muted}>{perp ? `${qty} ${t.ticker} perp contracts` : `${qty} r${t.ticker}`} at about {usd(price)} each, from the live Bitget mid price.{perp && t.leverage ? ` This order does not set leverage: set ${t.leverage}x on Bitget first, because the check above assumed it.` : ""}</p>
     </section>
   );
@@ -451,6 +472,11 @@ function Sources({ r }: { r: CheckResult }) {
   return (
     <section className={s.sources}>
       <p className="eyebrow">Sources</p>
+      <p>
+        When each was read: order book {r.costs ? r.costs.bookAt.slice(11, 19) + " UTC" : "not read"}
+        {r.costs?.fundingRateAt ? `; newest funding rate settled ${r.costs.fundingRateAt.slice(0, 16).replace("T", " ")} UTC; next settlement ${r.costs.fundingNextAt?.slice(0, 16).replace("T", " ")} UTC` : ""}
+        ; earnings calendar {r.calendarAt ? r.calendarAt.slice(0, 16).replace("T", " ") + " UTC (cached up to 6 hours)" : "not read"}; price history to {r.profile.asOf}.
+      </p>
       <p>Earnings dates: Nasdaq earnings calendar, live. Past earnings: SEC 8-K Item 2.02 filing times. Fed decisions: federalreserve.gov. Prices: {r.profile.ticker} daily history to {r.profile.asOf}. Order book, fees, funding: Bitget, live.</p>
       {r.problems.map((p) => <p key={p} className={s.problem}>{p}</p>)}
     </section>

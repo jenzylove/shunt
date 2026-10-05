@@ -15,15 +15,17 @@ export function limited(key: string, max: number, windowMs: number, now = Date.n
   return false;
 }
 
-export const sharedStore = () => Boolean(process.env.UPSTASH_REDIS_REST_URL && process.env.UPSTASH_REDIS_REST_TOKEN);
+const storeUrl = () => process.env.UPSTASH_REDIS_REST_URL || process.env.KV_REST_API_URL;
+const storeToken = () => process.env.UPSTASH_REDIS_REST_TOKEN || process.env.KV_REST_API_TOKEN;
+export const sharedStore = () => Boolean(storeUrl() && storeToken());
 
 /** Count one hit in the shared store. Returns the count in the current window, or null if the store is unavailable. */
 async function bump(key: string, windowSec: number): Promise<number | null> {
   if (!sharedStore()) return null;
   try {
-    const r = await fetch(`${process.env.UPSTASH_REDIS_REST_URL}/pipeline`, {
+    const r = await fetch(`${storeUrl()}/pipeline`, {
       method: "POST",
-      headers: { Authorization: `Bearer ${process.env.UPSTASH_REDIS_REST_TOKEN}`, "content-type": "application/json" },
+      headers: { Authorization: `Bearer ${storeToken()}`, "content-type": "application/json" },
       body: JSON.stringify([["INCR", key], ["EXPIRE", key, String(windowSec), "NX"]]),
       signal: AbortSignal.timeout(1500),
     });

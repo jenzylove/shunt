@@ -2,8 +2,8 @@
 import { promises as fs } from "fs";
 import path from "path";
 import { dayBand, eventBand, horizonBand } from "./engine/bands";
-import { fundingRunsBetween, gapDays, newYork, nyInstant, reactionDay, tradingDaysAfter, weekday } from "./engine/calendar";
-import { assess, type Assessment } from "./engine/switchpoint";
+import { gapDays, newYork, nyInstant, reactionDay, tradingDaysAfter, weekday } from "./engine/calendar";
+import { assess, fundingCharged, type Assessment } from "./engine/switchpoint";
 import type { Band, Calibration, Profile, ScheduledEvent, Trade } from "./engine/types";
 import * as bg from "./live/bitget";
 import { earningsBetween, FOMC_UPCOMING } from "./live/calendar";
@@ -36,6 +36,8 @@ export type Costs = {
   fundingUsd: number | null;         // perp only: funding counted against you over the hold (a credit is never counted)
   fundingExpectedUsd: number | null; // perp only: the signed expectation at the recent average rate; positive means you pay
   fundingRuns: number | null;        // funding settlements between now and the close of the last day of the hold
+  fundingNextAt: string | null;      // Bitget's next settlement
+  fundingRateAt: string | null;      // when the newest rate in the average settled
   totalUsd: number;                  // entry + exit + funding counted against you
   bookAt: string;                    // when Bitget stamped the order book
   readAt: string;
@@ -52,6 +54,7 @@ export type CheckResult = {
   weekendTrading: { traded: boolean; bars: number; weekendOf: string } | null;
   calibration: Calibration | null;
   problems: string[];                // sources that failed; nothing is filled in for them
+  calendarAt: string | null;         // when the earnings calendar was actually read (it may be cached for hours)
   notes: string[];                   // plain explanations of anything Shunt changed or assumed
 };
 
@@ -76,15 +79,17 @@ async function costs(t: Trade, holdDays: string[], now: Date, problems: string[]
       const f = bg.walk(book, size, s);
       return { f, cost: f.complete && f.impactPct != null ? size * f.impactPct + fee(f) : Infinity };
     };
-    let rate = 0, runs: number | null = null;
+    let rate = 0, runs: number | null = null, nextAt: string | null = null, rateAt: string | null = null;
     if (t.venue === "perp") {
-      const info = fees as bg.PerpInfo;
-      rate = (await bg.recentFunding(t.ticker)).avgRate * (t.side === "long" ? 1 : -1); // positive: you pay
-      // settlements actually crossed between now and the close of the last day of the hold
-      runs = fundingRunsBetween(now, nyInstant(holdDays[holdDays.length - 1], 16 * 60), info.fundIntervalHours);
+      const [f, sched] = await Promise.all([bg.recentFunding(t.ticker), bg.fundingSchedule(t.ticker)]);
+      rate = f.avgRate * (t.side === "long" ? 1 : -1); // positive: you pay
+      rateAt = f.lastAt ? new Date(f.lastAt).toISOString() : null;
+      nextAt = new Date(sched.next).toISOString();
+      // settlements on Bitget's own schedule between now and the close of the last day of the hold
+      runs = bg.settlementsBetween(now.getTime(), nyInstant(holdDays[holdDays.length - 1], 16 * 60).getTime(), sched.next, sched.periodHours);
     }
     // funding policy: the future rate is unknown, so the recent average is used, and only when it costs you. A credit is never counted.
-    const fundingAt = (size: number) => (runs == null ? 0 : Math.max(0, size * rate * runs));
+    const fundingAt = (size: number) => (runs == null ? 0 : fundingCharged(size, rate, "long", runs).charged);   // rate is already signed for the side
     const costAt = (size: number) => leg(size, inSide).cost + leg(size, outSide).cost + fundingAt(size);
     const e = leg(t.sizeUsd, inSide), x = leg(t.sizeUsd, outSide);
     if (!x.f.complete || !e.f.complete) problems.push(`The ${t.venue === "perp" ? "perp" : "rToken"} book cannot absorb $${Math.round(t.sizeUsd).toLocaleString("en-US")} right now.`);
@@ -94,7 +99,7 @@ async function costs(t: Trade, holdDays: string[], now: Date, problems: string[]
       costs: {
         venue: t.venue, entry: { ...e.f, feeUsd: fee(e.f) }, exit: { ...x.f, feeUsd: fee(x.f) },
         entryCostUsd: finite(e.cost), exitCostUsd: finite(x.cost),
-        fundingUsd: runs == null ? null : fundingAt(t.sizeUsd), fundingExpectedUsd: runs == null ? null : t.sizeUsd * rate * runs, fundingRuns: runs,
+        fundingUsd: runs == null ? null : fundingAt(t.sizeUsd), fundingExpectedUsd: runs == null ? null : t.sizeUsd * rate * runs, fundingRuns: runs, fundingNextAt: nextAt, fundingRateAt: rateAt,
         totalUsd: finite(costAt(t.sizeUsd)), bookAt: new Date(book.ts).toISOString(), readAt: new Date().toISOString(),
       },
     };
@@ -144,7 +149,7 @@ export async function checkTrade(input: Trade, now = new Date()): Promise<CheckR
   // earnings inside the hold: today (a release after tonight's close lands tomorrow) through the last day
   const ny = newYork(now);
   const scanDates = [ny.date, ...holdDays.filter((d) => d !== ny.date)];
-  const { rows, failed } = await earningsBetween(scanDates);
+  const { rows, failed, oldestReadAt } = await earningsBetween(scanDates);
   if (failed.length) problems.push(`Earnings calendar unavailable for ${failed.join(", ")}; earnings on those dates are not shown.`);
   const events: ScheduledEvent[] = [];
   const within = new Set(holdDays);
@@ -183,6 +188,6 @@ export async function checkTrade(input: Trade, now = new Date()): Promise<CheckR
     trade,
     profile: { ticker: p.ticker, name: p.name, sector: p.sector, asOf: p.asOf, lastClose: p.lastClose, volNow: p.volNow, perp: p.perp },
     holdDays, events, bands: { day, horizon, events: eventBands }, assessment, costs: c, weekendTrading: weekend,
-    calibration: cal, problems, notes,
+    calibration: cal, problems, notes, calendarAt: oldestReadAt ? new Date(oldestReadAt).toISOString() : null,
   };
 }
