@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { checkTrade } from "@/lib/check";
 import { hasModel, modelParse } from "@/lib/llm";
 import { cleanDraft, ruleParse, validate, type Draft } from "@/lib/parse";
+import * as rl from "@/lib/ratelimit";
 import { clientKey, limitedShared, modelBudgetSpent, withModelSlot } from "@/lib/ratelimit";
 import { universe } from "@/lib/universe";
 
@@ -22,6 +23,13 @@ const fail = (error: string, status: number) => NextResponse.json({ error, parse
  * Returns what was understood (and by what), plus the measured check when the trade is complete.
  */
 export async function POST(req: Request) {
+  const res = await handle(req);
+  // says whether limits were counted in the shared store or only on this instance; no secret in it
+  res.headers.set("x-shunt-limits", rl.lastStoreAnswered ? "shared" : "instance");
+  return res;
+}
+
+async function handle(req: Request): Promise<NextResponse> {
   const who = clientKey(req);
   if (await limitedShared("req:" + who, 40, 10 * 60_000)) {
     return fail("Too many checks from one place in a short time. Wait a few minutes and try again.", 429);

@@ -38,9 +38,12 @@ async function bump(key: string, windowSec: number): Promise<number | null> {
 }
 
 /** Per client limit, shared across instances when a store is configured. */
+export let lastStoreAnswered = false;   // whether the shared store counted the most recent hit; reported in a response header
+
 export async function limitedShared(key: string, max: number, windowMs: number): Promise<boolean> {
   if (limited(key, max, windowMs)) return true;
   const n = await bump(`shunt:${key}:${Math.floor(Date.now() / windowMs)}`, Math.ceil(windowMs / 1000) * 2);
+  lastStoreAnswered = n != null;
   return n != null && n > max;
 }
 
