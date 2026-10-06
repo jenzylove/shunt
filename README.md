@@ -10,6 +10,7 @@
 
 <p align="center">
   <a href="https://shunt-eight.vercel.app"><b>Live app</b></a> ·
+  <a href="https://youtu.be/3WRGlZvOSGw"><b>Demo video</b></a> ·
   <a href="https://shunt-eight.vercel.app/proof"><b>Proof</b></a> ·
   <a href="https://shunt-eight.vercel.app/research"><b>Research</b></a> ·
   <a href="https://github.com/jenzylove/shunt/actions/workflows/ci.yml"><img src="https://github.com/jenzylove/shunt/actions/workflows/ci.yml/badge.svg" alt="CI"></a>
@@ -28,6 +29,7 @@ trader's own decision. No sign up.
 
 | Want to | Go to |
 | --- | --- |
+| Watch it in under two minutes | [Demo video on YouTube](https://youtu.be/3WRGlZvOSGw) |
 | Try it in ten seconds | [shunt-eight.vercel.app](https://shunt-eight.vercel.app): four live example trades, or type your own |
 | See whether the numbers hold up | [/proof](https://shunt-eight.vercel.app/proof): calibration on unseen history, a live journal, 118 Bitget Demo orders through Agent Hub, a 24 sentence answer key |
 | See what failed before this | [/research](https://shunt-eight.vercel.app/research): two ideas that failed their tests, and the limits |
@@ -97,7 +99,7 @@ flowchart LR
 | Ranges built only from earlier data, on unseen days | ordinary days 80.5%, overnight gaps 80.0%, own earnings 80.7%, Fed statement days 83.4%; weekends fall short at 70.6% and the page says so |
 | Bitget Demo through Agent Hub (`bgc --paper-trading`) | 113 trades tried, 57 round trips (118 orders) on 8 stocks; median cost predicted 15.7 bps, charged 16.8 bps; every failure listed by reason |
 | Answer key, 24 sentences | first run 14 of 24 with rules alone, 22 of 24 with Claude; misses fixed and published; 24 of 24 now |
-| Forward journal | 30 ranges locked before each session, graded after it, never edited |
+| Forward journal | 30 ranges locked before each session, graded after it, never edited; first graded session: 28 of 30 inside |
 | Tests | 65 unit and API tests in CI, including every regression case from an external audit |
 
 Demo fills are simulated matching, so the orders test the fee and order book arithmetic, not live liquidity.

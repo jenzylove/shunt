@@ -3,8 +3,11 @@ name: daily journal
 # After every US close: refresh each stock's current volatility, grade yesterday's locked ranges,
 # lock in the next session's ranges, commit. The push redeploys the site.
 on:
+  # GitHub can skip a scheduled run, so there are two backups; the script is safe to run more than once
   schedule:
     - cron: "15 21 * * 1-5"
+    - cron: "40 23 * * 1-5"
+    - cron: "10 4 * * 2-6"
   workflow_dispatch:
 
 permissions:
