@@ -34,6 +34,13 @@ export function explain(r: CheckResult): Verdict {
     ? ` Cannot measure: ${a.unmeasured.map((b) => `${b.label} (${b.n} past)`).join("; ")}.`
     : "";
 
+  if (v.state === "incomplete") {
+    return {
+      tone: "caution",
+      headline: "No verdict right now: Bitget's live costs could not be read.",
+      detail: `${worst ? `Market moves alone: in ${odds} ${what(worst.band)}, ${p.ticker} moved less than ${pct(worst.band.pct)}, about ${usd((worst.band.pct ?? 0) * t.sizeUsd)} at ${usd(t.sizeUsd)}, before fees, slippage${t.venue === "perp" ? " and funding" : ""}. ` : ""}Shunt will not say whether this fits your ${usd(t.lossLimitUsd)} limit without the costs. Try again in a moment.`,
+    };
+  }
   if (v.state === "illiquid") {
     const venue = t.venue === "perp" ? `the ${p.ticker} perp` : `r${p.ticker}`;
     return {

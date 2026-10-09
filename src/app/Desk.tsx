@@ -25,7 +25,7 @@ const failureText = (status: number) =>
   : status >= 500 ? "Shunt hit a problem on its side. Try again in a moment."
   : "Shunt could not use that. Check the values and try again.";
 
-const STATUS: Record<string, string> = { fits: "Fits", "fits-if": "Fits with a change", "does-not-fit": "Doesn't fit", illiquid: "Can't fill" };
+const STATUS: Record<string, string> = { fits: "Fits", "fits-if": "Fits with a change", "does-not-fit": "Doesn't fit", illiquid: "Can't fill", incomplete: "No verdict yet" };
 
 const fromResult = (r: CheckResult): Reply => ({
   parsed: { trade: r.trade, draft: { ...r.trade }, missing: [], notes: [] },
@@ -166,7 +166,7 @@ export default function Desk({ initial }: { initial: CheckResult | null }) {
                     <div><dt>{r.trade.venue === "perp" ? "Fees, slippage, funding" : "Fees and slippage"}</dt><dd className="num">{r.costs ? (r.costs.entry.complete && r.costs.exit.complete ? usd(r.costs.totalUsd) : "book too thin") : "n/a"}</dd></div>
                   </dl>
                 </div>
-                {r.assessment.verdict.state !== "illiquid" && (
+                {r.assessment.verdict.state !== "illiquid" && r.assessment.verdict.state !== "incomplete" && (
                   <Rail key={`${r.trade.ticker}-${r.trade.sizeUsd}-${r.trade.horizonDays}-${r.trade.lossLimitUsd}-${r.trade.venue}-${r.costs?.readAt}`} r={r} />
                 )}
               </>
@@ -442,7 +442,7 @@ function Ticket({ r }: { r: CheckResult }) {
   const [copied, setCopied] = useState("");
   const t = r.trade, v = r.assessment.verdict;
   const price = r.costs?.entry.mid ?? r.profile.lastClose;
-  if (!price || v.state === "illiquid") return null;
+  if (!price || v.state === "illiquid" || v.state === "incomplete") return null;
   // a ticket is only shown for a trade the command can really open: an rToken is spot, so only a long
   if (t.venue === "rtoken" && t.side === "short") return null;
   const size = v.state === "fits" ? t.sizeUsd : v.maxSizeUsd;

@@ -6,7 +6,8 @@ export type Verdict =
   | { state: "fits" }
   | { state: "fits-if"; maxSizeUsd: number; exitBefore: { date: string; label: string } | null }
   | { state: "does-not-fit"; maxSizeUsd: number }
-  | { state: "illiquid"; absorbableUsd: number };   // the live book cannot take this size in or out
+  | { state: "illiquid"; absorbableUsd: number }    // the live book cannot take this size in or out
+  | { state: "incomplete"; reason: string };          // a required live input is missing, so no verdict is given
 
 export type Assessment = {
   verdict: Verdict;

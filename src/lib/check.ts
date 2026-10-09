@@ -184,6 +184,8 @@ export async function checkTrade(input: Trade, now = new Date()): Promise<CheckR
     ? { absorbableUsd: Math.min(c.entry.filledUsd, c.exit.filledUsd), complete: c.entry.complete && c.exit.complete }
     : undefined;
   const assessment = assess(trade, day, horizon, eventBands, priced?.costAt ?? 0, mmr, liquidity);
+  // fail closed: without live costs the loss is understated, so the market risk is shown but no verdict is given
+  if (!priced) assessment.verdict = { state: "incomplete", reason: "Bitget's live costs could not be read" };
   return {
     trade,
     profile: { ticker: p.ticker, name: p.name, sector: p.sector, asOf: p.asOf, lastClose: p.lastClose, volNow: p.volNow, perp: p.perp },
