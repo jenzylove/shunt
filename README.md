@@ -53,10 +53,28 @@ It measures. It does not predict direction, and you decide.
   <img src="docs/media/desk.png" alt="A Shunt check: the question, the verdict, the loss over the hold against the limit" width="100%">
 </p>
 
-$20,000 of NVDA for five trading days with a $600 limit. In 4 of 5 ordinary days NVDA moved less than 3.0%, about $661 at that
-size, so the trade is past the limit before anything scheduled. Shunt says so, gives the largest size that fits ($18,161 at the
-time of this screenshot), and draws where the loss crosses the line. The full check lists every scheduled event with its own
-measured move, the live Bitget costs, and an Agent Hub order ticket sized to fit.
+$20,000 of NVDA for five trading days with a $600 limit. On an ordinary day alone NVDA can move far enough to pass the limit,
+so Shunt says it doesn't fit, gives the largest size whose loss on every measured risk in the hold fits, and draws where the
+loss crosses the line. The full check lists every scheduled event with its own measured move, the live Bitget costs, and an
+Agent Hub order ticket sized to fit. (Numbers change with live volatility and order books, so this README does not quote them.)
+
+## Ask it about the trade
+
+Once a trade is checked, keep talking to it. Every answer is built by code from the same numbers as the check.
+
+| You type | Shunt answers with |
+| --- | --- |
+| "what about the upside?" | the same measured range both ways, at the same odds, with costs counted against you both ways |
+| "what's the worst that could happen?" | the check rerun at 19 in 20 |
+| "why doesn't it fit?" / "what size would fit?" | the event that breaks the limit and by how much; the largest size that fits every measured risk |
+| "when does it report next?" | the next date on the Nasdaq calendar, inside or outside your hold, and the stock's typical earnings move |
+| "compare nvda and amd" | both checked side by side with the same size, hold and limit |
+| "...because I think earnings will beat" | your reason held against the record: whether the event is even inside your hold, and how often the stock went your way |
+
+Under every check: what this exact trade would have made or lost on the stock's last twelve earnings (or Fed, or bellwether)
+days, and a button that checks the same trade smaller, shorter, without leverage and at 19 in 20, each as a full check.
+If a sentence can't be read, Shunt says so instead of repeating the last answer; two different loss limits, a currency other
+than dollars, or an unlisted symbol get a question or a plain refusal, never a guess.
 
 ## How it works
 
@@ -98,9 +116,11 @@ flowchart LR
 | --- | --- |
 | Ranges built only from earlier data, on unseen days | ordinary days 80.5%, overnight gaps 80.0%, own earnings 80.7%, Fed statement days 83.4%; weekends fall short at 70.6% and the page says so |
 | Bitget Demo through Agent Hub (`bgc --paper-trading`) | 113 trades tried, 57 round trips (118 orders) on 8 stocks; median cost predicted 15.7 bps, charged 16.8 bps; every failure listed by reason |
-| Answer key, 24 sentences | first run 14 of 24 with rules alone, 22 of 24 with Claude; misses fixed and published; 24 of 24 now |
-| Forward journal | 30 ranges locked before each session, graded after it, never edited; first graded session: 28 of 30 inside |
-| Tests | 65 unit and API tests in CI, including every regression case from an external audit |
+| Range usefulness, not just coverage | for each kind of event: typical width today, distance from 80% and a 95% interval, so a range that is merely wide shows up |
+| Sealed language test, 42 cases | written and committed before the question layer was built; same cases on the live site before and after: 30 of 42, then 41 of 42 (questions 0 of 10, then 10 of 10); the miss is published |
+| Earlier answer key, 24 sentences | first run 14 of 24 with rules alone, 22 of 24 with Claude; fixed after the misses were seen, so not counted again |
+| Forward journal | 30 ranges locked before each session, graded after it, never edited; running totals on /proof |
+| Release checks | CI on every push: tests, typecheck, lint, build, production dependency audit, and a data fingerprint check; `/api/version` reports the deployed commit |
 
 Demo fills are simulated matching, so the orders test the fee and order book arithmetic, not live liquidity.
 

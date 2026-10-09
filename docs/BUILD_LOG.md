@@ -108,3 +108,25 @@
   mode colours (go, caution) darkened to pass 4.5:1, every colour pair sampled by hand.
 - Tests: funding sign, Bitget schedule counting, Good Friday long weekend, the margin question, and one test that the headline
   loss, the chart's cost and the ticket's size all come from the same cost function (65 total). Answer key rerun: 24 of 24.
+
+## 9 October 2026, from a form you fill to a desk you can ask
+
+- Review against the Track 3 rubric found the language layer read trades well but answered no questions: "what about the
+  upside?", "why doesn't it fit?" and "compare nvda and amd" returned the same answer without saying so, and "when is the
+  next earnings?" was read as the stock NEXT.
+- Before touching the language code, 42 new cases were written and committed with their expected answers (scripts/lui-sealed).
+  Baseline on the live site, paced under the model allowance: 30 of 42, questions 0 of 10. A first faster run (27 of 42) hit
+  the model allowance and is kept, labelled.
+- Built: questions answered from the check's own numbers (upside, worst case at 19 in 20, why, largest size that fits, next
+  earnings, compare, is it good); past situations priced for the exact trade; the stated reason held against the stock's
+  record; scenarios (smaller, shorter, no leverage, 19 in 20) each checked for real; a question when two loss limits disagree;
+  refusals for other currencies and unlisted symbols; an explicit note when a sentence was not read.
+- After, same cases, same pacing: 41 of 42, questions 10 of 10, safety 12 of 12. The miss was new ("risk 2%" read as both $2 and
+  2% by the two limits check); fixed afterwards and not counted.
+- Fixes from an external audit: no verdict when live Bitget costs are missing or stale (tests for every failing input); Next.js
+  16.3.8 and source-map-js 1.2.2 (production audit clean, CI green again); data fingerprints checked in CI with daily fields
+  excluded; /api/version reports the deployed commit. Proof now shows range width, distance from 80% and 95% intervals.
+- A sizing bug was fixed on 6 Oct (the suggested size covered one ordinary day, not the whole hold); the demo video and README
+  showed the old number and were redone.
+- Agent Hub signal server retested: 19 tools listed, every call empty or an error. The CLI has no news or calendar tools.
+- Worked with cheaper models for mechanical jobs (data fingerprints, version route), reviewed before merging.
