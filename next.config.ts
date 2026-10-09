@@ -29,6 +29,7 @@ const nextConfig: NextConfig = {
   // the API reads measured stock profiles from disk; ship them with the server functions
   outputFileTracingIncludes: {
     "/api/**": ["./public/data/**"],
+    "/api/version": ["./docs/DATA_MANIFEST.json"],
   },
 };
 

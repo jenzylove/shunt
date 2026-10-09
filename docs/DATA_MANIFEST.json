@@ -1,6 +1,5 @@
 {
-  "generatedAt": "2026-10-05T13:18:13+00:00",
-  "codeCommit": "f4959e050b022e1181d057a4523753e0a2b25b05",
+  "generatedAt": "2026-10-09T06:10:49+00:00",
   "sources": [
     {
       "what": "daily prices, 10 years, adjusted close",
@@ -27,12 +26,12 @@
       "note": "includes one notation vote, 2025-08-22"
     }
   ],
-  "rules": "stocks with fewer than 750 daily prices are excluded; see scripts/build_dataset.py for the exclusion and event definitions",
+  "rules": "stocks with fewer than 750 daily prices are excluded; see scripts/build_dataset.py for the exclusion and event definitions. Hashes: each stock profile is parsed as JSON, the fields volNow, volAsOf, lastClose are removed (scripts/refresh_vol.py rewrites them in every profile each day), and the rest is serialized with sorted keys and compact separators before sha256. stockProfilesSha256 is sha256 over each filename followed by its profile hash, in filename order. calibrationSha256 uses the same serialization of calibration.json. Recompute and compare with: npm run data:verify. The code commit is not recorded here because it goes stale on every commit; the live app reports it at /api/version.",
   "outputs": {
     "stockProfiles": 2218,
-    "stockProfilesSha256": "b34775056cf3a7f4258771657307f12e928bd3c65be2db05f87f4d02ce8453bf",
-    "calibrationSha256": "565481fb4ad1db9116a293a38ba0318b5a9f75620c458fb29c6090b2288bd034",
-    "journalSha256": "40ad5bb9bd3243c1e5bfc6337ab7013145a1eb3a1aca98e5a468391481494ac4"
+    "stockProfilesSha256": "958f85f298501c66e9819e3bd46bfd18abca7e624b98aad6b4ee24d380ef86e4",
+    "calibrationSha256": "f237286457ea509054fad15a4c4150812090b7fa3d736a483e893079f2d82fd6"
   },
+  "journal": "public/data/journal.json is deliberately not hashed. It is append only and graded daily by a GitHub Action, and its full history is in git (git log -p public/data/journal.json).",
   "limits": "Raw responses are not committed, so a rebuild fetches today's data and will differ slightly; the hashes above fingerprint what this release shipped."
 }
