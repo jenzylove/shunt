@@ -54,3 +54,6 @@ AGENTS.md
 CLAUDE.md
 
 .vercel
+
+# local agent worktrees
+/.claude/
