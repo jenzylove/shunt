@@ -4,6 +4,7 @@ import type { CheckResult } from "@/lib/check";
 import { day, explain, pct, questionText, usd } from "@/lib/explain";
 import type { Draft, Parsed } from "@/lib/parse";
 import type { Answer } from "@/lib/questions";
+import { newYork } from "@/lib/engine/calendar";
 import Rail from "./Rail";
 import TrackBg from "./TrackBg";
 import s from "./page.module.css";
@@ -151,7 +152,7 @@ export default function Desk({ initial }: { initial: CheckResult | null }) {
                 <div className={s.qline} key={"q" + r.trade.ticker + r.trade.sizeUsd + r.trade.horizonDays + r.trade.lossLimitUsd + r.trade.venue}>
                   <p className={s.qtext}>{questionText(r.trade)}</p>
                   <p className={s.qmeta}>
-                    {day(r.holdDays[0])} to the close on {day(r.holdDays[r.holdDays.length - 1])}, {r.holdDays.length} trading session{r.holdDays.length === 1 ? "" : "s"}
+                    {r.holdDays[0] === newYork(new Date(r.checkedAt)).date ? "Today" : day(r.holdDays[0])} to the close on {day(r.holdDays[r.holdDays.length - 1])}, {r.holdDays.length} trading session{r.holdDays.length === 1 ? "" : "s"}
                     {reply?.meta?.asked && !reply.meta.unread && <> · you typed &ldquo;{reply.meta.asked}&rdquo;{reply.meta.readBy === "model" ? ", read by Claude; every number is computed by code" : ""}</>}
                   </p>
                   {r.notes.map((n) => <p key={n} className={s.qmeta}>{n}</p>)}
