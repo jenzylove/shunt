@@ -10,7 +10,7 @@
 .alert { color: var(--stop); }
 
 .bars { margin-top: 20px; border-top: 1px solid var(--ink); }
-.bar { display: grid; grid-template-columns: minmax(140px, 240px) 1fr 80px; gap: 18px; align-items: center; padding: 15px 0; border-bottom: 1px solid var(--line); }
+.bar { display: grid; grid-template-columns: minmax(160px, 340px) 1fr 80px; gap: 18px; align-items: center; padding: 15px 0; border-bottom: 1px solid var(--line); }
 .barName { font-weight: 550; }
 .barName small { display: block; color: var(--muted); font-weight: 400; font-size: 12.5px; }
 .track { position: relative; height: 10px; border-radius: 999px; background: var(--faint); }

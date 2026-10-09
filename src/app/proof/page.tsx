@@ -1,5 +1,7 @@
 import type { Metadata } from "next";
 import calData from "../../../public/data/calibration.json";
+import useData from "../../../public/data/usefulness.json";
+import { median, wilson } from "@/lib/stats";
 import journalData from "../../../public/data/journal.json";
 import ordersData from "../../../public/data/proof-orders.json";
 import s from "../doc.module.css";
@@ -64,15 +66,21 @@ export default function Proof() {
         <section className={s.section}>
           <h2>The same test on every stock</h2>
           <p>For every stock, the range was built only from events before each day, then checked against that day. Price history reaches back ten years; each row below says which window it uses. Each bar is the share of moves that stayed inside the range. The dark tick marks the 80% target, so a bar that reaches it means the range was honest.</p>
+          <p>Honest is not the same as useful. A range that is very wide catches nearly every move and tells you little. So each row also shows how wide the range is for a typical stock today, how far the result sits from 80% in percentage points, and the 95% interval around it. Close to 80% and narrow is what useful looks like.</p>
           <div className={s.bars}>
             {Object.entries(NAMES).map(([k, [name, note]]) => {
               const t = cal.types[k];
               const rate = t?.volScaled?.rate;
               if (rate == null) return null;
               const low = rate < 0.75;
+              const n = t.volScaled!.checked;
+              const [lo, hi] = wilson(rate, n);
+              const width = (useData.kinds as Record<string, { medianWidth: number | null }>)[k]?.medianWidth;
+              const err = (rate - 0.8) * 100;
               return (
                 <div key={k} className={s.bar}>
-                  <span className={s.barName}>{name}<small>{note} · {t.volScaled!.checked.toLocaleString("en-US")} checks</small></span>
+                  <span className={s.barName}>{name}<small>{note} · {n.toLocaleString("en-US")} checks</small>
+                    <small className="num">range today ±{width != null ? pc(width) : "n/a"} · {err >= 0 ? "+" : ""}{err.toFixed(1)} pts from 80 · 95% interval {pc(lo)} to {pc(hi)}</small></span>
                   <span className={s.track}><span className={`${s.fill} ${low ? s.fillLow : ""}`} style={{ width: `${rate * 100}%` }} /><span className={s.target} style={{ left: "80%" }} /></span>
                   <span className={s.val}>{pc(rate)}</span>
                 </div>
@@ -96,6 +104,20 @@ export default function Proof() {
             <div><dt>Inside the range</dt><dd>{journal.summary.graded ? pc(journal.summary.rate) : "not yet"}</dd></div>
             <div><dt>Waiting for their session</dt><dd>{journal.summary.pending}</dd></div>
           </dl>
+          {journal.summary.graded > 0 && journal.summary.rate != null && (() => {
+            const g = journal.entries.filter((e) => e.inside !== undefined);
+            const [lo, hi] = wilson(journal.summary.rate!, journal.summary.graded);
+            const w = median(g.map((e) => e.band80));
+            const err = (journal.summary.rate! - 0.8) * 100;
+            return (
+              <p className={s.muted}>
+                {err >= 0 ? "+" : ""}{err.toFixed(1)} pts from the 80% target, with a 95% interval of {pc(lo)} to {pc(hi)} over {journal.summary.graded} graded
+                ranges and {new Set(g.map((e) => e.for)).size} sessions. Median range ±{w != null ? pc(w) : "n/a"}. Thirty stocks on the same day move together,
+                so the real uncertainty is wider than that interval. A rate above 80% in a calm stretch can simply mean the ranges are a little wide; this
+                becomes evidence once many more sessions are graded, kept separate from the history above.
+              </p>
+            );
+          })()}
           <details className={s.more}>
             <summary>Show the {recent.length} locked ranges</summary>
           <div className={s.scroll}>

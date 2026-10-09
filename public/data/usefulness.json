@@ -1,0 +1,29 @@
+{
+ "asOf": "2026-10-09",
+ "kinds": {
+  "day": {
+   "medianWidth": 0.025225605499999998,
+   "stocks": 2218
+  },
+  "overnight": {
+   "medianWidth": 0.011393005999999999,
+   "stocks": 2218
+  },
+  "earnings": {
+   "medianWidth": 0.09069567449999999,
+   "stocks": 1834
+  },
+  "bellwether": {
+   "medianWidth": 0.046991906625,
+   "stocks": 45
+  },
+  "fed": {
+   "medianWidth": 0.031047324176,
+   "stocks": 2218
+  },
+  "weekend": {
+   "medianWidth": 0.012091327499999999,
+   "stocks": 2218
+  }
+ }
+}

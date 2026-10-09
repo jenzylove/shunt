@@ -48,7 +48,7 @@ const LIMITS = [
   "Ranges cover 4 in 5 (or 19 in 20) past cases. The rest is, by definition, outside.",
   "Weekend ranges are too narrow (71% caught against 80%).",
   "US CPI release days are not included: the official schedule could not be read reliably by a program.",
-  "Bitget Agent Hub's public signal server answered but returned empty data on every check from 29 September to 3 October, so news and sentiment are not shown. Agent Hub's CLI is used for orders.",
+  "Bitget Agent Hub's public signal server answered but returned empty data on every check from 29 September to 9 October. On 9 October it listed 19 tools, including a macro calendar and company news, but each call came back empty or with an error, so news, sentiment and CPI dates are not shown. Agent Hub's CLI has no news or calendar tools; it is used for orders.",
   "Bitget rToken volume figures are unusable before 9 July 2026 and weekend rToken trading is thin, so Shunt does not use rToken volume.",
   "Costs are read from the live order book at your size; a fast market can differ from that snapshot.",
 ];
