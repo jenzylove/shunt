@@ -35,14 +35,14 @@ export function answer(q: Question, r: CheckResult, extra: { worst?: CheckResult
   const cost = a.costUsd;
   const big = a.worst ?? a.horizon;
   const pctBig = big.band.pct ?? 0;
-  const costLine = r.costs ? `${usd(cost)} of fees, slippage${t.venue === "perp" ? " and funding" : ""}` : "costs (not available right now)";
+  const costLine = r.costs ? `${usd(cost)} of ${t.venue === "perp" ? "fees, slippage and funding" : "fees and slippage"}` : "costs (not available right now)";
 
   if (q.kind === "upside") {
     return {
       kind: q.kind, title: "The upside, at the same odds",
       lines: [
-        `In ${odds} past cases like the biggest risk in your hold (${big.band.label.toLowerCase()}), ${p.ticker} moved less than ${pct(pctBig)} either way.`,
-        `If it moves that far your way, ${usd(t.sizeUsd)} makes about ${usd(t.sizeUsd * pctBig - cost)}. If it moves that far against you, it loses about ${usd(t.sizeUsd * pctBig + cost)}. The gap is the ${costLine}, which count against you both ways.`,
+        `Your way, about +${usd(t.sizeUsd * pctBig - cost)}. Against you, about -${usd(t.sizeUsd * pctBig + cost)}.`,
+        `In ${odds} past cases like the biggest risk in your hold (${big.band.label.toLowerCase()}), ${p.ticker} moved less than ${pct(pctBig)} either way. The gap between the two is the ${costLine}, which count against you both ways.`,
         `Shunt measures how big moves have been, not which way the next one goes, so this is the room either way, not a forecast.`,
       ],
     };

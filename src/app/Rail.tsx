@@ -2,6 +2,7 @@
 // The rail: how much a trade could lose while you hold it, day by day, against the user's own loss limit.
 // The curve is a bad but ordinary stretch for this stock (4 in 5, or 19 in 20 if chosen). Red is above the limit.
 // Scheduled events stand on the track as flags with their measured size. Hover reads off any day.
+import { newYork } from "@/lib/engine/calendar";
 import { useEffect, useId, useRef, useState } from "react";
 import type { CheckResult } from "@/lib/check";
 import { day, usd } from "@/lib/explain";
@@ -68,20 +69,32 @@ export default function Rail({ r }: { r: CheckResult }) {
   // where the curve first passes the limit
   const uStar = hz && hz > 0 && limit > exit ? Math.pow((limit - exit) / hz, 2) : exit >= limit ? 0 : null;
   const crosses = uStar != null && uStar < 1;
+  // the hold usually starts today: say so, rather than print today's date like an old one
+  const today = r.checkedAt ? newYork(new Date(r.checkedAt)).date : null;
+  const when = (d: string) => (d === today ? "today" : day(d));
   const crossDay = crosses ? days[Math.min(n - 1, Math.max(0, Math.ceil(uStar * n) - 1))] : null;
 
   const ev = evs.map((e, i) => {
     const j = days.indexOf(e.band.date!);
     return { x: xOf((j + 1) / n), loss: e.lossUsd ?? 0, breach: e.breaches, text: shortLabel(e.band, t.ticker), i };
   });
-  const labelEvery = Math.ceil(n / Math.max(2, Math.floor((X1 - X0) / 92)));
+  // date labels are about 100px wide: always keep today (if the hold starts today) and the last day, then fit the rest between
+  const colW = (X1 - X0) / n, GAP = 112;
+  const kept = new Set<number>([n - 1]);
+  let lastX = -Infinity;
+  for (let i = 0; i < n - 1; i++) {
+    const x = (i + 1) * colW;
+    const must = i === 0 && days[0] === today;
+    if ((must || x - lastX >= GAP) && (n - 1 - i) * colW >= GAP) { kept.add(i); lastX = x; }
+  }
+  const showLabel = (i: number) => kept.has(i);
 
   const onMove = (ev2: React.PointerEvent<SVGRectElement>) => {
     const b = ev2.currentTarget.getBoundingClientRect();
     setHover(Math.min(1, Math.max(0, (ev2.clientX - b.left) / b.width)));
   };
   const hoverDay = hover == null ? null : days[Math.min(n - 1, Math.max(0, Math.ceil(hover * n) - 1))];
-  const tip = hover != null && hoverDay ? `by ${day(hoverDay)}: about ${usd(loss(hover))}` : "";
+  const tip = hover != null && hoverDay ? `by ${hoverDay === today ? "today's close" : day(hoverDay)}: about ${usd(loss(hover))}` : "";
   const tipW = tip.length * 7.7 + 28;
 
   return (
@@ -103,7 +116,7 @@ export default function Rail({ r }: { r: CheckResult }) {
             setHover(e.key === "Escape" ? null : e.key === "Home" ? step : e.key === "End" ? 1
               : Math.min(1, Math.max(step, cur + (e.key === "ArrowRight" ? step : -step))));
           }}
-          onBlur={() => setHover(null)} aria-label={crosses ? `Passes your ${usd(limit)} limit around ${crossDay}` : `Stays under your ${usd(limit)} limit`}>
+          onBlur={() => setHover(null)} aria-label={crosses ? `Passes your ${usd(limit)} limit around ${crossDay ? when(crossDay) : "the end"}` : `Stays under your ${usd(limit)} limit`}>
           <defs>
             <linearGradient id={`${uid}fill`} x1="0" y1="0" x2="0" y2="1">
               <stop offset="0" stopColor="var(--ink)" stopOpacity="0.20" /><stop offset="1" stopColor="var(--ink)" stopOpacity="0.02" />
@@ -185,7 +198,7 @@ export default function Rail({ r }: { r: CheckResult }) {
           {days.map((d, i) => (
             <g key={d}>
               <line x1={xOf((i + 1) / n)} x2={xOf((i + 1) / n)} y1={Y1 - 5} y2={Y1 + 5} className={s.sleeper} />
-              {(i % labelEvery === labelEvery - 1 || i === n - 1) && <text x={xOf((i + 1) / n)} y={Y1 + 30} textAnchor={i === n - 1 ? "end" : "middle"} className={s.tick}>{day(d)}</text>}
+              {showLabel(i) && <text x={xOf((i + 1) / n)} y={Y1 + 30} textAnchor={i === n - 1 ? "end" : "middle"} className={s.tick}>{when(d)}</text>}
             </g>
           ))}
 
@@ -207,7 +220,9 @@ export default function Rail({ r }: { r: CheckResult }) {
         {crosses
           ? uStar === 0
             ? <>Even getting out costs more than your <b>{usd(limit)}</b> limit.</>
-            : <>At this pace you pass your <b>{usd(limit)}</b> limit around <b>{crossDay ? day(crossDay) : "the end"}</b>.</>
+            : crossDay && crossDay === today
+              ? <>At this pace you could pass your <b>{usd(limit)}</b> limit <b>today</b>, in the first session of the hold.</>
+              : <>At this pace you pass your <b>{usd(limit)}</b> limit around <b>{crossDay ? when(crossDay) : "the end"}</b>.</>
           : <>This stretch stays under your <b>{usd(limit)}</b> limit for the whole hold. Events are shown as flags with their own measured size.</>}
       </figcaption>
     </figure>

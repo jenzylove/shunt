@@ -65,6 +65,7 @@ export type CheckResult = {
   calibration: Calibration | null;
   problems: string[];                // sources that failed; nothing is filled in for them
   calendarAt: string | null;         // when the earnings calendar was actually read (it may be cached for hours)
+  checkedAt: string;                 // when this check ran, so the page can say "today" instead of a date
   notes: string[];                   // plain explanations of anything Shunt changed or assumed
 };
 
@@ -218,6 +219,6 @@ export async function checkTrade(input: Trade, now = new Date()): Promise<CheckR
     profile: { ticker: p.ticker, name: p.name, sector: p.sector, asOf: p.asOf, lastClose: p.lastClose, volNow: p.volNow, perp: p.perp,
       earningsN: p.earnings.n ?? 0, earningsP50: p.earnings.p50 ?? null },
     holdDays, events, bands: { day, horizon, events: eventBands }, assessment, costs: c, weekendTrading: weekend,
-    calibration: cal, problems, notes, calendarAt: oldestReadAt ? new Date(oldestReadAt).toISOString() : null,
+    calibration: cal, problems, notes, checkedAt: now.toISOString(), calendarAt: oldestReadAt ? new Date(oldestReadAt).toISOString() : null,
   };
 }

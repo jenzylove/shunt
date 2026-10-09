@@ -192,3 +192,70 @@
 .scBtn { margin: 4px 0 8px; padding: 11px 18px; border-radius: 12px; border: 1px solid var(--panel-line); background: none; color: var(--panel-ink); font: 600 14px var(--font-display); cursor: pointer; }
 .scBtn:hover:not(:disabled) { border-color: var(--panel-accent); color: var(--panel-accent); }
 .scBtn:disabled { opacity: 0.6; cursor: default; }
+
+/* focus: one quiet question line, the verdict, then one view at a time */
+.qline { margin: 0 0 clamp(18px, 2.4vw, 28px); animation: fadeUp 0.5s ease both; }
+.qtext { margin: 0; font-size: clamp(15px, 1.4vw, 17px); font-weight: 600; color: var(--ink); max-width: 72ch; letter-spacing: -0.005em; }
+.qmeta { margin: 6px 0 0; font-size: 13px; color: var(--muted); max-width: 80ch; }
+.answer[data-quiet] .vh { font-size: clamp(22px, 2.6vw, 32px); }
+
+.lenses { margin-top: clamp(28px, 3.6vw, 44px); }
+.lensTabs { display: flex; gap: 4px; border-bottom: 1px solid var(--line); overflow-x: auto; scrollbar-width: none; }
+.lensTab { position: relative; background: none; border: 0; padding: 12px 16px 14px; font: 600 14.5px var(--font-display); color: var(--muted); cursor: pointer; white-space: nowrap; transition: color 0.2s ease; }
+.lensTab:first-child { padding-left: 0; }
+.lensTab:hover { color: var(--ink); }
+.lensTab[aria-selected="true"] { color: var(--ink); }
+.lensTab[aria-selected="true"]::after { content: ""; position: absolute; left: 16px; right: 16px; bottom: -1px; height: 2px; background: var(--accent); }
+.lensTab:first-child[aria-selected="true"]::after { left: 0; }
+.lensBody { padding-top: 6px; animation: fadeUp 0.45s ease both; min-height: 220px; }
+.lensSec { padding-top: 22px; }
+.lensLead { margin: 0 0 14px; font-size: clamp(17px, 1.7vw, 21px); line-height: 1.4; color: var(--ink); max-width: 56ch; font-weight: 500; letter-spacing: -0.01em; }
+.lensLead b { font-weight: 800; }
+.lensQuote { margin: 0 0 14px; font-size: 14px; color: var(--muted); font-style: italic; }
+.lensNote { margin: 18px 0 0; font-size: 13px; color: var(--muted); max-width: 72ch; }
+
+/* history: one bar per past day, centred on zero, the limit drawn across */
+.bars { position: relative; display: flex; gap: clamp(6px, 1vw, 14px); height: 240px; margin-top: 18px; }
+.barCol { flex: 1; display: flex; flex-direction: column; align-items: center; min-width: 0; }
+.barTrack { position: relative; flex: 1; width: 100%; }
+.bar { position: absolute; left: 18%; right: 18%; border-radius: 4px; background: color-mix(in srgb, var(--muted) 55%, transparent); transform-origin: center; animation: grow 0.6s cubic-bezier(0.22, 0.7, 0.2, 1) both; }
+.bar[data-up] { background: var(--go); }
+.bar[data-broke] { background: var(--stop); }
+.barCol small { flex: none; height: 18px; line-height: 18px; margin-top: 8px; font-size: 10.5px; color: var(--muted); white-space: nowrap; }
+.barPlot { position: absolute; left: 0; right: 0; top: 0; bottom: 26px; pointer-events: none; z-index: 1; }
+.barZero { position: absolute; left: 0; right: 0; top: 50%; border-top: 1px solid var(--line); }
+.barLimit { position: absolute; left: 0; right: 0; height: 0; border-top: 1px dashed var(--stop); opacity: 0.75; }
+.barLimit em { position: absolute; right: 0; top: 4px; background: var(--bg); padding: 0 0 0 6px; font: 600 11px var(--font-num); color: var(--stop); font-style: normal; }
+@keyframes grow { from { transform: scaleY(0); } to { transform: scaleY(1); } }
+
+/* what would fit: one line per change, verdict in words */
+.scList { list-style: none; margin: 4px 0 0; padding: 0; }
+.scList li { display: grid; grid-template-columns: minmax(150px, 220px) 1fr auto; gap: 8px 24px; align-items: baseline; padding: 16px 0; border-bottom: 1px solid var(--line); }
+.scName { font-weight: 700; color: var(--ink); }
+.scName small { display: block; margin-top: 3px; font-weight: 400; font-size: 12.5px; color: var(--muted); }
+.scVerdict { color: var(--ink); font-size: 15.5px; display: flex; gap: 10px; align-items: baseline; }
+.scVerdict i { width: 8px; height: 8px; border-radius: 50%; background: var(--muted); flex: none; transform: translateY(-1px); }
+.scList li[data-tone="go"] .scVerdict i { background: var(--go); }
+.scList li[data-tone="caution"] .scVerdict i { background: var(--caution); }
+.scList li[data-tone="stop"] .scVerdict i { background: var(--stop); }
+.scVerdict em { color: var(--muted); font-style: normal; }
+.scNum { color: var(--muted); font-size: 13px; }
+@media (max-width: 700px) { .scList li { grid-template-columns: 1fr; } }
+
+/* the trade folds into one line; fields open on demand */
+.tradeLine { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 16px; }
+.tradeLine > p { margin: 0; font-size: 13.5px; color: var(--muted); }
+.tradeLine > div { flex-basis: 100%; margin-top: 8px; }
+.editBtn { background: none; border: 0; padding: 4px 0; font: 600 13.5px var(--font-display); color: var(--accent); cursor: pointer; }
+.editBtn:hover { text-decoration: underline; text-underline-offset: 3px; }
+@media (prefers-reduced-motion: reduce) { .bar, .lensBody, .qline { animation: none; } }
+
+.reply { margin: 0 0 clamp(26px, 3vw, 36px); padding: 0 0 clamp(22px, 3vw, 30px); border-top: 0; border-bottom: 1px solid var(--line); }
+.reply .replyLead { margin: 10px 0 0; font-size: clamp(19px, 2vw, 25px); font-weight: 600; line-height: 1.32; letter-spacing: -0.015em; color: var(--ink); max-width: 46ch; }
+.reply .replyBody { margin: 12px 0 0; font-size: 16px; color: color-mix(in srgb, var(--ink) 80%, var(--muted)); max-width: 66ch; }
+.reply .replyNote { margin: 10px 0 0; font-size: 13.5px; color: var(--muted); max-width: 72ch; }
+@media (max-width: 640px) {
+  .barCol:not(:first-of-type):not(:last-of-type) small { visibility: hidden; }
+  .barLimit em { display: none; }
+  .bars { gap: 4px; }
+}
