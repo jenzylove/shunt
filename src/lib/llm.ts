@@ -21,11 +21,15 @@ const TradeSchema = z.object({
   leverage: z.number().nullable(),
   confidence: z.enum(["0.8", "0.95"]).nullable().describe("0.95 only if the user asks for a worst case or 19 in 20; otherwise null"),
   thesis: z.string().nullable().describe("The user's reason for the trade in their own words, if given"),
+  question: z.enum(["none", "upside", "worst", "why", "size", "next-earnings", "compare", "explain"]).describe(
+    "If the message ASKS about the trade instead of changing it: upside (how much could I make), worst (the worst that could happen), why (why it does or doesn't fit), size (what size would fit), next-earnings (when it reports), compare (two or more stocks side by side), explain (is this good or safe, should I). Otherwise none."),
+  tickers: z.array(z.string()).describe("Every stock the message names, as tickers in capitals, in the order named. Empty if none."),
 });
 
 const SYSTEM = `You turn a trader's message into a structured trade for a risk checking tool.
 Only extract what the user said. Never invent a size, holding period or loss limit: leave a field null if it is not stated or clearly implied.
 If a current trade is given and the message adjusts it ("what if I hold till Friday", "make it 10k", "use the perp at 3x"), set intent to change and return the full trade with only the changed fields updated.
+If the message only ASKS about the current trade (upside, worst case, why, what size, when it reports, is it good), set intent to change, set question, and change NO field.
 If the message names a DIFFERENT stock or describes a whole new trade, set intent to new, and fill ONLY what the message states. Never copy size, loss limit, holding period, leverage or venue from the current trade into a new one: leave them null.
 "Over the weekend" means hold through the next Monday open. "Till Friday" or "until the 9th" means holdUntil that date.
 Today in New York is {today} ({weekday}).`;
@@ -33,7 +37,7 @@ Today in New York is {today} ({weekday}).`;
 let client: Anthropic | null = null;
 export const hasModel = () => Boolean(process.env.ANTHROPIC_API_KEY);
 
-export type ModelRead = { draft: Draft | null; intent?: "change" | "new"; error?: string };
+export type ModelRead = { draft: Draft | null; intent?: "change" | "new"; error?: string; question?: string; tickers?: string[] };
 
 export async function modelParse(text: string, current: Draft | null, now = new Date()): Promise<ModelRead> {
   if (!hasModel()) return { draft: null, error: "no model key" };
@@ -67,7 +71,9 @@ export async function modelParse(text: string, current: Draft | null, now = new 
       const i = days.findIndex((x) => x >= o.holdUntil!);
       if (i >= 0) d.horizonDays = i + 1;
     }
-    return { draft: d, intent: current ? o.intent : "new" };
+    const question = o.question && o.question !== "none" ? o.question : undefined;
+    const tickers = (o.tickers ?? []).map((x) => x.toUpperCase().replace(/^R(?=[A-Z]{2,5}$)/, "")).filter((x) => /^[A-Z.]{1,8}$/.test(x));
+    return { draft: d, intent: current ? o.intent : "new", question, tickers };
   } catch (e) {
     if (e instanceof Anthropic.RateLimitError) return { draft: null, error: "busy, try again" };
     if (e instanceof Anthropic.AuthenticationError) return { draft: null, error: "model key rejected" };

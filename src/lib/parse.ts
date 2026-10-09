@@ -4,7 +4,11 @@ import { z } from "zod";
 import type { Trade } from "./engine/types";
 import { gapDays, newYork, tradingDaysAfter } from "./engine/calendar";
 
-export type Draft = Partial<Trade> & { thesis?: string };
+export type Draft = Partial<Trade> & {
+  thesis?: string;
+  currency?: string;                 // set only when the words use a currency other than dollars
+  lossConflict?: [number, number];   // a dollar limit and a percent limit that disagree: ask, never pick one
+};
 export type Parsed = { trade: Trade | null; draft: Draft; missing: (keyof Trade)[]; notes: string[] };
 
 const NUM = String.raw`(\d+(?:[.,]\d+)?)\s*(k|m)?`;
@@ -22,6 +26,7 @@ const COMPANY: Record<string, string> = {
 
 // everyday words that are also tickers: never read these as a stock unless written in capitals
 const STOP = new Set(("all can now one for big low new key cash well true good best real safe open line play move post plus any are was you the and buy sell long short hold " +
+  "next why report reports earnings fit fits upside gain profit worst case compare instead look about " +
   "days day week weeks loss max risk lose over take stop size bet weekend month year till with from into that this what when will down high less more most much many " +
   "just like want need have has had not out off per its our your their them they then than also only very each both such same other another about after before while").split(" "));
 
@@ -92,7 +97,9 @@ export function ruleParse(text: string, known: (t: string) => boolean, now = new
     const lim2 = s.match(new RegExp(String.raw`\$?\s*${NUM}\s*(?:dollars?|usd|usdt)?\s*(?:limit|loss|max(?:imum)?\s*loss|stop(?:\s*loss)?)\b`));
     if (lim2) d.lossLimitUsd = money(lim2[1], lim2[2]);
   }
-  const pctLim = s.match(/(?:max(?:imum)?\s*loss|lose|risk|limit)\s*(?:of\s*)?(\d+(?:\.\d+)?)\s*%/) ?? s.match(/(\d+(?:\.\d+)?)\s*%\s*(?:max(?:imum)?\s*loss|limit|stop|loss)/);
+  const pctLim = s.match(/(?:max(?:imum)?\s*loss|lose|risk|limit)\s*(?:of\s*)?(\d+(?:\.\d+)?)\s*%/) ?? s.match(/(\d+(?:\.\d+)?)\s*%\s*(?:max(?:imum)?\s*loss|limit|stop|loss)/)
+    // "max loss $500 or 2%": a percent offered as an alternative to a dollar limit
+    ?? (d.lossLimitUsd != null ? s.match(/\bor\s*(\d+(?:\.\d+)?)\s*%/) : null);
 
   // size: first money amount that is not the loss limit: "$20k", "20,000 dollars", "20k usdt"
   for (const m of s.matchAll(new RegExp(String.raw`\$\s*${NUM}|${NUM}\s*(?:usd|usdt|dollars|bucks)\b`, "g"))) {
@@ -113,7 +120,15 @@ export function ruleParse(text: string, known: (t: string) => boolean, now = new
     }
   }
   if (d.sizeUsd != null && d.leverage && /\bmargin\b|\bcollateral\b|\bof my own\b/.test(s)) d.sizeUsd = d.sizeUsd * d.leverage;
-  if (pctLim && d.sizeUsd) d.lossLimitUsd = (Number(pctLim[1]) / 100) * d.sizeUsd;
+  if (pctLim && d.sizeUsd) {
+    const fromPct = (Number(pctLim[1]) / 100) * d.sizeUsd;
+    // "$500 or 2%": two different limits in one sentence. Keep both and ask which one is meant.
+    if (d.lossLimitUsd != null && Math.abs(d.lossLimitUsd - fromPct) > Math.max(1, fromPct * 0.01)) d.lossConflict = [d.lossLimitUsd, Math.round(fromPct)];
+    d.lossLimitUsd = fromPct;
+  }
+  // Shunt prices everything in US dollars; another currency is never silently read as dollars
+  const cur = s.match(/[€£¥₦]|\b(eur|euros?|gbp|pounds?|yen|jpy|naira|ngn|cad|aud|inr|rupees?)\b/);
+  if (cur) d.currency = cur[1] ?? cur[0];
 
   // horizon in trading days: "5 days", "2 weeks", "a week", "till friday", "overnight", "over the weekend"
   const NW: Record<string, number> = { one: 1, two: 2, three: 3, four: 4, five: 5, six: 6, seven: 7, eight: 8, nine: 9, ten: 10 };
@@ -144,6 +159,8 @@ const DraftSchema = z.object({
   leverage: z.number().finite().min(1).max(1000).optional(),
   confidence: z.union([z.literal(0.8), z.literal(0.95)]).optional(),
   thesis: z.string().max(500).optional(),
+  currency: z.string().max(12).optional(),
+  lossConflict: z.tuple([z.number().finite().positive(), z.number().finite().positive()]).optional(),
 }).strip();
 
 /** A draft that arrives from outside (the browser, or a model): only known fields, only sane numbers. Null if anything is off. */
@@ -177,4 +194,23 @@ export function validate(d: Draft): Parsed {
     confidence: d.confidence === 0.95 ? 0.95 : 0.8,
   };
   return { trade, draft: d, missing, notes };
+}
+
+/** Every stock a sentence names, in the order named: rNVDA, NVDAUSDT, plain tickers and company names. */
+export function tickersIn(text: string, known: (t: string) => boolean): string[] {
+  const found: { at: number; t: string }[] = [];
+  for (const m of text.matchAll(/[A-Za-z][A-Za-z.]*/g)) {
+    const w = m[0], up = w.toUpperCase();
+    let t = "";
+    if (/^r[a-z]{2,5}$/i.test(w) && known(w.slice(1).toUpperCase())) t = w.slice(1).toUpperCase();
+    else if (/usdt$/i.test(w) && known(up.slice(0, -4))) t = up.slice(0, -4);
+    else if (known(up) && (w === up || (w.length >= 3 && !STOP.has(w.toLowerCase())))) t = up;
+    if (t) found.push({ at: m.index ?? 0, t });
+  }
+  const lower = text.toLowerCase();
+  for (const [name, t] of Object.entries(COMPANY)) {
+    const i = lower.search(new RegExp(`\b${name}\b`));
+    if (i >= 0) found.push({ at: i, t });
+  }
+  return [...new Set(found.sort((a, b) => a.at - b.at).map((f) => f.t))];
 }

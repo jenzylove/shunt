@@ -43,9 +43,19 @@ export type Costs = {
   readAt: string;
 };
 
+/** Past events of a kind that falls inside the hold, newest last, with what this exact trade would have made or lost. */
+export type History = {
+  kind: "earnings" | "fed" | "bellwether";
+  label: string;
+  events: { d: string; move: number; pnlUsd: number }[];
+  withYou: number;          // times the move went the trade's way
+  n: number;
+};
+
 export type CheckResult = {
   trade: Trade;
-  profile: Pick<Profile, "ticker" | "name" | "sector" | "asOf" | "lastClose" | "volNow" | "perp">;
+  profile: Pick<Profile, "ticker" | "name" | "sector" | "asOf" | "lastClose" | "volNow" | "perp"> & { earningsN: number; earningsP50: number | null };
+  history: History[];
   holdDays: string[];
   events: ScheduledEvent[];
   bands: { day: Band; horizon: Band; events: Band[] };
@@ -186,9 +196,27 @@ export async function checkTrade(input: Trade, now = new Date()): Promise<CheckR
   const assessment = assess(trade, day, horizon, eventBands, priced?.costAt ?? 0, mmr, liquidity);
   // fail closed: without live costs the loss is understated, so the market risk is shown but no verdict is given
   if (!priced) assessment.verdict = { state: "incomplete", reason: "Bitget's live costs could not be read" };
+  // past situations like this one: every stored event of the kinds inside the hold, priced for this trade
+  const sign = trade.side === "long" ? 1 : -1;
+  const roundTrip = assessment.costUsd;
+  const hist = (kind: History["kind"], label: string, evs: { d: string; move: number | null }[]): History | null => {
+    const rows = evs.filter((e) => e.move != null).slice(-12).map((e) => ({ d: e.d, move: e.move as number, pnlUsd: trade.sizeUsd * (e.move as number) * sign - roundTrip }));
+    return rows.length ? { kind, label, events: rows, withYou: rows.filter((r) => r.move * sign > 0).length, n: rows.length } : null;
+  };
+  const kinds = new Set(events.map((e) => e.kind));
+  const inHold = [
+    kinds.has("earnings") ? hist("earnings", `${p.ticker}'s last earnings days`, p.earnings.events ?? []) : null,
+    kinds.has("fed") ? hist("fed", "the last Fed decision days", p.fed.events ?? []) : null,
+    ...[...new Set(events.filter((e) => e.kind === "bellwether").map((e) => e.hub))].map((h) =>
+      hist("bellwether", `the last ${h} report days`, p.bellwethers.find((b) => b.hub === h)?.events ?? [])),
+  ].filter((x): x is History => x != null);
+  // nothing with a stored history inside the hold: show the stock's last earnings days for reference (the page labels it)
+  const ref = inHold.length ? null : hist("earnings", `${p.ticker}'s last earnings days`, p.earnings.events ?? []);
+  const history = ref ? [ref] : inHold;
   return {
-    trade,
-    profile: { ticker: p.ticker, name: p.name, sector: p.sector, asOf: p.asOf, lastClose: p.lastClose, volNow: p.volNow, perp: p.perp },
+    trade, history,
+    profile: { ticker: p.ticker, name: p.name, sector: p.sector, asOf: p.asOf, lastClose: p.lastClose, volNow: p.volNow, perp: p.perp,
+      earningsN: p.earnings.n ?? 0, earningsP50: p.earnings.p50 ?? null },
     holdDays, events, bands: { day, horizon, events: eventBands }, assessment, costs: c, weekendTrading: weekend,
     calibration: cal, problems, notes, calendarAt: oldestReadAt ? new Date(oldestReadAt).toISOString() : null,
   };

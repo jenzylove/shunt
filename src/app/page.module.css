@@ -177,3 +177,18 @@
   .cchips button { padding-inline: 14px; }
 }
 @media (prefers-reduced-motion: reduce) { .bgWrap { transform: none !important; } }
+
+/* the answer to a question, your reason against the record, and past situations: quiet blocks inside the panel */
+.reply, .past { margin: 28px 0 0; padding: 22px 0 0; border-top: 1px solid var(--panel-line); animation: fadeUp 0.6s ease both; }
+.replyTitle { margin: 6px 0 10px; font-size: 22px; font-weight: 700; letter-spacing: -0.02em; color: var(--panel-ink); }
+.reply p { margin: 0 0 8px; color: var(--panel-ink); max-width: 78ch; font-size: 16px; }
+.unread { margin: 10px 0 0; padding: 10px 14px; border-radius: 10px; background: color-mix(in srgb, var(--panel-caution) 14%, transparent); color: var(--panel-ink); font-size: 14px; max-width: 80ch; }
+.pastRow { display: flex; gap: 6px; flex-wrap: wrap; margin: 4px 0 12px; }
+.pastCell { display: flex; flex-direction: column; gap: 2px; padding: 8px 10px; min-width: 76px; border: 1px solid var(--panel-line); border-radius: 10px; }
+.pastCell span { font-size: 14px; color: var(--panel-ink); }
+.pastCell small { font-size: 11px; color: var(--panel-muted); }
+.pastCell[data-bad] { border-color: var(--panel-stop); }
+.pastCell[data-bad] span { color: var(--panel-stop); }
+.scBtn { margin: 4px 0 8px; padding: 11px 18px; border-radius: 12px; border: 1px solid var(--panel-line); background: none; color: var(--panel-ink); font: 600 14px var(--font-display); cursor: pointer; }
+.scBtn:hover:not(:disabled) { border-color: var(--panel-accent); color: var(--panel-accent); }
+.scBtn:disabled { opacity: 0.6; cursor: default; }

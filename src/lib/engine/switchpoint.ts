@@ -19,6 +19,7 @@ export type Assessment = {
   costUsd: number;                 // round trip at the trade's size: fee and slippage in and out, plus perp funding
   liquidationPct: number | null;   // perp only: an estimate of the move that would liquidate (isolated margin, before fees); null when the inputs are missing
   safeLeverage: number | null;     // perp only: highest leverage whose liquidation distance clears the biggest measured move
+  largestFitUsd: number | null;    // the largest size whose loss on every measured risk in the hold, with costs at that size, fits the limit
 };
 
 /**
@@ -111,5 +112,6 @@ export function assess(
   } else {
     verdict = { state: "fits" };
   }
-  return { verdict, day: dayR, horizon: horizonR, events: measured, worst, unmeasured, costUsd: costAt(cost, t, t.sizeUsd), liquidationPct: liq, safeLeverage };
+  const largestFitUsd = biggest > 0 ? maxSize(t, biggest, cost) : null;
+  return { verdict, day: dayR, horizon: horizonR, events: measured, worst, unmeasured, largestFitUsd, costUsd: costAt(cost, t, t.sizeUsd), liquidationPct: liq, safeLeverage };
 }

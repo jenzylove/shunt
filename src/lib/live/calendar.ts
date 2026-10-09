@@ -29,6 +29,17 @@ export async function earningsOn(date: string): Promise<EarningsRow[] & { readAt
   return out;
 }
 
+/** The next date a ticker reports, scanning the Nasdaq calendar over the coming weekdays. Null if none is listed. */
+export async function nextEarnings(ticker: string, from: string, weekdays = 30): Promise<{ date: string; timing: string } | null> {
+  const dates: string[] = [];
+  for (let d = new Date(from + "T12:00:00Z"); dates.length < weekdays; d = new Date(d.getTime() + 86_400_000)) {
+    if (d.getUTCDay() !== 0 && d.getUTCDay() !== 6) dates.push(d.toISOString().slice(0, 10));
+  }
+  const { rows } = await earningsBetween(dates);
+  const hit = rows.filter((r) => r.symbol === ticker).sort((a, b) => (a.date < b.date ? -1 : 1))[0];
+  return hit ? { date: hit.date, timing: hit.timing } : null;
+}
+
 /** Earnings rows for a set of dates, fetched in parallel; failures are reported, never filled in. */
 export async function earningsBetween(dates: string[]): Promise<{ rows: EarningsRow[]; failed: string[]; oldestReadAt: number | null }> {
   const res = await Promise.allSettled(dates.map(earningsOn));

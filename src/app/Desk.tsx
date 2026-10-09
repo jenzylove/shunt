@@ -3,6 +3,7 @@ import { useEffect, useRef, useState } from "react";
 import type { CheckResult } from "@/lib/check";
 import { day, explain, pct, questionText, usd } from "@/lib/explain";
 import type { Draft, Parsed } from "@/lib/parse";
+import type { Answer } from "@/lib/questions";
 import Rail from "./Rail";
 import TrackBg from "./TrackBg";
 import s from "./page.module.css";
@@ -15,9 +16,10 @@ const EXAMPLES = [
   { label: "$5k rAAPL, overnight", text: "$5k rAAPL overnight, stop at -$150" },
 ];
 
-type Meta = { readBy: "rules" | "model" | "edit"; intent?: "new" | "change" | "edit"; asked?: string; model: string | null; modelNote?: string };
+type Meta = { readBy: "rules" | "model" | "edit"; intent?: "new" | "change" | "edit" | "question"; asked?: string; model: string | null; modelNote?: string; unread?: boolean };
 type Ask = { kind: "sizeMeaning"; sizeUsd: number; leverage: number };
-type Reply = { parsed: Parsed; result?: CheckResult; error?: string; meta?: Meta; ask?: Ask };
+type Conflict = { kind: "conflict"; field: "lossLimitUsd"; options: [number, number] };
+type Reply = { parsed: Parsed; result?: CheckResult; error?: string; meta?: Meta; ask?: Ask | Conflict; answer?: Answer };
 
 const failureText = (status: number) =>
   status === 429 ? "Too many checks from one place in a short time. Wait a few minutes and try again."
@@ -66,7 +68,7 @@ export default function Desk({ initial }: { initial: CheckResult | null }) {
       try { j = await r.json(); } catch { /* not JSON: handled below */ }
       const j2: Reply = {
         parsed: j.parsed ?? { trade: null, draft: reply?.parsed.draft ?? {}, missing: [], notes: [] },
-        result: j.result, meta: j.meta, ask: j.ask,
+        result: j.result, meta: j.meta, ask: j.ask, answer: j.answer,
         error: j.error ?? (r.ok ? undefined : failureText(r.status)),
       };
       setReply(j2);
@@ -129,6 +131,11 @@ export default function Desk({ initial }: { initial: CheckResult | null }) {
 
           <div className={s.panelBody} aria-live="polite" aria-busy={busy} data-busy={busy || undefined}>
             {!reply && <p className={s.working}>Reading the calendar, the stock&apos;s history and Bitget&apos;s order book…</p>}
+            {reply && !r && reply.ask?.kind === "conflict" && (
+              <ConflictAsk ask={reply.ask} asked={reply.meta?.asked}
+                onPick={(limit) => { setActive(null); const d = { ...reply.parsed.draft, lossLimitUsd: limit }; delete d.lossConflict; run({ draft: d }); }} />
+            )}
+            {reply && !r && reply.answer && <AnswerBlock a={reply.answer} />}
             {reply && !r && reply.ask?.kind === "sizeMeaning" && (
               <SizeMeaning ask={reply.ask} asked={reply.meta?.asked}
                 onPick={(size) => { setActive(null); run({ draft: { ...reply.parsed.draft, sizeUsd: size }, sizeConfirmed: true }); }} />
@@ -147,13 +154,21 @@ export default function Desk({ initial }: { initial: CheckResult | null }) {
                     Hold covers {r.holdDays.length} trading session{r.holdDays.length === 1 ? "" : "s"}, {day(r.holdDays[0])} to the close on {day(r.holdDays[r.holdDays.length - 1])}.
                   </p>
                   {r.notes.map((n) => <p key={n} className={s.asked}>{n}</p>)}
-                  {reply?.meta?.asked && (
+                  {reply?.meta?.asked && !reply.meta.unread && (
                     <p className={s.asked}>
                       You typed &ldquo;{reply.meta.asked}&rdquo;{reply.meta.readBy === "model" ? ", read by Claude. Every number below is computed by code." : "."}
-                      {reply.meta.modelNote && <> The model was not used: {reply.meta.modelNote}.</>}
+                      {reply.meta.modelNote && <> {reply.meta.modelNote[0].toUpperCase() + reply.meta.modelNote.slice(1)}.</>}
+                    </p>
+                  )}
+                  {reply?.meta?.unread && (
+                    <p className={s.unread} role="status">
+                      I couldn&apos;t read &ldquo;{reply.meta.asked}&rdquo; as a change or a question, so the answer below is unchanged.
+                      You can change the size, hold, limit, venue or leverage, or ask about the upside, the worst case, why, what size fits,
+                      the next earnings, or compare two stocks.{reply.meta.modelNote ? ` (${reply.meta.modelNote}.)` : ""}
                     </p>
                   )}
                 </div>
+                {reply?.answer && <AnswerBlock a={reply.answer} />}
                 <div className={s.answer} data-tone={v.tone} key={"a" + r.trade.ticker + r.trade.sizeUsd + r.trade.horizonDays + r.trade.lossLimitUsd + r.trade.venue + r.costs?.readAt}>
                   <div className={s.answerText}>
                     <span className={s.status}><i />{STATUS[r.assessment.verdict.state]}</span>
@@ -169,6 +184,9 @@ export default function Desk({ initial }: { initial: CheckResult | null }) {
                 {r.assessment.verdict.state !== "illiquid" && r.assessment.verdict.state !== "incomplete" && (
                   <Rail key={`${r.trade.ticker}-${r.trade.sizeUsd}-${r.trade.horizonDays}-${r.trade.lossLimitUsd}-${r.trade.venue}-${r.costs?.readAt}`} r={r} />
                 )}
+                <Thesis r={r} thesis={reply?.parsed.draft.thesis} />
+                <Past r={r} />
+                <Scenarios key={`sc-${r.trade.ticker}-${r.trade.sizeUsd}-${r.trade.horizonDays}-${r.trade.lossLimitUsd}-${r.trade.venue}-${r.trade.leverage}-${r.trade.confidence}`} r={r} />
               </>
             )}
           </div>
@@ -208,6 +226,147 @@ export default function Desk({ initial }: { initial: CheckResult | null }) {
 function ReadAt({ iso }: { iso?: string }) {
   if (!iso) return null;
   return <time className={s.readAt} dateTime={iso}>book at {iso.slice(11, 19)} UTC</time>;
+}
+
+/** A question about the trade, answered from the same numbers as the check. */
+function AnswerBlock({ a }: { a: Answer }) {
+  return (
+    <section className={s.reply} aria-label="Answer to your question">
+      <span className="eyebrow">Answer</span>
+      <h3 className={s.replyTitle}>{a.title}</h3>
+      {a.lines.map((l) => <p key={l}>{l}</p>)}
+    </section>
+  );
+}
+
+/** Two loss limits in one sentence: ask which one is meant, never pick one. */
+function ConflictAsk({ ask, asked, onPick }: { ask: Conflict; asked?: string; onPick: (limit: number) => void }) {
+  const [a, b] = ask.options;
+  return (
+    <div className={s.clarify}>
+      <span className="eyebrow">One quick question</span>
+      <h2 className={s.q}>{asked ? <>You asked &ldquo;{asked}&rdquo;. </> : null}That gives two different loss limits. Which one is yours?</h2>
+      <div className={s.cgo}>
+        <button className={s.cgoMain} onClick={() => onPick(a)}>{usd(a)}</button>
+        <button className={s.cgoMain} onClick={() => onPick(b)}>{usd(b)}</button>
+      </div>
+    </div>
+  );
+}
+
+/** Past situations like this one: every stored event of the kinds inside the hold, priced for this exact trade. */
+function Past({ r }: { r: CheckResult }) {
+  const h = r.history?.[0];
+  if (!h) return null;
+  const inHold = r.events.some((e) => e.kind === h.kind);
+  const t = r.trade;
+  const worst = Math.min(...h.events.map((e) => e.pnlUsd));
+  const over = h.events.filter((e) => -e.pnlUsd > t.lossLimitUsd).length;
+  return (
+    <section className={s.past} aria-label="Past situations like this one">
+      <span className="eyebrow">{inHold ? "Past situations like this one" : "For reference: not inside this hold"}</span>
+      <h3 className={s.replyTitle}>What {usd(t.sizeUsd)} {t.side === "long" ? "long" : "short"} would have done on {h.label}</h3>
+      <div className={s.pastRow}>
+        {h.events.map((e) => (
+          <div key={e.d} className={s.pastCell} data-bad={-e.pnlUsd > t.lossLimitUsd || undefined} title={`${e.d}: ${(e.move * 100).toFixed(1)}%`}>
+            <span className="num">{e.pnlUsd >= 0 ? "+" : "-"}{usd(Math.abs(e.pnlUsd))}</span>
+            <small className="num">{day(e.d).split(" ").slice(1).join(" ")} {e.d.slice(2, 4)}</small>
+          </div>
+        ))}
+      </div>
+      <p className={s.asked}>
+        Went your way {h.withYou} of {h.n} times. {over ? `${over} of ${h.n} would have cost more than your ${usd(t.lossLimitUsd)} limit; ` : `None would have cost more than your ${usd(t.lossLimitUsd)} limit; `}
+        the worst was {worst >= 0 ? "a gain of " : ""}{usd(Math.abs(worst))}. Each day&apos;s real move, times your size, minus today&apos;s round trip cost. History, not a forecast.
+      </p>
+    </section>
+  );
+}
+
+/** The same trade changed one way at a time, each checked for real, so you can see which change makes it fit and why. */
+function Scenarios({ r }: { r: CheckResult }) {
+  type Row = { name: string; change: string; result?: CheckResult; error?: string };
+  const [rows, setRows] = useState<Row[] | null>(null);
+  const [busy, setBusy] = useState(false);
+  const t = r.trade, a = r.assessment, v = a.verdict;
+  if (v.state === "illiquid" || v.state === "incomplete") return null;
+
+  const variants: { name: string; change: string; draft: Partial<Draft> }[] = [];
+  if (a.largestFitUsd != null && Math.abs(a.largestFitUsd - t.sizeUsd) > 1) variants.push({ name: "Largest size that fits", change: `${usd(t.sizeUsd)} to ${usd(a.largestFitUsd)}`, draft: { sizeUsd: a.largestFitUsd } });
+  const exitBefore = v.state === "fits-if" ? v.exitBefore : null;
+  const firstBreach = exitBefore ? r.holdDays.indexOf(exitBefore.date) : -1;
+  const shorter = firstBreach > 0 ? firstBreach : Math.max(1, Math.floor(t.horizonDays / 2));
+  if (shorter < t.horizonDays) variants.push({ name: "Shorter hold", change: `${t.horizonDays} to ${shorter} day${shorter === 1 ? "" : "s"}${firstBreach > 0 ? `, out before ${day(exitBefore!.date)}` : ""}`, draft: { horizonDays: shorter } });
+  if (t.venue === "perp" && (t.leverage ?? 1) > 1) variants.push({ name: "No leverage", change: `${t.leverage}x to 1x`, draft: { leverage: 1 } });
+  if (t.confidence === 0.8) variants.push({ name: "Worse case", change: "4 in 5 to 19 in 20", draft: { confidence: 0.95 } });
+
+  const runAll = async () => {
+    setBusy(true);
+    const base: Draft = { ticker: t.ticker, venue: t.venue, side: t.side, sizeUsd: t.sizeUsd, horizonDays: t.horizonDays, lossLimitUsd: t.lossLimitUsd, leverage: t.leverage, confidence: t.confidence };
+    const out = await Promise.all(variants.map(async (x): Promise<Row> => {
+      try {
+        const res = await fetch("/api/check", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ draft: { ...base, ...x.draft }, rulesOnly: true }) });
+        const j = await res.json();
+        return j.result ? { name: x.name, change: x.change, result: j.result } : { name: x.name, change: x.change, error: j.error ?? "could not run" };
+      } catch { return { name: x.name, change: x.change, error: "could not reach Shunt" }; }
+    }));
+    setRows(out); setBusy(false);
+  };
+  if (!variants.length) return null;
+  const line = (c: CheckResult) => ({ head: explain(c).headline, worst: (c.assessment.worst ?? c.assessment.horizon).lossUsd, cost: c.assessment.costUsd });
+  const now = line(r);
+  return (
+    <section className={s.past} aria-label="The same trade, changed one way at a time">
+      <span className="eyebrow">What would make it fit</span>
+      <h3 className={s.replyTitle}>The same trade, changed one way at a time</h3>
+      {!rows ? (
+        <button className={s.scBtn} onClick={runAll} disabled={busy}>{busy ? "Checking each one" : `Check ${variants.map((x) => x.name.toLowerCase()).join(", ")}`}</button>
+      ) : (
+        <div className={s.scroll}>
+          <table className={s.table}>
+            <thead><tr><th>Scenario</th><th>Change</th><th>Verdict</th><th className={s.r}>Worst measured</th><th className={s.r}>Costs</th></tr></thead>
+            <tbody>
+              <tr><td>As you asked</td><td>none</td><td>{now.head}</td><td className={`num ${s.r}`} data-label="Worst measured">{usd(now.worst)}</td><td className={`num ${s.r}`} data-label="Costs">{usd(now.cost)}</td></tr>
+              {rows.map((x) => {
+                if (!x.result) return <tr key={x.name}><td>{x.name}</td><td>{x.change}</td><td colSpan={3}>{x.error}</td></tr>;
+                const l = line(x.result);
+                return <tr key={x.name}><td>{x.name}</td><td>{x.change}</td><td>{l.head}</td><td className={`num ${s.r}`} data-label="Worst measured">{usd(l.worst)}</td><td className={`num ${s.r}`} data-label="Costs">{usd(l.cost)}</td></tr>;
+              })}
+            </tbody>
+          </table>
+        </div>
+      )}
+      <p className={s.asked}>Each row is a full check of its own, against the same {usd(t.lossLimitUsd)} limit, with costs priced live at that size.</p>
+    </section>
+  );
+}
+
+/** The reason you gave, held up against this stock's own record. It never says whether you are right. */
+function Thesis({ r, thesis }: { r: CheckResult; thesis?: string }) {
+  if (!thesis) return null;
+  const t = r.trade;
+  const mentions = (re: RegExp) => re.test(thesis.toLowerCase());
+  const lines: string[] = [];
+  if (mentions(/earnings|report|beat|miss|guidance|quarter/) && !r.events.some((e) => e.kind === "earnings")) {
+    lines.push(`Your reason is about earnings, but ${t.ticker} does not report inside this ${t.horizonDays} day hold, so the hold carries the risk without the event you are betting on.`);
+  }
+  if (mentions(/\bfed\b|rate|powell|fomc|cut|hike/) && !r.events.some((e) => e.kind === "fed")) {
+    lines.push(`Your reason is about the Fed, but there is no Fed decision inside this hold.`);
+  }
+  const h = r.history?.find((x) => (mentions(/\bfed\b|rate|powell|fomc/) ? x.kind === "fed" : x.kind === "earnings")) ?? r.history?.[0];
+  if (h) {
+    const against = h.events.filter((e) => e.move * (t.side === "long" ? 1 : -1) < 0).map((e) => Math.abs(e.move)).sort((a, b) => a - b);
+    const med = against.length ? against[Math.floor(against.length / 2)] : null;
+    lines.push(`On ${h.label}, ${t.ticker} went your way ${h.withYou} of ${h.n} times.${med != null ? ` When it went against you, the median move was ${(med * 100).toFixed(1)}%, about ${usd(med * t.sizeUsd + r.assessment.costUsd)} at your size.` : ""}`);
+  }
+  if (!lines.length) return null;
+  return (
+    <section className={s.reply} aria-label="Your reason, against the record">
+      <span className="eyebrow">Your reason</span>
+      <h3 className={s.replyTitle}>&ldquo;{thesis.length > 120 ? thesis.slice(0, 117) + "..." : thesis}&rdquo;</h3>
+      {lines.map((l) => <p key={l}>{l}</p>)}
+      <p className={s.asked}>Shunt does not judge whether your reason is right. This is what the record says about the bet it implies.</p>
+    </section>
+  );
 }
 
 /** "$10k at 5x" means two different trades. Ask which, with both read back in dollars. */
