@@ -35,3 +35,13 @@ describe("questions about a trade", () => {
     expect(ruleParse("buy $10k AAPL for 5 days, max loss $200 or 2%", known).lossConflict).toBeUndefined();
   });
 });
+
+describe("percent limits are not read as dollars", () => {
+  it("reads risk 2% as a percent of the size, with no conflict", () => {
+    const d = ruleParse("rTSLA 3k, 2 days, risk 2%", known);
+    expect(d.lossLimitUsd).toBe(60);
+    expect(d.lossConflict).toBeUndefined();
+    expect(ruleParse("hood 4k 1 day 2.5% max loss", known).lossLimitUsd).toBe(100);
+    expect(ruleParse("go long meta 12k, 1 week, max loss 3%", known).lossLimitUsd).toBe(360);
+  });
+});

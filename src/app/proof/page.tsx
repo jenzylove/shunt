@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
 import calData from "../../../public/data/calibration.json";
 import useData from "../../../public/data/usefulness.json";
+import sealedBefore from "../../../scripts/lui-sealed/results-baseline.json";
+import sealedAfter from "../../../scripts/lui-sealed/results-after.json";
 import { median, wilson } from "@/lib/stats";
 import journalData from "../../../public/data/journal.json";
 import ordersData from "../../../public/data/proof-orders.json";
@@ -178,6 +180,30 @@ export default function Proof() {
             </table>
           </div>
         </details>
+
+        <h3 className={s.sub}>A second test, sealed before the change</h3>
+        <p>
+          Those 24 sentences were fixed after their misses were seen, so they cannot score the language layer again. Before Shunt learned to answer
+          questions, 42 new cases were written and committed with the answer each should get: trades in slang, unclear or contradictory inputs that
+          must be asked about, attempts to push past the limits, follow ups, and ten questions about a trade. The same cases ran on the live site
+          before and after the change, paced under the model&apos;s allowance. The cases were not edited between runs.
+        </p>
+        <div className={s.scroll}>
+          <table className={s.table}>
+            <thead><tr><th>Group</th><th className={s.r}>Before</th><th className={s.r}>After</th></tr></thead>
+            <tbody>
+              {(["all", "trade", "safety", "followup", "question"] as const).map((g) => (
+                <tr key={g}><td>{({ all: "All 42", trade: "Trades", safety: "Unclear, contradictory or past the limits", followup: "Follow ups", question: "Questions about a trade" } as Record<string, string>)[g]}</td>
+                  <td className={`num ${s.r}`}>{(sealedBefore.summary as Record<string, string>)[g]}</td><td className={`num ${s.r}`}>{(sealedAfter.summary as Record<string, string>)[g]}</td></tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+        <p className={s.muted}>
+          Missed after the change: {sealedAfter.rows.filter((r) => !r.pass).map((r) => `"${r.text}" (${r.misses.join("; ")})`).join(", ") || "none"}.
+          {" "}That miss was new: the check for two different loss limits read &ldquo;risk 2%&rdquo; as both $2 and 2%. It was fixed after this run and is
+          not counted here. Cases and runner: scripts/lui-sealed.
+        </p>
       </section>
 
       {orders && orders.orders.length > 0 && (() => {

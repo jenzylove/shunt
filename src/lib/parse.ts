@@ -91,7 +91,7 @@ export function ruleParse(text: string, known: (t: string) => boolean, now = new
   if (lev) d.leverage = Number(lev[1]);
 
   // loss limit: "max loss $600", "can lose 600", "risk $500", "stop at -$400"
-  const lim = s.match(new RegExp(String.raw`(?:max(?:imum)?\s*loss|cap(?:\s*(?:the\s*|my\s*)?loss)?(?:\s*at)?|lose(?:\s*up\s*to)?|losing|take\s*(?:a\s*)?(?:loss\s*of\s*)?|risk(?:ing)?|stomach|tolerate|stop(?:\s*me)?(?:\s*at)?|limit(?:\s*of)?)\s*(?:of\s*)?-?\s*\$?\s*${NUM}`));
+  const lim = s.match(new RegExp(String.raw`(?:max(?:imum)?\s*loss|cap(?:\s*(?:the\s*|my\s*)?loss)?(?:\s*at)?|lose(?:\s*up\s*to)?|losing|take\s*(?:a\s*)?(?:loss\s*of\s*)?|risk(?:ing)?|stomach|tolerate|stop(?:\s*me)?(?:\s*at)?|limit(?:\s*of)?)\s*(?:of\s*)?-?\s*\$?\s*${NUM}(?![\d.]*\s*(?:%|percent))`));   // "risk 2%" is a percent, not $2
   if (lim) d.lossLimitUsd = money(lim[1], lim[2]);
   if (!lim) {
     const lim2 = s.match(new RegExp(String.raw`\$?\s*${NUM}\s*(?:dollars?|usd|usdt)?\s*(?:limit|loss|max(?:imum)?\s*loss|stop(?:\s*loss)?)\b`));

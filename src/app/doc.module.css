@@ -64,3 +64,4 @@
 .stripOut { fill: var(--stop); }
 .stripTick { fill: var(--muted); font: 500 11px var(--font-num); }
 .stripNote { margin: 4px 0 0; color: var(--muted); font-size: 13px; }
+.sub { margin: 36px 0 8px; font-size: 21px; font-weight: 600; letter-spacing: -0.02em; }
